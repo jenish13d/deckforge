@@ -1619,3 +1619,25 @@ a {
   background: var(--border);
   color: var(--muted);
 }
+
+/* ---------- PDF export: cards rendered off-screen at a fixed 16:9 size ---------- */
+.pdf-stage {
+  position: fixed;
+  top: 0;
+  left: -100000px;
+  width: 1280px;
+  pointer-events: none;
+}
+
+.pdf-page {
+  width: 1280px;
+  height: 720px;
+  overflow: hidden;
+}
+
+.pdf-page .card {
+  width: 1280px;
+  height: 720px;
+  border-radius: 0;
+  box-shadow: none;
+}

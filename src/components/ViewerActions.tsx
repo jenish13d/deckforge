@@ -3,13 +3,14 @@
 import { useState } from "react";
 
 import type { CardContent } from "@/lib/cards";
+import { PdfButton } from "./PdfButton";
 import { Presenter } from "./Presenter";
 
-export function ViewerActions({ cards, theme }: { cards: CardContent[]; theme: string }) {
+export function ViewerActions({ cards, theme, title }: { cards: CardContent[]; theme: string; title: string }) {
   const [presenting, setPresenting] = useState(false);
   return (
     <>
-      <button type="button" className="button" onClick={() => window.print()}>Download PDF</button>
+      <PdfButton cards={cards} theme={theme} title={title} />
       <button type="button" className="button button--primary" onClick={() => setPresenting(true)} disabled={cards.length === 0}>
         Present
       </button>

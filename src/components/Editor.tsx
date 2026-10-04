@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CardEditForm } from "@/components/CardEditForm";
 import { CardPlaceholder, CardView } from "@/components/CardView";
+import { PdfButton } from "@/components/PdfButton";
 import { Presenter } from "@/components/Presenter";
 import { emptyCard, type CardContent } from "@/lib/cards";
 import { ApiError, api } from "@/lib/client";
@@ -228,7 +229,8 @@ export function Editor({
         </select>
         <Link href="/account" className="credits-pill" title="Credits left this month">{credits} credits</Link>
         <button type="button" className="button" onClick={share}>{copied ? "Link copied" : "Share"}</button>
-        <Link className="button" href={`/d/${deck.id}`} target="_blank">View / PDF</Link>
+        <Link className="button" href={`/d/${deck.id}`} target="_blank">View</Link>
+        <PdfButton cards={readyCards} theme={deck.theme} title={deck.title} />
         <button
           type="button"
           className="button button--primary"

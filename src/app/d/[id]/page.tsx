@@ -24,7 +24,7 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
       <header className="toolbar no-print">
         <Link href="/" className="toolbar__brand">Deckforge</Link>
         <h1 className="toolbar__heading">{deck.title}</h1>
-        <ViewerActions cards={cards} theme={deck.theme} />
+        <ViewerActions cards={cards} theme={deck.theme} title={deck.title} />
       </header>
       <main className="page">
         <div className={`deck theme-${deck.theme}`}>

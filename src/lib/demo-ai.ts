@@ -46,7 +46,7 @@ const ICONS = ["💡", "🧭", "📊", "🗓️", "💬", "✅"];
 export function demoCard(cardTitle: string, _deckTitle: string, index: number, total: number): GeneratedCard {
   const base = { icon: "", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "" };
   if (index === 0) {
-    return { ...base, layout: "title", icon: "🚀", title: cardTitle, subtitle: "Demo content: add an Anthropic API key to have the AI write real slides for this topic." };
+    return { ...base, layout: "title", icon: "🚀", title: cardTitle, subtitle: "Demo content: connect an AI key (Gemini or Claude) to have the AI write real slides for this topic." };
   }
   if (index === total - 1) {
     return { ...base, layout: "section", icon: "🎯", title: cardTitle, subtitle: "Agree on owners, set a date for the first milestone, and review progress in two weeks." };
