@@ -1267,6 +1267,8 @@ a {
 
 .card {
   container-type: inline-size;
+  display: flex;
+  flex-direction: column;
   aspect-ratio: 16 / 9;
   width: 100%;
   overflow: hidden;
@@ -1282,7 +1284,10 @@ a {
   flex-direction: column;
   justify-content: center;
   gap: 2.2cqi;
-  height: 100%;
+  /* Fill the card via flex rather than height: 100%, which WebKit (Safari) resolves a few
+     pixels taller than an aspect-ratio box. */
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 6cqi 7cqi;
 }
 
@@ -1518,6 +1523,8 @@ a {
 
 .presenter__stage {
   width: min(100vw, calc((100vh - 56px) * 16 / 9));
+  /* Mobile Safari: size to the visible area, not the area behind the toolbars. */
+  width: min(100vw, calc((100dvh - 56px) * 16 / 9));
   cursor: pointer;
 }
 
@@ -1570,6 +1577,26 @@ a {
   .deck .card__inner {
     padding: 28px 22px;
     gap: 12px;
+  }
+
+  .deck .card__title {
+    font-size: max(4.4cqi, 22px);
+  }
+
+  .deck .card--title .card__title {
+    font-size: max(6.4cqi, 28px);
+  }
+
+  .deck .card--section .card__title {
+    font-size: max(5.4cqi, 25px);
+  }
+
+  .deck .card__stat-value {
+    font-size: max(5cqi, 26px);
+  }
+
+  .deck .card__quote {
+    font-size: max(3.6cqi, 19px);
   }
 
   .deck .card__items--columns,

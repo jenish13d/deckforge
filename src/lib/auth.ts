@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHash, randomBytes } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type { User } from "@prisma/client";
 
 import { refreshCredits } from "./credits";
@@ -17,10 +17,13 @@ export async function startSession(userId: string): Promise<void> {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
   await db.session.create({ data: { id: hashToken(token), userId, expiresAt } });
+  // Secure (HTTPS-only) everywhere except plain-HTTP localhost, where Safari would drop it.
+  const host = (await headers()).get("host") ?? "";
+  const local = /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
   (await cookies()).set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" && !local,
     path: "/",
     expires: expiresAt,
   });
