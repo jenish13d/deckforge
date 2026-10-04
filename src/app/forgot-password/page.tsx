@@ -1,5 +1,6 @@
 import { ForgotForm } from "@/components/ForgotForm";
 import { SiteHeader } from "@/components/SiteHeader";
+import { captchaEnabled } from "@/lib/captcha";
 
 export const metadata = { title: "Forgot password" };
 
@@ -8,7 +9,7 @@ export default function ForgotPasswordPage() {
     <>
       <SiteHeader />
       <main className="page page--auth">
-        <ForgotForm />
+        <ForgotForm captcha={captchaEnabled()} />
       </main>
     </>
   );

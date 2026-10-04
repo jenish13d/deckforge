@@ -76,6 +76,11 @@ separate Neon "branch" for testing.)
   3. In Vercel add: `SMTP_HOST` = `smtp.gmail.com`, `SMTP_PORT` = `465`, `SMTP_USER` = your Gmail address,
      `SMTP_PASS` = the 16-letter app password (Secret), `APP_URL` = your site address → Redeploy.
 
+- **Feedback and admin page:** the 💬 Feedback button works with no setup. Log in with the email in
+  `NEXT_PUBLIC_CONTACT_EMAIL` and an **Admin** link appears at the top (or open `/admin`). To let another
+  account in, add `ADMIN_EMAILS` (comma-separated emails) in Vercel and redeploy.
+- **"I'm not a robot" check:** on by default, nothing to set up.
+
 - **Free real AI (Gemini):** get a free key at https://aistudio.google.com → **Get API key**. In Vercel →
   **Settings → Environment Variables**: add `GEMINI_API_KEY` (Secret), **delete** `DEMO_AI` and
   `BILLING_DEMO`, then **Deployments → ⋯ → Redeploy**. Quick and Standard now use real AI; Premium shows

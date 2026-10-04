@@ -25,6 +25,7 @@ model User {
   sessions             Session[]
   decks                Deck[]
   passwordResets       PasswordReset[]
+  feedback             Feedback[]
 }
 
 model PasswordReset {
@@ -80,4 +81,20 @@ model Card {
   updatedAt DateTime @updatedAt
 
   @@index([deckId, position])
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // Reply address: the user's email, or one typed in by a visitor (optional).
+  email     String?
+  // 1 (unhappy) to 4 (love it), or null if not given.
+  rating    Int?
+  message   String
+  // Page the feedback was sent from, e.g. "/d/abc/edit".
+  page      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

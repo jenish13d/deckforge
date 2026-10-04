@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { isAdminEmail } from "@/lib/admin";
 import { getCurrentUser } from "@/lib/auth";
 import { PLANS, planOf } from "@/lib/plans";
 import { Logo } from "./Logo";
@@ -13,6 +14,7 @@ export async function SiteHeader() {
       <nav className="site-header__nav">
         {user ? (
           <>
+            {isAdminEmail(user.email) && <Link href="/admin">Admin</Link>}
             <Link href="/decks">My decks</Link>
             <Link href="/account" className="credits-pill" title="Credits left this month">
               {user.credits} credits · {PLANS[planOf(user.plan)].label}

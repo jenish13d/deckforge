@@ -4,18 +4,20 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { api } from "@/lib/client";
+import { Captcha } from "./Captcha";
 
-export function ForgotForm() {
+export function ForgotForm({ captcha = false }: { captcha?: boolean }) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState("");
+  const [altcha, setAltcha] = useState<string | null>(null);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setState("sending");
     setError("");
     try {
-      await api("/api/auth/forgot", { body: { email } });
+      await api("/api/auth/forgot", { body: { email, altcha } });
       setState("sent");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -44,8 +46,9 @@ export function ForgotForm() {
         <span className="field__label">Email</span>
         <input className="input" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
       </label>
+      {captcha && <Captcha onChange={setAltcha} />}
       {error && <p className="error" role="alert">{error}</p>}
-      <button className="button button--primary" type="submit" disabled={state === "sending"}>
+      <button className="button button--primary" type="submit" disabled={state === "sending" || (captcha && !altcha)}>
         {state === "sending" ? "Sending…" : "Send reset link"}
       </button>
       <Link href="/login">Back to log in</Link>

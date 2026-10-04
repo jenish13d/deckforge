@@ -1824,3 +1824,127 @@ a {
 .section--tight {
   margin-top: 32px;
 }
+
+/* ---------- Feedback button ---------- */
+.feedback {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.feedback__toggle {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.feedback__panel {
+  width: min(340px, calc(100vw - 32px));
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+.feedback__form,
+.feedback__thanks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feedback__form p,
+.feedback__thanks p {
+  margin: 0;
+}
+
+.feedback__moods {
+  display: flex;
+  gap: 8px;
+}
+
+.feedback__mood {
+  flex: 1;
+  padding: 6px 0;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.feedback__mood.is-selected {
+  border-color: var(--primary);
+}
+
+/* ---------- Admin ---------- */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.admin-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.admin-stat__value {
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.feedback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feedback-item {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.feedback-item p {
+  margin: 6px 0 0;
+}
+
+.feedback-item__mood {
+  font-size: 1.4rem;
+}
+
+.feedback-item__message {
+  white-space: pre-wrap;
+}
+
+/* ---------- Captcha ---------- */
+.captcha altcha-widget {
+  --altcha-max-width: 100%;
+  --altcha-color-base: var(--surface);
+  --altcha-color-border: var(--border);
+  --altcha-color-text: var(--text);
+  --altcha-border-radius: 8px;
+}

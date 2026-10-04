@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { startSession } from "@/lib/auth";
+import { CAPTCHA_ERROR, verifyCaptcha } from "@/lib/captcha";
 import { allowance } from "@/lib/credits";
 import { db } from "@/lib/db";
 import { jsonError, readJson } from "@/lib/http";
@@ -14,6 +15,7 @@ export async function POST(request: Request) {
   const password = String(body?.password ?? "");
   const invalid = validateCredentials(email, password);
   if (invalid) return jsonError(invalid, 400);
+  if (!(await verifyCaptcha(body?.altcha))) return jsonError(CAPTCHA_ERROR, 400);
 
   try {
     const user = await db.user.create({

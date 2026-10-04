@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist } from "next/font/google";
+
+import { FeedbackButton } from "@/components/FeedbackButton";
+import { getCurrentUser } from "@/lib/auth";
+import { captchaEnabled } from "@/lib/captcha";
 import "./globals.css";
 
 const sans = Geist({ variable: "--font-sans", subsets: ["latin"] });
@@ -15,7 +19,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const user = await getCurrentUser();
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
       <body>
@@ -25,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </div>
         )}
         {children}
+        <FeedbackButton loggedIn={Boolean(user)} captcha={captchaEnabled()} />
       </body>
     </html>
   );

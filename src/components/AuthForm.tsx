@@ -5,21 +5,24 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { api } from "@/lib/client";
+import { Captcha } from "./Captcha";
 
-export function AuthForm({ mode, next = "/" }: { mode: "login" | "signup"; next?: string }) {
+export function AuthForm({ mode, next = "/", captcha = false }: { mode: "login" | "signup"; next?: string; captcha?: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [altcha, setAltcha] = useState<string | null>(null);
   const signup = mode === "signup";
+  const needsCaptcha = signup && captcha;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
     setError("");
     try {
-      await api(`/api/auth/${mode}`, { body: { email, password } });
+      await api(`/api/auth/${mode}`, { body: { email, password, altcha } });
       router.push(next);
       router.refresh();
     } catch (e) {
@@ -51,8 +54,9 @@ export function AuthForm({ mode, next = "/" }: { mode: "login" | "signup"; next?
       {!signup && (
         <Link href="/forgot-password" className="small">Forgot password?</Link>
       )}
+      {needsCaptcha && <Captcha onChange={setAltcha} />}
       {error && <p className="error" role="alert">{error}</p>}
-      <button className="button button--primary" type="submit" disabled={busy}>
+      <button className="button button--primary" type="submit" disabled={busy || (needsCaptcha && !altcha)}>
         {busy ? "Please wait…" : signup ? "Sign up free" : "Log in"}
       </button>
       {signup && (

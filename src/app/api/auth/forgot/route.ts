@@ -1,3 +1,4 @@
+import { CAPTCHA_ERROR, verifyCaptcha } from "@/lib/captcha";
 import { db } from "@/lib/db";
 import { emailEnabled, passwordResetEmail, sendEmail } from "@/lib/email";
 import { jsonError, readJson } from "@/lib/http";
@@ -12,7 +13,9 @@ export async function POST(request: Request) {
   }
   if (!limits.auth(clientKey(request))) return jsonError("Too many attempts. Try again later.", 429);
 
-  const email = String((await readJson(request))?.email ?? "").trim().toLowerCase();
+  const body = await readJson(request);
+  if (!(await verifyCaptcha(body?.altcha))) return jsonError(CAPTCHA_ERROR, 400);
+  const email = String(body?.email ?? "").trim().toLowerCase();
   const user = email ? await db.user.findUnique({ where: { email }, select: { id: true, email: true } }) : null;
 
   if (user) {

@@ -22,6 +22,12 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 - **Accounts:** email + password, "My decks", only the owner can edit. **Forgot password** sends a one-time
   link valid for 1 hour (SMTP, e.g. Gmail with an app password; the same answer is shown whether or not the
   email has an account). **Change password** on the Account page. Both sign out other devices.
+- **Bot protection:** an "I'm not a robot" checkbox ([ALTCHA](https://altcha.org), self-hosted proof-of-work,
+  no third-party service or key) on sign-up, forgot password and feedback from visitors. It takes about
+  1–3 seconds in the background; each answer works once and expires after 10 minutes. `CAPTCHA=off` disables it.
+- **Feedback:** a "💬 Feedback" button on every page (mood + message, optional email for visitors). Feedback is
+  saved, emailed to `NEXT_PUBLIC_CONTACT_EMAIL` when email is set up, and listed on **/admin** with site stats
+  (users, decks, cards, Pro users). Admins are `NEXT_PUBLIC_CONTACT_EMAIL` plus `ADMIN_EMAILS`.
 - **Quality modes and credits:**
 
   | Mode | With Claude (`ANTHROPIC_API_KEY`) | With Gemini only (`GEMINI_API_KEY`) | Credits per card |
@@ -49,12 +55,12 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 | Piece | Where |
 | --- | --- |
 | Pages | `src/app/page.tsx` (home/create), `d/[id]/edit` (editor), `d/[id]` (shared view), `decks`, `account`, `login`, `signup` |
-| API | `src/app/api/{auth,outline,decks,billing}` |
+| API | `src/app/api/{auth,outline,decks,billing,feedback,captcha,image,images}` |
 | AI | `src/lib/ai.ts` (Claude + routing), `src/lib/gemini.ts` (Gemini), `src/lib/providers.ts` (which provider), `src/lib/demo-ai.ts` (sample content) |
 | Accounts | `src/lib/auth.ts` (session cookies), `src/lib/password.ts` (scrypt) |
 | Credits & plans | `src/lib/credits.ts`, `src/lib/plans.ts` |
 | Payments | `src/lib/billing.ts` |
-| Data | Prisma + PostgreSQL (`prisma/schema.prisma`): `User`, `Session`, `Deck`, `Card` |
+| Data | Prisma + PostgreSQL (`prisma/schema.prisma`): `User`, `Session`, `Deck`, `Card`, `PasswordReset`, `Feedback` |
 
 ## Run it
 
