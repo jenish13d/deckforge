@@ -3,6 +3,7 @@ import "server-only";
 import { generateCard, GenerationError } from "./ai";
 import {
   CardContentSchema,
+  IMAGE_LAYOUTS,
   OutlineSchema,
   normalizeCard,
   parseStored,
@@ -10,6 +11,7 @@ import {
   type CardContent,
 } from "./cards";
 import { db } from "./db";
+import { findPhoto } from "./images";
 import { DEFAULT_MODE, isModeId, type ModeId } from "./plans";
 import type { ThemeId } from "./themes";
 
@@ -127,7 +129,7 @@ export async function generateDeckCard(
   if (!deck || index < 0) throw new GenerationError("Card not found.");
 
   try {
-    const content = await generateCard({
+    const { card, imageQuery } = await generateCard({
       deckTitle: deck.title,
       prompt: deck.prompt,
       outline: deck.cards.map((c) => c.brief),
@@ -135,6 +137,7 @@ export async function generateDeckCard(
       mode,
       extra,
     });
+    const content = { ...card, image: IMAGE_LAYOUTS.includes(card.layout) ? await findPhoto(imageQuery) : null };
     const row = await db.card.update({
       where: { id: cardId },
       data: { status: "ready", content: JSON.stringify(content) },

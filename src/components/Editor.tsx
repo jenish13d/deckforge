@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CardEditForm } from "@/components/CardEditForm";
 import { CardPlaceholder, CardView } from "@/components/CardView";
-import { PdfButton } from "@/components/PdfButton";
+import { DownloadMenu } from "@/components/DownloadMenu";
 import { Presenter } from "@/components/Presenter";
 import { emptyCard, type CardContent } from "@/lib/cards";
 import { ApiError, api } from "@/lib/client";
@@ -28,12 +28,14 @@ export function Editor({
   initialCredits,
   allowedModes,
   parallel = 3,
+  photosEnabled = false,
 }: {
   initial: DeckView;
   initialCredits: number;
   allowedModes: ModeId[];
   /** Cards written at once (1 on the free Gemini tier, which allows few requests per minute). */
   parallel?: number;
+  photosEnabled?: boolean;
 }) {
   const [deck, setDeck] = useState(initial);
   const [credits, setCredits] = useState(initialCredits);
@@ -230,7 +232,7 @@ export function Editor({
         <Link href="/account" className="credits-pill" title="Credits left this month">{credits} credits</Link>
         <button type="button" className="button" onClick={share}>{copied ? "Link copied" : "Share"}</button>
         <Link className="button" href={`/d/${deck.id}`} target="_blank">View</Link>
-        <PdfButton cards={readyCards} theme={deck.theme} title={deck.title} />
+        <DownloadMenu cards={readyCards} theme={deck.theme} title={deck.title} />
         <button
           type="button"
           className="button button--primary"
@@ -277,6 +279,7 @@ export function Editor({
                   initial={card.content ?? emptyCard(card.brief.title)}
                   onSave={(content) => saveCard(card.id, content)}
                   onCancel={() => setEditing(null)}
+                  photosEnabled={photosEnabled}
                 />
               ) : card.content ? (
                 <div className={busy[card.id] ? "is-busy" : undefined}>

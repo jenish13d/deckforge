@@ -57,12 +57,14 @@ describe("generateCard", () => {
     stats: [],
     quote: "",
     quoteAuthor: "",
+    imageQuery: " pizza oven ",
   };
 
   it("sends the shared deck context separately from the per-card request", async () => {
     const { call, requests } = fakeModel(card);
     const result = await generateCard({ deckTitle: "Meal prep", prompt: "brief", outline, index: 1, mode: "standard" }, call);
-    expect(result.title).toBe("The problem");
+    expect(result.card.title).toBe("The problem");
+    expect(result.imageQuery).toBe("pizza oven");
     expect(requests[0].context).toBe(deckContext("Meal prep", "brief", outline));
     expect(requests[0].user).toContain('card 2 of 3: "The problem"');
     expect(requests[0].user).not.toContain("first card");
@@ -87,7 +89,7 @@ describe("generateCard", () => {
 describe("modes", () => {
   it("runs each card on the model of its mode", async () => {
     const { call, requests } = fakeModel({
-      layout: "bullets", icon: "", title: "t", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "",
+      layout: "bullets", icon: "", title: "t", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "", imageQuery: "",
     });
     for (const mode of ["quick", "standard", "premium"] as const) {
       await generateCard({ deckTitle: "d", prompt: "p", outline, index: 1, mode }, call);
@@ -125,9 +127,9 @@ describe("demo mode", () => {
 
     const first = await generateCard({ deckTitle: result.title, prompt: "p", outline: result.cards, index: 0, mode: "quick" }, callDemo);
     const middle = await generateCard({ deckTitle: result.title, prompt: "p", outline: result.cards, index: 2, mode: "quick" }, callDemo);
-    expect(first.layout).toBe("title");
-    expect(first.title).toBe(result.cards[0].title);
-    expect(middle.title).toBe(result.cards[2].title);
+    expect(first.card.layout).toBe("title");
+    expect(first.card.title).toBe(result.cards[0].title);
+    expect(middle.card.title).toBe(result.cards[2].title);
   });
 });
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CardContentSchema, normalizeCard, normalizeOutline, parseStored, type GeneratedCard } from "../cards";
+import { CardContentSchema, imageSrc, normalizeCard, normalizeOutline, parseStored, showsImage, type GeneratedCard } from "../cards";
 
 const base: GeneratedCard = {
   layout: "bullets",
@@ -11,6 +11,7 @@ const base: GeneratedCard = {
   stats: [],
   quote: "",
   quoteAuthor: "",
+  imageQuery: "",
 };
 
 describe("normalizeCard", () => {
@@ -67,5 +68,26 @@ describe("parseStored", () => {
 
   it("parses valid content", () => {
     expect(parseStored(CardContentSchema, JSON.stringify(base))?.title).toBe("Why now");
+  });
+});
+
+describe("card photos", () => {
+  const photo = { url: "https://images.pexels.com/photos/1/a.jpeg", alt: "Pizza", credit: "Ana", creditUrl: "https://www.pexels.com/photo/1" };
+
+  it("keeps Pexels photos and drops photos from anywhere else", () => {
+    expect(normalizeCard({ ...base, image: photo }).image?.url).toBe(photo.url);
+    expect(normalizeCard({ ...base, image: { ...photo, url: "https://evil.example.com/x.jpg" } }).image).toBeNull();
+    expect(normalizeCard({ ...base, image: { ...photo, url: "javascript:alert(1)" } }).image).toBeNull();
+    expect(normalizeCard({ ...base, image: { ...photo, creditUrl: "javascript:alert(1)" } }).image?.creditUrl).toBe("");
+  });
+
+  it("only shows photos on layouts with room for them", () => {
+    expect(showsImage(normalizeCard({ ...base, layout: "bullets", image: photo }))).toBe(true);
+    expect(showsImage(normalizeCard({ ...base, layout: "stats", image: photo }))).toBe(false);
+    expect(showsImage(normalizeCard(base))).toBe(false);
+  });
+
+  it("serves photos through the same-origin image route", () => {
+    expect(imageSrc(photo.url)).toBe(`/api/image?src=${encodeURIComponent(photo.url)}`);
   });
 });

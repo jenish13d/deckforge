@@ -45,7 +45,15 @@ export function PdfButton({
 
         for (let i = 0; i < pages.length; i++) {
           if (cancelled) return;
-          const image = await toJpeg(pages[i], { width: WIDTH, height: HEIGHT, pixelRatio: 2, quality: 0.92, backgroundColor: "#ffffff" });
+          const image = await toJpeg(pages[i], {
+            width: WIDTH,
+            height: HEIGHT,
+            pixelRatio: 2,
+            quality: 0.92,
+            backgroundColor: "#ffffff",
+            // Photos share one path (/api/image?src=…); without this every photo would reuse the first one.
+            includeQueryParams: true,
+          });
           if (i > 0) pdf.addPage([WIDTH, HEIGHT], "landscape");
           pdf.addImage(image, "JPEG", 0, 0, WIDTH, HEIGHT);
           setProgress(i + 1);
@@ -75,7 +83,7 @@ export function PdfButton({
           setState("rendering");
         }}
       >
-        {busy ? `Creating PDF… ${progress}/${cards.length}` : state === "error" ? "PDF failed, try again" : "Download PDF"}
+        {busy ? `Creating PDF… ${progress}/${cards.length}` : state === "error" ? "PDF failed, try again" : "PDF"}
       </button>
       {busy && (
         <div ref={stage} className={`pdf-stage theme-${theme}`} aria-hidden="true">

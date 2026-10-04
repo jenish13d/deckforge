@@ -10,7 +10,12 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 - **Cards appear one by one** (3 at a time); one failure doesn't sink the deck, and reloading resumes unfinished cards.
 - **7 card layouts** (title, section, bullets, columns, big numbers, quote, timeline), picked per card by the AI.
 - **Editing:** edit form per card, regenerate with instructions, add, delete, reorder.
-- **6 themes**, **present mode**, **share link** (view-only) and **PDF** (one 16:9 card per page).
+- **6 themes**, **present mode** and **share links** (view-only).
+- **Downloads:** **PDF** (built in the browser: each card rendered at 1280×720 into a 16:9 page, identical in
+  every browser) and **PowerPoint (.pptx)** with native, editable text, shapes and photos in the deck's theme.
+- **Photos:** with `PEXELS_API_KEY` set, the AI suggests photo keywords per card and Title, Section, Bullets
+  and Quote cards get a Pexels photo beside the text, credited on the slide. Users can search, swap or remove
+  photos in the card editor. Photos are served through `/api/image` (Pexels only) so exports can read them.
 - **Accounts:** email + password, "My decks", only the owner can edit.
 - **Quality modes and credits:**
 

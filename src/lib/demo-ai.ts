@@ -44,7 +44,8 @@ const LAYOUT_CYCLE = ["bullets", "columns", "stats", "timeline", "quote", "bulle
 const ICONS = ["💡", "🧭", "📊", "🗓️", "💬", "✅"];
 
 export function demoCard(cardTitle: string, _deckTitle: string, index: number, total: number): GeneratedCard {
-  const base = { icon: "", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "" };
+  // Photos are looked up from the card title when a Pexels key is set.
+  const base = { icon: "", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "", imageQuery: cardTitle };
   if (index === 0) {
     return { ...base, layout: "title", icon: "🚀", title: cardTitle, subtitle: "Demo content: connect an AI key (Gemini or Claude) to have the AI write real slides for this topic." };
   }

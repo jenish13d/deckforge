@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { LAYOUTS, MAX_ITEMS, type CardContent, type Layout } from "@/lib/cards";
+import { IMAGE_LAYOUTS, LAYOUTS, MAX_ITEMS, imageSrc, type CardContent, type CardImage, type Layout } from "@/lib/cards";
+import { api } from "@/lib/client";
 
 const LAYOUT_NAMES: Record<Layout, string> = {
   title: "Title",
@@ -18,10 +19,12 @@ export function CardEditForm({
   initial,
   onSave,
   onCancel,
+  photosEnabled = false,
 }: {
   initial: CardContent;
   onSave: (content: CardContent) => Promise<void>;
   onCancel: () => void;
+  photosEnabled?: boolean;
 }) {
   const [c, setC] = useState<CardContent>(initial);
   const [saving, setSaving] = useState(false);
@@ -157,10 +160,91 @@ export function CardEditForm({
         </>
       )}
 
+      {photosEnabled && <PhotoPicker card={c} onChange={(image) => set({ image })} />}
+
       <div className="row row--end">
         <button type="button" className="button" onClick={onCancel} disabled={saving}>Cancel</button>
         <button type="submit" className="button button--primary" disabled={saving}>{saving ? "Saving…" : "Save"}</button>
       </div>
     </form>
+  );
+}
+
+type PhotoResult = CardImage & { thumb: string };
+
+function PhotoPicker({ card, onChange }: { card: CardContent; onChange: (image: CardImage | null) => void }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<PhotoResult[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState("");
+  const fits = IMAGE_LAYOUTS.includes(card.layout);
+
+  async function search() {
+    if (!query.trim()) return;
+    setSearching(true);
+    setError("");
+    try {
+      const { photos } = await api<{ photos: PhotoResult[] }>("/api/images/search", { body: { query } });
+      setResults(photos);
+      if (photos.length === 0) setError("No photos found. Try other words.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  return (
+    <fieldset className="fieldset">
+      <legend className="field__label">Photo</legend>
+      {!fits && <p className="muted small">Photos show on the Title, Section divider, Bullet points and Quote layouts.</p>}
+      {card.image && (
+        <div className="photo-current">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={imageSrc(card.image.url)} alt={card.image.alt} />
+          <span className="muted small">Photo by {card.image.credit} on Pexels</span>
+          <button type="button" className="button button--small button--danger" onClick={() => onChange(null)}>
+            Remove photo
+          </button>
+        </div>
+      )}
+      <div className="pair">
+        <input
+          className="input"
+          placeholder="Search free photos, e.g. pizza oven"
+          aria-label="Search photos"
+          value={query}
+          maxLength={100}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void search();
+            }
+          }}
+        />
+        <button type="button" className="button button--small" onClick={search} disabled={searching || !query.trim()}>
+          {searching ? "Searching…" : "Find photos"}
+        </button>
+      </div>
+      {error && <p className="error small">{error}</p>}
+      {results && results.length > 0 && (
+        <div className="photo-grid">
+          {results.map((photo) => (
+            <button
+              key={photo.url}
+              type="button"
+              className={`photo-option${card.image?.url === photo.url ? " is-selected" : ""}`}
+              onClick={() => onChange({ url: photo.url, alt: photo.alt, credit: photo.credit, creditUrl: photo.creditUrl })}
+              title={`Photo by ${photo.credit} on Pexels`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photo.thumb} alt={photo.alt} />
+            </button>
+          ))}
+        </div>
+      )}
+      <p className="muted small">Photos from Pexels, free to use. The photographer is credited on the slide.</p>
+    </fieldset>
   );
 }

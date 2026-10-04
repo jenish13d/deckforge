@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { Editor } from "@/components/Editor";
 import { getCurrentUser } from "@/lib/auth";
 import { getDeck } from "@/lib/decks";
+import { imagesEnabled } from "@/lib/images";
 import { availableModes, parallelCards } from "@/lib/providers";
 
 export const metadata: Metadata = { title: "Edit deck", robots: { index: false } };
@@ -18,5 +19,6 @@ export default async function EditPage(props: PageProps<"/d/[id]/edit">) {
 
   return <Editor initial={deck} initialCredits={user.credits} allowedModes={availableModes(user.plan)}
       parallel={parallelCards()}
+      photosEnabled={imagesEnabled()}
     />;
 }
