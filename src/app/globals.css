@@ -1,30 +1,51 @@
 /* ---------- App chrome ---------- */
 :root {
-  --bg: #faf6ef;
-  --surface: #fffdf9;
-  --text: #2b211a;
-  --muted: #76685a;
-  --border: #ebe1d3;
-  --primary: #b4462a;
+  /* Riviera: deep sea blue and gold on clean white. */
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --text: #0f1c2e;
+  --muted: #5b6576;
+  --border: #e2e7ee;
+  --primary: #0b3d6b;
   --primary-text: #ffffff;
   --danger: #b42318;
-  --olive: #6b7a3a;
-  --lemon: #f2c94c;
+  /* Brand: second color for small accents, the gradient used on big surfaces, and
+     the colors of the logo and illustration. */
+  --accent: #9a7a2c;
+  --gold: #d4af37;
+  --brand-a: #082c4e;
+  --brand-b: #1f6fa8;
+  --logo-back: #d4af37;
+  --logo-front: #0b3d6b;
+  --logo-dot: #1f6fa8;
+  --art-bar-a: #5d86b1;
+  --art-bar-b: #cfdced;
+  --art-glow-a: #cfe0f1;
+  --art-glow-b: #f5e8bf;
+  --art-glow-c: #e1eaf4;
+  --art-chip: #e3eaf3;
+  --art-shadow: #061a2e;
   --radius: 10px;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #16120e;
-    --surface: #211b16;
-    --text: #f4ede4;
-    --muted: #ab9d8d;
-    --border: #3a2f26;
-    --primary: #e3825e;
-    --primary-text: #1c130d;
+    --bg: #0b1220;
+    --surface: #131c2c;
+    --text: #eef2f8;
+    --muted: #94a0b4;
+    --border: #253149;
+    --primary: #6aa8e0;
+    --primary-text: #06111f;
     --danger: #ff7a66;
-    --olive: #b7c47a;
+    --accent: #e0bd5f;
+    --gold: #e0bd4f;
+    --brand-a: #0e3a63;
+    --brand-b: #2a7cc0;
+    --logo-front: #3d86c6;
+    --logo-dot: #6aa8e0;
+    --art-shadow: #000000;
     color-scheme: dark;
   }
 }
@@ -1016,7 +1037,7 @@ a {
   margin-top: 72px;
   padding: 48px 24px;
   border-radius: 20px;
-  background: linear-gradient(135deg, #a83f25 0%, #d9773a 100%);
+  background: linear-gradient(135deg, var(--brand-a) 0%, var(--brand-b) 100%);
   color: #fff;
   text-align: center;
 }
@@ -1029,7 +1050,7 @@ a {
 .cta-band .button--primary {
   background: #fff;
   border-color: #fff;
-  color: #a83f25;
+  color: var(--brand-a);
 }
 
 .site-footer {
@@ -1931,12 +1952,12 @@ a {
 /* ---------- App shell (signed-in pages) ---------- */
 :root {
   --primary-soft: color-mix(in srgb, var(--primary) 11%, var(--surface));
-  --side: #f5eee3;
+  --side: #f0f3f7;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --side: #1b1611;
+    --side: #0f1828;
   }
 
   .hero-art__glow {
@@ -2011,7 +2032,7 @@ a {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #b4462a, #e0953c);
+  background: linear-gradient(135deg, var(--brand-a), var(--brand-b));
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
@@ -2757,7 +2778,7 @@ a.quick-chip {
 
 .create-start__hello {
   margin: 0 0 -10px;
-  color: var(--olive);
+  color: var(--accent);
   font-family: var(--font-serif), Georgia, serif;
   font-size: 1.15rem;
   font-style: italic;
@@ -2769,7 +2790,7 @@ a.quick-chip {
 }
 
 .eyebrow {
-  color: var(--olive);
+  color: var(--accent);
 }
 
 .logo {
@@ -2792,4 +2813,18 @@ a.quick-chip {
   .theme-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
+
+/* Polish: soft depth on cards */
+.starter,
+.template-tile,
+.feature,
+.step,
+.price-card,
+.panel,
+.credit-box,
+.prompt-box--landing,
+.quick-chip,
+.tabs {
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 2px 8px rgba(16, 24, 40, 0.04);
 }

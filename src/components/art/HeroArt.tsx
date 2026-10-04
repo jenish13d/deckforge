@@ -9,8 +9,8 @@ export function HeroArt({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 400 260" role="img" aria-label="Slides being created">
       <defs>
         <linearGradient id="ha-primary" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#b4462a" />
-          <stop offset="1" stopColor="#e0953c" />
+          <stop offset="0" style={{ stopColor: "var(--brand-a)" }} />
+          <stop offset="1" style={{ stopColor: "var(--brand-b)" }} />
         </linearGradient>
         <linearGradient id="ha-sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#a9d6ef" />
@@ -21,21 +21,21 @@ export function HeroArt({ className }: { className?: string }) {
           <stop offset="1" stopColor="#f2b134" />
         </linearGradient>
         <linearGradient id="ha-bar" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#8a9a4b" />
-          <stop offset="1" stopColor="#c9d18f" />
+          <stop offset="0" style={{ stopColor: "var(--art-bar-a)" }} />
+          <stop offset="1" style={{ stopColor: "var(--art-bar-b)" }} />
         </linearGradient>
         <linearGradient id="ha-hill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#8a9a4b" />
           <stop offset="1" stopColor="#5f6d31" />
         </linearGradient>
-        {(["#fbd3b4", "#fbe7a1", "#d8e2b6"] as const).map((color, i) => (
+        {(["var(--art-glow-a)", "var(--art-glow-b)", "var(--art-glow-c)"] as const).map((color, i) => (
           <radialGradient key={color} id={`ha-glow${i}`}>
-            <stop offset="0" stopColor={color} stopOpacity="0.9" />
-            <stop offset="1" stopColor={color} stopOpacity="0" />
+            <stop offset="0" style={{ stopColor: color, stopOpacity: 0.9 }} />
+            <stop offset="1" style={{ stopColor: color, stopOpacity: 0 }} />
           </radialGradient>
         ))}
         <filter id="ha-shadow" x="-30%" y="-30%" width="160%" height="170%">
-          <feDropShadow dx="0" dy="12" stdDeviation="12" floodColor="#5a2d14" floodOpacity="0.18" />
+          <feDropShadow dx="0" dy="12" stdDeviation="12" style={{ floodColor: "var(--art-shadow)", floodOpacity: 0.18 }} />
         </filter>
       </defs>
 
@@ -49,7 +49,7 @@ export function HeroArt({ className }: { className?: string }) {
       {/* back-left card: bar chart */}
       <g transform="rotate(-11 125 115)" filter="url(#ha-shadow)">
         <rect x="40" y="58" width="172" height="112" rx="14" fill="#fffdf8" />
-        <rect x="56" y="74" width="70" height="9" rx="4.5" fill="#f1dccb" />
+        <rect x="56" y="74" width="70" height="9" rx="4.5" style={{ fill: "var(--art-chip)" }} />
         <rect x="58" y="128" width="20" height="28" rx="4" fill="url(#ha-bar)" />
         <rect x="86" y="112" width="20" height="44" rx="4" fill="url(#ha-bar)" />
         <rect x="114" y="120" width="20" height="36" rx="4" fill="url(#ha-bar)" />
@@ -72,9 +72,9 @@ export function HeroArt({ className }: { className?: string }) {
           <ellipse cx="270" cy="95" rx="2.6" ry="8.5" fill="#3f4a22" />
           <ellipse cx="318" cy="90" rx="3" ry="10" fill="#3f4a22" />
           <path d="M226 118 L226 110 L238 104 L250 110 L250 118 Z" fill="#e8b48c" />
-          <path d="M224 111 L238 102 L252 111" stroke="#b4462a" strokeWidth="3" fill="none" strokeLinejoin="round" />
+          <path d="M224 111 L238 102 L252 111" style={{ stroke: "var(--brand-a)" }} strokeWidth="3" fill="none" strokeLinejoin="round" />
         </g>
-        <rect x="215" y="127" width="84" height="8" rx="4" fill="#f1dccb" />
+        <rect x="215" y="127" width="84" height="8" rx="4" style={{ fill: "var(--art-chip)" }} />
       </g>
 
       {/* front card: title slide */}
@@ -97,10 +97,10 @@ export function HeroArt({ className }: { className?: string }) {
 
       {/* sparkles */}
       <path d={star} transform="translate(318 168) scale(20)" fill="url(#ha-sun)" />
-      <path d={star} transform="translate(84 48) scale(11)" fill="#e0953c" />
-      <path d={star} transform="translate(356 196) scale(8)" fill="#8a9a4b" />
-      <circle cx="372" cy="56" r="4" fill="#e8b48c" />
-      <circle cx="196" cy="30" r="3.5" fill="#f2c94c" />
+      <path d={star} transform="translate(84 48) scale(11)" style={{ fill: "var(--brand-b)" }} />
+      <path d={star} transform="translate(356 196) scale(8)" style={{ fill: "var(--accent)" }} />
+      <circle cx="372" cy="56" r="4" style={{ fill: "var(--art-glow-a)" }} />
+      <circle cx="196" cy="30" r="3.5" style={{ fill: "var(--gold)" }} />
     </svg>
   );
 }
