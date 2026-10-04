@@ -29,8 +29,7 @@ Time: about 20 minutes.
    (If it isn't listed, click **Adjust GitHub App Permissions** and give Vercel access to the `deckforge` repo.)
 4. On the configure screen:
    - **Framework Preset:** Next.js (detected automatically)
-   - Open **Build and Output Settings** → turn on the override for **Build Command** and enter:
-     `npm run vercel-build`
+   - The build command is already set in `vercel.json`, so you don't need to change it.
    - Open **Environment Variables** and add these, one by one (Name → Value → **Add**):
 
      | Name | Value |
