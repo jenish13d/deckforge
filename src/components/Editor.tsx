@@ -12,6 +12,7 @@ import { ApiError, api } from "@/lib/client";
 import type { CardView as CardData, DeckView } from "@/lib/decks";
 import { MODES, MODE_IDS, isModeId, type ModeId } from "@/lib/plans";
 import { THEMES, isThemeId } from "@/lib/themes";
+import { SITE } from "@/lib/site";
 
 // How many times a card waits out the AI's per-minute limit before giving up.
 const MAX_BUSY_RETRIES = 8;
@@ -188,7 +189,7 @@ export function Editor({
   return (
     <>
       <header className="toolbar">
-        <Link href="/" className="toolbar__brand">Deckforge</Link>
+        <Link href="/" className="toolbar__brand">{SITE.name}</Link>
         <input
           className="input toolbar__title"
           aria-label="Deck title"

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { CardImage } from "./cards";
+import { SITE } from "@/lib/site";
 
 // Photos for slides.
 // - Default: Openverse (https://openverse.org), no key needed. We only use Flickr and
@@ -16,7 +17,7 @@ export interface PhotoResult extends CardImage {
   thumb: string;
 }
 
-const USER_AGENT = "Deckforge/1.0 (presentation maker)";
+const USER_AGENT = `${SITE.name}/1.0 (presentation maker)`;
 
 interface PexelsPhoto {
   url: string;

@@ -1,11 +1,12 @@
 import { LegalPage } from "@/components/LegalPage";
+import { SITE } from "@/lib/site";
 
 export const metadata = { title: "Terms of service" };
 
 export default function TermsPage() {
   return (
     <LegalPage title="Terms of service" updated="October 4, 2026">
-      <p>By creating an account or using Deckforge, you agree to these terms.</p>
+      <p>By creating an account or using {SITE.name}, you agree to these terms.</p>
 
       <h2>Your account</h2>
       <p>Keep your login details safe; you are responsible for activity on your account. You must be old enough to agree to these terms where you live.</p>
@@ -17,7 +18,7 @@ export default function TermsPage() {
       <p>Decks are written with the help of AI and may contain mistakes. Review facts, figures and quotes before you rely on or publish them.</p>
 
       <h2>Acceptable use</h2>
-      <p>Don&apos;t use Deckforge to create illegal, harmful, hateful or misleading content, to infringe others&apos; rights, or to disrupt or overload the service.</p>
+      <p>Don&apos;t use {SITE.name} to create illegal, harmful, hateful or misleading content, to infringe others&apos; rights, or to disrupt or overload the service.</p>
 
       <h2>Plans, credits and payments</h2>
       <ul>
@@ -28,10 +29,10 @@ export default function TermsPage() {
       </ul>
 
       <h2>Ending your use</h2>
-      <p>You can stop using Deckforge at any time. We may suspend accounts that break these terms.</p>
+      <p>You can stop using {SITE.name} at any time. We may suspend accounts that break these terms.</p>
 
       <h2>Disclaimer and liability</h2>
-      <p>Deckforge is provided &quot;as is&quot;. To the extent the law allows, we are not liable for indirect or consequential losses, and our total liability is limited to the amount you paid us in the 12 months before the claim. Nothing in these terms limits rights you have under consumer law.</p>
+      <p>{SITE.name} is provided &quot;as is&quot;. To the extent the law allows, we are not liable for indirect or consequential losses, and our total liability is limited to the amount you paid us in the 12 months before the claim. Nothing in these terms limits rights you have under consumer law.</p>
 
       <h2>Changes</h2>
       <p>We may update these terms. If changes are significant, we will let you know before they take effect.</p>

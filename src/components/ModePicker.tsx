@@ -1,5 +1,6 @@
 "use client";
 
+import { ModeIcon } from "@/components/ModeIcon";
 import { MODES, MODE_IDS, type ModeId } from "@/lib/plans";
 
 export function ModePicker({
@@ -30,7 +31,7 @@ export function ModePicker({
             onClick={() => onChange(id)}
           >
             <span className="mode-option__name">
-              {mode.icon} {mode.label} {soon ? <span className="badge badge--muted">Soon</span> : locked && <span className="badge">Pro</span>}
+              <ModeIcon mode={id} /> {mode.label} {soon ? <span className="badge badge--muted">Soon</span> : locked && <span className="badge">Pro</span>}
             </span>
             <span className="mode-option__desc">{mode.description}</span>
             <span className="mode-option__cost">

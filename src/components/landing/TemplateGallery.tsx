@@ -1,18 +1,19 @@
 import Link from "next/link";
 
 import { CardView } from "@/components/CardView";
+import { TemplateIcon } from "@/components/TemplateIcon";
 import { TEMPLATES } from "@/lib/templates";
 
 /** Template tiles; each links to `hrefFor(template)`. */
-export function TemplateGallery({ hrefFor }: { hrefFor: (id: string) => string }) {
+export function TemplateGallery({ hrefFor, scroll = false }: { hrefFor: (id: string) => string; /** Swipeable row on phones. */ scroll?: boolean }) {
   return (
-    <div className="template-grid">
+    <div className={scroll ? "template-grid scroll-row" : "template-grid template-grid--page"}>
       {TEMPLATES.map((t) => (
         <Link key={t.id} href={hrefFor(t.id)} className="template-tile">
           <div className={`template-tile__preview mini-card theme-${t.theme}`}>
             <CardView content={t.preview} />
           </div>
-          <strong>{t.icon} {t.name}</strong>
+          <strong className="template-tile__name"><TemplateIcon id={t.id} /> {t.name}</strong>
           <span className="muted small">{t.description}</span>
         </Link>
       ))}

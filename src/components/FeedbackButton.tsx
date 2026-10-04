@@ -1,10 +1,12 @@
 "use client";
 
+import { MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { api } from "@/lib/client";
 import { Captcha } from "./Captcha";
+import { SITE } from "@/lib/site";
 
 const MOODS = [
   { value: 1, emoji: "😞", label: "Not good" },
@@ -61,7 +63,7 @@ export function FeedbackButton({ loggedIn, captcha = false }: { loggedIn: boolea
             </div>
           ) : (
             <form onSubmit={send} className="feedback__form">
-              <p className="strong">How&apos;s Deckforge so far?</p>
+              <p className="strong">How&apos;s {SITE.name} so far?</p>
               <div className="feedback__moods" role="radiogroup" aria-label="Rating">
                 {MOODS.map((m) => (
                   <button
@@ -111,8 +113,9 @@ export function FeedbackButton({ loggedIn, captcha = false }: { loggedIn: boolea
           )}
         </div>
       )}
-      <button type="button" className="feedback__toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        💬 Feedback
+      <button type="button" className="feedback__toggle" aria-expanded={open} aria-label="Feedback" onClick={() => setOpen((o) => !o)}>
+        <MessageCircle size={18} aria-hidden="true" />
+        <span className="feedback__label">Feedback</span>
       </button>
     </div>
   );

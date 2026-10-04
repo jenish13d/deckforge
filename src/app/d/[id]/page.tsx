@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { CardView } from "@/components/CardView";
 import { ViewerActions } from "@/components/ViewerActions";
 import { getDeck } from "@/lib/decks";
+import { SITE } from "@/lib/site";
 
 export async function generateMetadata(props: PageProps<"/d/[id]">): Promise<Metadata> {
   const { id } = await props.params;
@@ -22,7 +23,7 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
   return (
     <>
       <header className="toolbar no-print">
-        <Link href="/" className="toolbar__brand">Deckforge</Link>
+        <Link href="/" className="toolbar__brand">{SITE.name}</Link>
         <h1 className="toolbar__heading">{deck.title}</h1>
         <ViewerActions cards={cards} theme={deck.theme} title={deck.title} />
       </header>
@@ -34,7 +35,7 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
         </div>
         {cards.length === 0 && <p className="muted">This deck is still being written.</p>}
         <p className="made-with no-print">
-          Made with <Link href="/">Deckforge</Link>
+          Made with <Link href="/">{SITE.name}</Link>
         </p>
       </main>
     </>

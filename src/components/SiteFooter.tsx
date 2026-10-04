@@ -15,7 +15,7 @@ export async function SiteFooter() {
         </div>
         <nav className="site-footer__col" aria-label="Product">
           <strong>Product</strong>
-          <Link href="/#templates">Templates</Link>
+          <Link href="/templates">Templates</Link>
           <Link href="/#themes">Themes</Link>
           <Link href="/pricing">Pricing</Link>
           <Link href="/#faq">FAQ</Link>

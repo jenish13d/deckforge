@@ -6,8 +6,8 @@ import { premiumAvailable } from "@/lib/providers";
 const features = (): { label: string; free: string | boolean; pro: string | boolean }[] => [
   { label: "Credits every month", free: String(PLANS.free.monthlyCredits), pro: PLANS.pro.monthlyCredits.toLocaleString() },
   { label: "About how many cards (Standard)", free: `~${PLANS.free.monthlyCredits / MODES.standard.creditsPerCard}`, pro: `~${PLANS.pro.monthlyCredits / MODES.standard.creditsPerCard}` },
-  { label: "⚡ Quick and ✨ Standard modes", free: true, pro: true },
-  { label: premiumAvailable() ? "💎 Premium mode" : "💎 Premium mode (coming soon)", free: false, pro: true },
+  { label: "Quick and Standard modes", free: true, pro: true },
+  { label: premiumAvailable() ? "Premium mode" : "Premium mode (coming soon)", free: false, pro: true },
   { label: "All themes, editing, present mode", free: true, pro: true },
   { label: "Share links and PDF download", free: true, pro: true },
   { label: "Free AI outlines", free: true, pro: true },
@@ -16,7 +16,7 @@ const features = (): { label: string; free: string | boolean; pro: string | bool
 const cell = (value: string | boolean) =>
   value === true ? <span aria-label="Included">✓</span> : value === false ? <span className="muted" aria-label="Not included">—</span> : value;
 
-export function Pricing({ ctaHref = "/signup" }: { ctaHref?: string }) {
+export function Pricing({ ctaHref = "/signup", compact = false }: { ctaHref?: string; /** Hide the comparison table (landing page). */ compact?: boolean }) {
   return (
     <div className="pricing-block">
       <div className="pricing-cards">
@@ -37,31 +37,37 @@ export function Pricing({ ctaHref = "/signup" }: { ctaHref?: string }) {
         </div>
       </div>
 
-      <table className="compare">
-        <thead>
-          <tr>
-            <th scope="col"><span className="sr-only">Feature</span></th>
-            <th scope="col">Free</th>
-            <th scope="col">Pro</th>
-          </tr>
-        </thead>
-        <tbody>
-          {features().map((f) => (
-            <tr key={f.label}>
-              <th scope="row">{f.label}</th>
-              <td>{cell(f.free)}</td>
-              <td>{cell(f.pro)}</td>
+      {compact ? (
+        <p className="center">
+          <Link href="/pricing">Compare plans in detail</Link>
+        </p>
+      ) : (
+        <table className="compare">
+          <thead>
+            <tr>
+              <th scope="col"><span className="sr-only">Feature</span></th>
+              <th scope="col">Free</th>
+              <th scope="col">Pro</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {features().map((f) => (
+              <tr key={f.label}>
+                <th scope="row">{f.label}</th>
+                <td>{cell(f.free)}</td>
+                <td>{cell(f.pro)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       <p className="muted small center">
         Credits per card:{" "}
         {MODE_IDS.map((id, i) => (
           <span key={id}>
             {i > 0 && " · "}
-            {MODES[id].icon} {MODES[id].label} {MODES[id].creditsPerCard}
+            {MODES[id].label} {MODES[id].creditsPerCard}
           </span>
         ))}
         . Unused credits refill monthly. Cancel any time.

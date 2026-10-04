@@ -1,16 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-
+import { ArrowRight, ArrowUp, ChevronDown, ClipboardPaste, Layers, LayoutTemplate, LoaderCircle, Zap } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
+import { HeroArt } from "@/components/art/HeroArt";
+import { CardView } from "@/components/CardView";
 import { ModePicker } from "@/components/ModePicker";
+import { TemplateIcon } from "@/components/TemplateIcon";
 import { ThemePicker } from "@/components/ThemePicker";
 import { MAX_CARDS, MIN_CARDS, type Outline } from "@/lib/cards";
 import { api } from "@/lib/client";
 import { DEFAULT_MODE, cardCost, type ModeId } from "@/lib/plans";
-import { TEMPLATES } from "@/lib/templates";
+import { TEMPLATES, type Template } from "@/lib/templates";
 import type { ThemeId } from "@/lib/themes";
 
 interface EditableCard {
@@ -18,6 +21,14 @@ interface EditableCard {
   title: string;
   points: string;
 }
+
+const SAMPLES = [
+  "A 5-minute talk for college students on why sleep matters, with simple tips",
+  "The history of pizza, from Naples to the whole world",
+  "Pitch for a neighborhood coffee subscription: problem, offer, pricing and launch plan",
+  "Introduction to climate change for 10-year-olds, with examples they can relate to",
+  "Quarterly results for a small online shop: sales, best sellers, problems and next steps",
+];
 
 let nextKey = 0;
 const toEditable = (outline: Outline): EditableCard[] =>
@@ -45,6 +56,10 @@ export function CreateFlow({
   const [cards, setCards] = useState<EditableCard[] | null>(null);
   const [busy, setBusy] = useState<"outline" | "deck" | null>(null);
   const [error, setError] = useState("");
+  const [tab, setTab] = useState<"start" | "templates">("start");
+  const [placeholder, setPlaceholder] = useState("Describe your topic, audience and goal…");
+  const promptRef = useRef<HTMLTextAreaElement>(null);
+  const sampleIndex = useRef(-1);
 
   async function makeOutline(event: React.FormEvent) {
     event.preventDefault();
@@ -82,61 +97,134 @@ export function CreateFlow({
   const update = (key: number, patch: Partial<EditableCard>) =>
     setCards((list) => list?.map((c) => (c.key === key ? { ...c, ...patch } : c)) ?? null);
 
+  function applyTemplate(template: Template) {
+    setPrompt(template.prompt);
+    setTheme(template.theme);
+    focusPrompt();
+  }
+
+  function focusPrompt(placeholderText?: string) {
+    if (placeholderText) setPlaceholder(placeholderText);
+    promptRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    promptRef.current?.focus({ preventScroll: true });
+  }
+
+  function trySample() {
+    sampleIndex.current = (sampleIndex.current + 1) % SAMPLES.length;
+    setPrompt(SAMPLES[sampleIndex.current]);
+    focusPrompt();
+  }
+
   if (!cards) {
     return (
-      <form className="panel" onSubmit={makeOutline}>
-        <label className="field">
-          <span className="field__label">Your topic</span>
+      <div className="create-start">
+        <HeroArt className="create-start__art" />
+        <h1 className="create-start__title">What do you want to present?</h1>
+
+        <form className="prompt-box" onSubmit={makeOutline}>
           <textarea
-            className="input input--large"
-            rows={4}
+            ref={promptRef}
+            className="prompt-box__input"
+            rows={3}
             maxLength={4000}
             required
-            placeholder="Describe your topic, audience and goal. Paste notes if you have them."
+            aria-label="Your topic"
+            placeholder={placeholder}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) e.currentTarget.form?.requestSubmit();
+            }}
           />
-        </label>
-
-        <div className="chips" aria-label="Start from a template">
-          {TEMPLATES.map((t) => (
+          <div className="prompt-box__bar">
+            <label className="pill-select">
+              <Layers size={15} aria-hidden="true" />
+              <select aria-label="Number of cards" value={cardCount} onChange={(e) => setCardCount(Number(e.target.value))}>
+                {Array.from({ length: MAX_CARDS - MIN_CARDS + 1 }, (_, i) => MIN_CARDS + i).map((n) => (
+                  <option key={n} value={n}>{n} cards</option>
+                ))}
+              </select>
+              <ChevronDown size={15} aria-hidden="true" className="pill-select__chevron" />
+            </label>
+            <span className="prompt-box__hint">The outline is free</span>
             <button
-              key={t.id}
-              type="button"
-              className="chip"
-              onClick={() => {
-                setPrompt(t.prompt);
-                setTheme(t.theme);
-              }}
+              className="send-button"
+              type="submit"
+              aria-label="Generate outline"
+              title="Generate outline"
+              disabled={busy !== null || !prompt.trim()}
             >
-              {t.icon} {t.name}
+              {busy === "outline" ? <LoaderCircle size={20} className="spin" aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
+            </button>
+          </div>
+        </form>
+        {busy === "outline" && <p className="status center" role="status">Planning your outline…</p>}
+        {/\[[^\]]+\]/.test(prompt) && (
+          <p className="muted small center">Replace the parts in [brackets] with your details for the best result.</p>
+        )}
+        {error && <p className="error center" role="alert">{error}</p>}
+
+        <div className="quick-chips" aria-label="Start from a template">
+          {TEMPLATES.map((t) => (
+            <button key={t.id} type="button" className="quick-chip" onClick={() => applyTemplate(t)}>
+              <TemplateIcon id={t.id} /> {t.name}
             </button>
           ))}
         </div>
-        {/\[[^\]]+\]/.test(prompt) && (
-          <p className="muted small">Replace the parts in [brackets] with your details for the best result.</p>
-        )}
 
-        <div className="row">
-          <label className="field field--inline">
-            <span className="field__label">Cards</span>
-            <select className="input" value={cardCount} onChange={(e) => setCardCount(Number(e.target.value))}>
-              {Array.from({ length: MAX_CARDS - MIN_CARDS + 1 }, (_, i) => MIN_CARDS + i).map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </label>
-          <button className="button button--primary" type="submit" disabled={busy !== null || !prompt.trim()}>
-            {busy === "outline" ? "Planning…" : "Generate outline"}
+        <div className="tabs" role="tablist" aria-label="Ideas">
+          <button type="button" role="tab" aria-selected={tab === "start"} className="tab" onClick={() => setTab("start")}>
+            Get started
+          </button>
+          <button type="button" role="tab" aria-selected={tab === "templates"} className="tab" onClick={() => setTab("templates")}>
+            Templates
           </button>
         </div>
-        {error && <p className="error" role="alert">{error}</p>}
-      </form>
+
+        {tab === "start" ? (
+          <div className="starter-grid" role="tabpanel">
+            <button type="button" className="starter" onClick={trySample}>
+              <Zap size={20} aria-hidden="true" className="starter__icon" />
+              <strong>Take it for a test drive</strong>
+              <span>Fill in a sample topic and watch a deck being made.</span>
+              <span className="starter__cta">Try a sample <ArrowRight size={14} aria-hidden="true" /></span>
+            </button>
+            <button type="button" className="starter" onClick={() => focusPrompt("Paste your notes, an outline or a whole document here…")}>
+              <ClipboardPaste size={20} aria-hidden="true" className="starter__icon" />
+              <strong>Turn notes into slides</strong>
+              <span>Paste notes, an outline or a document. We&apos;ll shape it into cards.</span>
+              <span className="starter__cta">Paste my notes <ArrowRight size={14} aria-hidden="true" /></span>
+            </button>
+            <button type="button" className="starter" onClick={() => setTab("templates")}>
+              <LayoutTemplate size={20} aria-hidden="true" className="starter__icon" />
+              <strong>Start from a template</strong>
+              <span>Pitch decks, reports, lessons, proposals and more.</span>
+              <span className="starter__cta">Browse templates <ArrowRight size={14} aria-hidden="true" /></span>
+            </button>
+          </div>
+        ) : (
+          <div className="template-grid template-grid--app scroll-row" role="tabpanel">
+            {TEMPLATES.map((t) => (
+              <button key={t.id} type="button" className="template-tile" onClick={() => applyTemplate(t)}>
+                <div className={`template-tile__preview mini-card theme-${t.theme}`}>
+                  <CardView content={t.preview} />
+                </div>
+                <strong className="template-tile__name"><TemplateIcon id={t.id} /> {t.name}</strong>
+                <span className="muted small">{t.description}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     );
   }
 
   return (
-    <div className="panel">
+    <div className="panel outline-panel">
+      <div className="row row--between">
+        <h1 className="outline-panel__title">Review your outline</h1>
+        <span className="muted small">Step 2 of 2</span>
+      </div>
       <label className="field">
         <span className="field__label">Deck title</span>
         <input className="input input--large" value={title} maxLength={120} onChange={(e) => setTitle(e.target.value)} />

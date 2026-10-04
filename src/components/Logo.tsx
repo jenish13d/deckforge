@@ -1,3 +1,5 @@
+import { SITE } from "@/lib/site";
+
 export function LogoMark({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
@@ -12,7 +14,7 @@ export function Logo() {
   return (
     <span className="logo">
       <LogoMark />
-      <span>Deckforge</span>
+      <span>{SITE.name}</span>
     </span>
   );
 }

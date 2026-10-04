@@ -4,6 +4,7 @@ import type PptxGenJS from "pptxgenjs";
 
 import { imageSrc, showsImage, type CardContent } from "./cards";
 import { themeStyle, type ThemeStyle } from "./themes";
+import { SITE } from "@/lib/site";
 
 // Builds an editable PowerPoint deck (16:9, 13.333 × 7.5 in) from cards. Sizes mirror
 // the on-screen card, where 1% of the card width (1cqi) is 0.1333 in ≈ 9.6 pt.
@@ -163,7 +164,7 @@ export async function buildPptx(cards: CardContent[], theme: string, title: stri
   const pptx = new Pptx();
   pptx.layout = "LAYOUT_WIDE";
   pptx.title = title;
-  pptx.company = "Deckforge";
+  pptx.company = SITE.name;
 
   const style = themeStyle(theme);
   const background = gradientBackground(style);

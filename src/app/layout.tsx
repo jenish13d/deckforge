@@ -5,16 +5,17 @@ import { FeedbackButton } from "@/components/FeedbackButton";
 import { getCurrentUser } from "@/lib/auth";
 import { captchaEnabled } from "@/lib/captcha";
 import "./globals.css";
+import { SITE } from "@/lib/site";
 
 const sans = Geist({ variable: "--font-sans", subsets: ["latin"] });
 const serif = Fraunces({ variable: "--font-serif", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "Deckforge: AI presentation maker", template: "%s · Deckforge" },
-  description: "Describe your idea. Deckforge plans it, writes it and designs it. Then make it yours.",
+  title: { default: `${SITE.name}: AI presentation maker`, template: `%s · ${SITE.name}` },
+  description: SITE.description,
   openGraph: {
-    title: "Deckforge: AI presentation maker",
-    description: "Ideas to slides in a minute.",
+    title: `${SITE.name}: AI presentation maker`,
+    description: SITE.tagline,
     type: "website",
   },
 };

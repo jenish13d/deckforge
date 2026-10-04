@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
-import { SiteHeader } from "@/components/SiteHeader";
+import { AppShell } from "@/components/app/AppShell";
 import { isAdminEmail } from "@/lib/admin";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -51,9 +51,8 @@ export default async function AdminPage() {
   ];
 
   return (
-    <>
-      <SiteHeader />
-      <main className="page">
+    <AppShell next="/admin">
+      <div className="page">
         <h1 className="page-title">Admin</h1>
         <div className="admin-stats">
           {stats.map((s) => (
@@ -105,7 +104,7 @@ export default async function AdminPage() {
             ))}
           </ul>
         )}
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }

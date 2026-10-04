@@ -1,9 +1,9 @@
+import { LayoutGrid, Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DeckGrid } from "@/components/DeckGrid";
-import { SiteFooter } from "@/components/SiteFooter";
-import { SiteHeader } from "@/components/SiteHeader";
+import { AppShell } from "@/components/app/AppShell";
 import { getCurrentUser } from "@/lib/auth";
 import { listDecks } from "@/lib/decks";
 
@@ -15,16 +15,15 @@ export default async function DecksPage() {
   const decks = await listDecks(user.id);
 
   return (
-    <>
-      <SiteHeader />
-      <main className="page">
-        <div className="row row--between">
+    <AppShell next="/decks">
+      <div className="page">
+        <div className="row row--between page-head">
           <h1 className="page-title">My decks</h1>
-          <Link href="/" className="button button--primary">+ New deck</Link>
+          <Link href="/" className="button button--primary"><Plus size={18} aria-hidden="true" /> New deck</Link>
         </div>
         {decks.length === 0 ? (
           <div className="empty-state">
-            <p className="empty-state__icon" aria-hidden="true">🗂️</p>
+            <LayoutGrid size={40} className="empty-state__icon" aria-hidden="true" />
             <h2>No decks yet</h2>
             <p className="muted">Your decks will appear here. Start from a template or describe your own idea.</p>
             <Link href="/" className="button button--primary">Create your first deck</Link>
@@ -32,8 +31,7 @@ export default async function DecksPage() {
         ) : (
           <DeckGrid decks={decks} />
         )}
-      </main>
-      <SiteFooter />
-    </>
+      </div>
+    </AppShell>
   );
 }

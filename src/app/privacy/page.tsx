@@ -1,5 +1,6 @@
 import { LegalPage } from "@/components/LegalPage";
 import { textProvider } from "@/lib/providers";
+import { SITE } from "@/lib/site";
 
 export const metadata = { title: "Privacy policy" };
 
@@ -7,7 +8,7 @@ export default function PrivacyPage() {
   const usesGemini = textProvider() === "gemini";
   return (
     <LegalPage title="Privacy policy" updated="October 4, 2026">
-      <p>This policy explains what Deckforge collects, why, and the choices you have.</p>
+      <p>This policy explains what {SITE.name} collects, why, and the choices you have.</p>
 
       <h2>What we collect</h2>
       <ul>
@@ -53,7 +54,7 @@ export default function PrivacyPage() {
       <p>Depending on where you live (for example under the GDPR, UK GDPR or California law), you may have the right to access, correct, export or delete your personal data, and to object to some processing. Contact us to make a request.</p>
 
       <h2>Children</h2>
-      <p>Deckforge is not intended for children under 13, or under 16 where local law requires.</p>
+      <p>{SITE.name} is not intended for children under 13, or under 16 where local law requires.</p>
 
       <h2>Changes</h2>
       <p>If we make important changes to this policy, we will update this page and the date above.</p>

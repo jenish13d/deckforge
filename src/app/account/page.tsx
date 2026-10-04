@@ -2,8 +2,7 @@ import { redirect } from "next/navigation";
 
 import { ChangePasswordForm } from "@/components/ChangePasswordForm";
 import { PlanActions } from "@/components/PlanActions";
-import { SiteFooter } from "@/components/SiteFooter";
-import { SiteHeader } from "@/components/SiteHeader";
+import { AppShell } from "@/components/app/AppShell";
 import { getCurrentUser } from "@/lib/auth";
 import { billingConfigured, billingDemoEnabled } from "@/lib/billing";
 import { MODES, PLANS, planOf } from "@/lib/plans";
@@ -18,9 +17,8 @@ export default async function AccountPage(props: PageProps<"/account">) {
   const current = PLANS[plan];
 
   return (
-    <>
-      <SiteHeader />
-      <main className="page page--narrow">
+    <AppShell next="/account">
+      <div className="page page--narrow">
         <h1 className="page-title">Account</h1>
         {upgraded && <p className="success" role="status">Thanks! Your Pro plan is active.</p>}
         {user.credits === 0 && !upgraded && (
@@ -82,8 +80,7 @@ export default async function AccountPage(props: PageProps<"/account">) {
         <section className="section section--tight">
           <ChangePasswordForm />
         </section>
-      </main>
-      <SiteFooter />
-    </>
+      </div>
+    </AppShell>
   );
 }

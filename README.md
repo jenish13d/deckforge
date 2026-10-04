@@ -57,7 +57,9 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 
 | Piece | Where |
 | --- | --- |
-| Pages | `src/app/page.tsx` (home/create), `d/[id]/edit` (editor), `d/[id]` (shared view), `decks`, `account`, `login`, `signup` |
+| Pages | `src/app/page.tsx` (landing / create screen), `d/[id]/edit` (editor), `d/[id]` (shared view), `decks`, `templates`, `account`, `admin`, `login`, `signup` |
+| Layout | `src/components/app/AppShell.tsx` (signed-in pages: sidebar on laptops, top bar + bottom tabs on phones), `src/components/art/HeroArt.tsx` (SVG illustration), icons from `lucide-react` |
+| Brand | `src/lib/site.ts`: name, tagline and description in one place |
 | API | `src/app/api/{auth,outline,decks,billing,feedback,captcha,image,images}` |
 | AI | `src/lib/ai.ts` (Claude + routing), `src/lib/gemini.ts` (Gemini), `src/lib/providers.ts` (which provider), `src/lib/demo-ai.ts` (sample content) |
 | Accounts | `src/lib/auth.ts` (session cookies), `src/lib/password.ts` (scrypt) |
