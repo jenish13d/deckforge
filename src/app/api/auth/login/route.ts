@@ -14,6 +14,6 @@ export async function POST(request: Request) {
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return jsonError("Wrong email or password.", 401);
   }
-  await startSession(user.id);
+  await startSession(user.id, { remember: body?.remember !== false });
   return Response.json({ ok: true });
 }

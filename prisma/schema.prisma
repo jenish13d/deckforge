@@ -62,6 +62,8 @@ model Deck {
   theme     String   @default("minimal")
   // "quick" | "standard" | "premium" (see src/lib/plans.ts)
   mode      String   @default("standard")
+  // Whether anyone with the link can view the deck (the owner can always open it).
+  shared    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   cards     Card[]

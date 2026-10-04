@@ -24,6 +24,16 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 - **Accounts:** email + password, "My decks", only the owner can edit. **Forgot password** sends a one-time
   link valid for 1 hour (SMTP, e.g. Gmail with an app password; the same answer is shown whether or not the
   email has an account). **Change password** on the Account page. Both sign out other devices.
+- **My decks:** search, sort, and a menu on every deck (open, share, rename, duplicate, delete); "Select" to
+  delete several decks at once. The editor's "⋯" menu can duplicate or delete the deck.
+- **Sharing:** a Share window with copy link, WhatsApp, Telegram, X, LinkedIn, Facebook, Reddit, email and the
+  phone's own share sheet. Owners can switch a deck between "anyone with the link" and private (`Deck.shared`);
+  private decks show a "This deck is private" page to everyone else, and their link preview hides the title.
+  Shared links get a preview image (`opengraph-image`) in chat apps and social networks.
+- **Account controls:** "Remember me" on log in (off = the session ends when the browser closes, at most a day),
+  show/hide password, download all my data (JSON) and delete my account (password required).
+- **Site basics:** custom 404 and error pages, robots.txt, sitemap.xml, web app manifest and home-screen icon.
+  The site always uses its light design, whatever the device's dark-mode setting.
 - **Bot protection:** an "I'm not a robot" checkbox ([ALTCHA](https://altcha.org), self-hosted proof-of-work,
   no third-party service or key) on sign-up, forgot password and feedback from visitors. It takes about
   1–3 seconds in the background; each answer works once and expires after 10 minutes. `CAPTCHA=off` disables it.

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app/AppShell";
 import { HeroArt } from "@/components/art/HeroArt";
 import { CreateFlow } from "@/components/CreateFlow";
-import { DeckGrid } from "@/components/DeckGrid";
+import { DeckLibrary } from "@/components/DeckLibrary";
 import { Faq } from "@/components/landing/Faq";
 import { Pricing } from "@/components/landing/Pricing";
 import { TemplateGallery } from "@/components/landing/TemplateGallery";
@@ -67,7 +67,7 @@ export default async function Home(props: PageProps<"/">) {
                 <h2 className="section-title">Recent decks</h2>
                 <Link href="/decks">View all</Link>
               </div>
-              <DeckGrid decks={recent} />
+              <DeckLibrary decks={recent} />
             </section>
           )}
         </div>

@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { api } from "@/lib/client";
 import { Captcha } from "./Captcha";
+import { PasswordInput } from "./ui/PasswordInput";
 
 export function AuthForm({ mode, next = "/", captcha = false }: { mode: "login" | "signup"; next?: string; captcha?: boolean }) {
   const router = useRouter();
@@ -14,6 +15,7 @@ export function AuthForm({ mode, next = "/", captcha = false }: { mode: "login" 
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [altcha, setAltcha] = useState<string | null>(null);
+  const [remember, setRemember] = useState(true);
   const signup = mode === "signup";
   const needsCaptcha = signup && captcha;
 
@@ -22,7 +24,7 @@ export function AuthForm({ mode, next = "/", captcha = false }: { mode: "login" 
     setBusy(true);
     setError("");
     try {
-      await api(`/api/auth/${mode}`, { body: { email, password, altcha } });
+      await api(`/api/auth/${mode}`, { body: { email, password, altcha, remember } });
       router.push(next);
       router.refresh();
     } catch (e) {
@@ -41,9 +43,7 @@ export function AuthForm({ mode, next = "/", captcha = false }: { mode: "login" 
       </label>
       <label className="field">
         <span className="field__label">Password</span>
-        <input
-          className="input"
-          type="password"
+        <PasswordInput
           autoComplete={signup ? "new-password" : "current-password"}
           minLength={signup ? 8 : undefined}
           required
@@ -52,7 +52,12 @@ export function AuthForm({ mode, next = "/", captcha = false }: { mode: "login" 
         />
       </label>
       {!signup && (
-        <Link href="/forgot-password" className="small">Forgot password?</Link>
+        <div className="row row--between">
+          <label className="checkbox">
+            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me
+          </label>
+          <Link href="/forgot-password" className="small">Forgot password?</Link>
+        </div>
       )}
       {needsCaptcha && <Captcha onChange={setAltcha} />}
       {error && <p className="error" role="alert">{error}</p>}

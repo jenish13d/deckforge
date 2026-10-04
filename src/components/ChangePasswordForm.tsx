@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { api } from "@/lib/client";
+import { PasswordInput } from "./ui/PasswordInput";
 
 export function ChangePasswordForm() {
   const [current, setCurrent] = useState("");
@@ -30,11 +31,11 @@ export function ChangePasswordForm() {
       <h2 className="section-title">Change password</h2>
       <label className="field">
         <span className="field__label">Current password</span>
-        <input className="input" type="password" autoComplete="current-password" required value={current} onChange={(e) => setCurrent(e.target.value)} />
+        <PasswordInput autoComplete="current-password" required value={current} onChange={(e) => setCurrent(e.target.value)} />
       </label>
       <label className="field">
         <span className="field__label">New password</span>
-        <input className="input" type="password" autoComplete="new-password" minLength={8} required value={next} onChange={(e) => setNext(e.target.value)} />
+        <PasswordInput autoComplete="new-password" minLength={8} required value={next} onChange={(e) => setNext(e.target.value)} />
       </label>
       {error && <p className="error" role="alert">{error}</p>}
       {state === "saved" && <p className="success" role="status">Password changed. Other devices have been signed out.</p>}

@@ -24,7 +24,7 @@ const QUESTIONS = [
   },
   {
     q: "Who can see my decks?",
-    a: "Only you can edit your decks. A deck can be viewed by anyone you send its link to, so only share links with people you trust.",
+    a: "Only you can edit your decks. By default, anyone you send a deck's link to can view it. You can make any deck private from its Share window, and delete decks or your whole account at any time.",
   },
   {
     q: "Can I cancel Pro?",

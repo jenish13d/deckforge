@@ -1,16 +1,21 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist } from "next/font/google";
 
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { getCurrentUser } from "@/lib/auth";
 import { captchaEnabled } from "@/lib/captcha";
-import "./globals.css";
 import { SITE } from "@/lib/site";
+import { siteUrl } from "@/lib/url";
+import "./globals.css";
 
 const sans = Geist({ variable: "--font-sans", subsets: ["latin"] });
 const serif = Fraunces({ variable: "--font-serif", subsets: ["latin"], style: ["normal", "italic"] });
 
+// One look everywhere: the site stays light even when the device is in dark mode.
+export const viewport: Viewport = { colorScheme: "light", themeColor: "#ffffff" };
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: { default: `${SITE.name}: AI presentation maker`, template: `%s · ${SITE.name}` },
   description: SITE.description,
   openGraph: {

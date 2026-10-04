@@ -1,12 +1,18 @@
 "use client";
 
+import { CopyPlus, Ellipsis, Lock, Share2, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CardEditForm } from "@/components/CardEditForm";
 import { CardPlaceholder, CardView } from "@/components/CardView";
 import { DownloadMenu } from "@/components/DownloadMenu";
 import { Presenter } from "@/components/Presenter";
+import { ShareDialog } from "@/components/share/ShareDialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Menu } from "@/components/ui/Menu";
+import { useToast } from "@/components/ui/Toast";
 import { emptyCard, type CardContent } from "@/lib/cards";
 import { ApiError, api } from "@/lib/client";
 import type { CardView as CardData, DeckView } from "@/lib/decks";
@@ -52,7 +58,10 @@ export function Editor({
   const [cardErrors, setCardErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [presenting, setPresenting] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [toast, showToast] = useToast();
+  const router = useRouter();
   const [tick, setTick] = useState(0);
   // Celebrate once a freshly generated deck has every card written.
   const [startedWriting] = useState(() => initial.cards.some((c) => c.status === "pending"));
@@ -176,13 +185,13 @@ export function Editor({
     }
   }
 
-  async function share() {
+  async function duplicateDeck() {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/d/${deck.id}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      window.prompt("Copy this link:", `${window.location.origin}/d/${deck.id}`);
+      const { id } = await api<{ id: string }>(`/api/decks/${deck.id}/duplicate`, { body: {} });
+      showToast("Copy created. Opening it…");
+      router.push(`/d/${id}/edit`);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : String(e));
     }
   }
 
@@ -235,7 +244,9 @@ export function Editor({
           ))}
         </select>
         <Link href="/account" className="credits-pill" title="Credits left this month">{credits} credits</Link>
-        <button type="button" className="button" onClick={share}>{copied ? "Link copied" : "Share"}</button>
+        <button type="button" className="button" onClick={() => setSharing(true)}>
+          {deck.shared ? <Share2 size={16} aria-hidden="true" /> : <Lock size={16} aria-hidden="true" />} Share
+        </button>
         <Link className="button" href={`/d/${deck.id}`} target="_blank">View</Link>
         <DownloadMenu cards={readyCards} theme={deck.theme} title={deck.title} />
         <button
@@ -246,6 +257,18 @@ export function Editor({
         >
           Present
         </button>
+        <Menu label={{ text: "More options", content: <Ellipsis size={18} aria-hidden="true" /> }} buttonClassName="button button--icon">
+          {(close) => (
+            <>
+              <button type="button" className="menu__item" role="menuitem" onClick={() => { close(); void duplicateDeck(); }}>
+                <CopyPlus size={16} aria-hidden="true" /> Duplicate deck
+              </button>
+              <button type="button" className="menu__item menu__item--danger" role="menuitem" onClick={() => { close(); setConfirmDelete(true); }}>
+                <Trash2 size={16} aria-hidden="true" /> Delete deck
+              </button>
+            </>
+          )}
+        </Menu>
       </header>
 
       <main className="page">
@@ -316,6 +339,31 @@ export function Editor({
       </main>
 
       {presenting && <Presenter cards={readyCards} theme={deck.theme} onClose={() => setPresenting(false)} />}
+      {sharing && (
+        <ShareDialog
+          deckId={deck.id}
+          title={deck.title}
+          shared={deck.shared}
+          canManage
+          onClose={() => setSharing(false)}
+          onSharedChange={(shared) => setDeck((d) => ({ ...d, shared }))}
+        />
+      )}
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete this deck?"
+          message={`“${deck.title}” will be deleted for good, and its share link will stop working.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={async () => {
+            await api(`/api/decks/${deck.id}`, { method: "DELETE" });
+            router.push("/decks");
+            router.refresh();
+          }}
+          onClose={() => setConfirmDelete(false)}
+        />
+      )}
+      {toast}
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { AccountDataActions } from "@/components/AccountDataActions";
 import { ChangePasswordForm } from "@/components/ChangePasswordForm";
 import { PlanActions } from "@/components/PlanActions";
 import { AppShell } from "@/components/app/AppShell";
@@ -80,6 +81,10 @@ export default async function AccountPage(props: PageProps<"/account">) {
         <section className="section section--tight">
           <ChangePasswordForm />
         </section>
+
+        <div className="section section--tight">
+          <AccountDataActions />
+        </div>
       </div>
     </AppShell>
   );

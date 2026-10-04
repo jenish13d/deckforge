@@ -7,7 +7,7 @@ export const metadata = { title: "Privacy policy" };
 export default function PrivacyPage() {
   const usesGemini = textProvider() === "gemini";
   return (
-    <LegalPage title="Privacy policy" updated="October 4, 2026">
+    <LegalPage title="Privacy policy" updated="October 5, 2026">
       <p>This policy explains what {SITE.name} collects, why, and the choices you have.</p>
 
       <h2>What we collect</h2>
@@ -45,13 +45,13 @@ export default function PrivacyPage() {
       <p>We use one essential cookie to keep you signed in. We don&apos;t use advertising or tracking cookies.</p>
 
       <h2>Shared decks</h2>
-      <p>Anyone with a deck&apos;s view link can see that deck. Only share links with people you trust.</p>
+      <p>New decks can be viewed by anyone with their link, so only share links with people you trust. You can make any deck private from its Share window; then only you can open it.</p>
 
       <h2>Keeping and deleting data</h2>
-      <p>We keep your account and decks while your account is open. You can delete decks at any time, and you can ask us to delete your account and its data.</p>
+      <p>We keep your account and decks while your account is open. You can delete decks at any time. On the Account page you can download all your data, or delete your account, which removes it and all its decks for good.</p>
 
       <h2>Your rights</h2>
-      <p>Depending on where you live (for example under the GDPR, UK GDPR or California law), you may have the right to access, correct, export or delete your personal data, and to object to some processing. Contact us to make a request.</p>
+      <p>Depending on where you live (for example under the GDPR, UK GDPR or California law), you may have the right to access, correct, export or delete your personal data, and to object to some processing. You can export or delete your data yourself from the Account page, or contact us to make a request.</p>
 
       <h2>Children</h2>
       <p>{SITE.name} is not intended for children under 13, or under 16 where local law requires.</p>

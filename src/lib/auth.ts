@@ -9,13 +9,18 @@ import { db } from "./db";
 
 const COOKIE = "df_session";
 const SESSION_DAYS = 30;
+// Without "Remember me" the cookie ends when the browser closes, and the session within a day.
+const SHORT_SESSION_HOURS = 24;
 
 const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
-/** Creates a session and sets the cookie. Call from a route handler or server action. */
-export async function startSession(userId: string): Promise<void> {
+/**
+ * Creates a session and sets the cookie. Call from a route handler or server action.
+ * `remember: false` makes it a browser-session cookie that also expires within a day.
+ */
+export async function startSession(userId: string, { remember = true }: { remember?: boolean } = {}): Promise<void> {
   const token = randomBytes(32).toString("base64url");
-  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + (remember ? SESSION_DAYS * 24 : SHORT_SESSION_HOURS) * 60 * 60 * 1000);
   await db.session.create({ data: { id: hashToken(token), userId, expiresAt } });
   // Secure (HTTPS-only) everywhere except plain-HTTP localhost, where Safari would drop it.
   const host = (await headers()).get("host") ?? "";
@@ -25,7 +30,7 @@ export async function startSession(userId: string): Promise<void> {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production" && !local,
     path: "/",
-    expires: expiresAt,
+    ...(remember ? { expires: expiresAt } : {}),
   });
 }
 

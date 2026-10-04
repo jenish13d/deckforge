@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { MAX_CARDS } from "@/lib/cards";
-import { createDeck } from "@/lib/decks";
+import { createDeck, deleteDecks } from "@/lib/decks";
 import { jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { DEFAULT_MODE, canUseMode, isModeId } from "@/lib/plans";
 import { premiumAvailable } from "@/lib/providers";
@@ -35,4 +35,14 @@ export async function POST(request: Request) {
   if (mode === "premium" && !premiumAvailable()) return jsonError("Premium mode is coming soon.", 403);
 
   return Response.json(await createDeck({ userId: user.id, title, prompt, theme, mode, outline }), { status: 201 });
+}
+
+/** Deletes several decks at once: `{ ids: string[] }`. Only the user's own decks are deleted. */
+export async function DELETE(request: Request) {
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+  const body = await readJson(request);
+  const ids = Array.isArray(body?.ids) ? body.ids.filter((x): x is string => typeof x === "string").slice(0, 500) : [];
+  if (ids.length === 0) return jsonError("Choose at least one deck.", 400);
+  return Response.json({ deleted: await deleteDecks(user.id, ids) });
 }

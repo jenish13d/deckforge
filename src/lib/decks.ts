@@ -32,6 +32,8 @@ export interface DeckView {
   prompt: string;
   theme: string;
   mode: ModeId;
+  /** Anyone with the link can view it. */
+  shared: boolean;
   cards: CardView[];
 }
 
@@ -58,6 +60,7 @@ export async function getDeck(id: string): Promise<DeckView | null> {
     prompt: deck.prompt,
     theme: deck.theme,
     mode: isModeId(deck.mode) ? deck.mode : DEFAULT_MODE,
+    shared: deck.shared,
     cards: deck.cards.map(toCardView),
   };
 }
@@ -102,6 +105,8 @@ export async function listDecks(userId: string, take?: number) {
       id: true,
       title: true,
       theme: true,
+      shared: true,
+      createdAt: true,
       updatedAt: true,
       _count: { select: { cards: true } },
       cards: { orderBy: { position: "asc" }, take: 1, select: { content: true } },
@@ -111,6 +116,8 @@ export async function listDecks(userId: string, take?: number) {
     id: d.id,
     title: d.title,
     theme: d.theme,
+    shared: d.shared,
+    createdAt: d.createdAt,
     updatedAt: d.updatedAt,
     cards: d._count.cards,
     cover: parseStored(CardContentSchema, d.cards[0]?.content ?? ""),
@@ -195,6 +202,34 @@ export async function reorderCards(deckId: string, cardIds: string[]): Promise<v
   );
 }
 
-export async function updateDeck(deckId: string, data: { title?: string; theme?: ThemeId }): Promise<void> {
+export async function updateDeck(deckId: string, data: { title?: string; theme?: ThemeId; shared?: boolean }): Promise<void> {
   await db.deck.update({ where: { id: deckId }, data });
+}
+
+/** Copies a deck the user owns, with all written cards. Returns the copy's id, or null. */
+export async function duplicateDeck(userId: string, deckId: string): Promise<{ id: string } | null> {
+  const deck = await db.deck.findFirst({ where: { id: deckId, userId }, include: { cards: { orderBy: { position: "asc" } } } });
+  if (!deck) return null;
+  const title = `Copy of ${deck.title}`;
+  const copy = await db.deck.create({
+    data: {
+      userId,
+      title: title.length > 120 ? `${title.slice(0, 119)}…` : title,
+      prompt: deck.prompt,
+      theme: deck.theme,
+      mode: deck.mode,
+      shared: deck.shared,
+      cards: {
+        // Cards still being written are copied as failed so the copy never spends credits on its own.
+        create: deck.cards.map((c) => ({ position: c.position, brief: c.brief, content: c.content, status: c.content ? "ready" : "failed" })),
+      },
+    },
+  });
+  return { id: copy.id };
+}
+
+/** Deletes the given decks if the user owns them; returns how many were deleted. */
+export async function deleteDecks(userId: string, ids: string[]): Promise<number> {
+  const { count } = await db.deck.deleteMany({ where: { userId, id: { in: ids } } });
+  return count;
 }

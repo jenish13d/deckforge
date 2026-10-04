@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { api } from "@/lib/client";
+import { PasswordInput } from "./ui/PasswordInput";
 
 export function ResetForm({ token }: { token: string }) {
   const router = useRouter();
@@ -33,11 +34,11 @@ export function ResetForm({ token }: { token: string }) {
       <h1 className="auth-form__title">Choose a new password</h1>
       <label className="field">
         <span className="field__label">New password</span>
-        <input className="input" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <PasswordInput autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
       </label>
       <label className="field">
         <span className="field__label">Repeat new password</span>
-        <input className="input" type="password" autoComplete="new-password" minLength={8} required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        <PasswordInput autoComplete="new-password" minLength={8} required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
       </label>
       {error && (
         <p className="error" role="alert">
