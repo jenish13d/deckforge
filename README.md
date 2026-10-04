@@ -17,12 +17,14 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
   | Mode | With Claude (`ANTHROPIC_API_KEY`) | With Gemini only (`GEMINI_API_KEY`) | Credits per card |
   | --- | --- | --- | --- |
   | ⚡ Quick | `claude-haiku-4-5` | `gemini-flash-lite-latest` | 1 |
-  | ✨ Standard (default) | `claude-sonnet-5-5` | `gemini-flash-latest` | 2 |
+  | ✨ Standard (default) | `claude-sonnet-5-5` | `gemini-flash-lite-latest` with thinking | 2 |
   | 💎 Premium (Pro only) | `claude-opus-5-5` | not available ("coming soon") | 4 |
 
   Gemini's free tier lets the site run at no cost; its daily request limits are shared by all users
-  and change over time (check them in Google AI Studio). Busy responses are retried, then shown as a
-  friendly "try again in a minute" message, and the card's credits are refunded.
+  and change over time (check them in Google AI Studio). On Gemini the editor writes one card at a time;
+  when Google says it's busy, the card shows "Waiting for the AI…" and retries after the delay Google
+  suggests (credits for failed attempts are refunded). If the daily quota runs out, the editor says so.
+  Set `GEMINI_STANDARD_MODEL=gemini-flash-latest` for stronger writing on a paid Gemini plan.
 
   Outlines are free (Standard model, low effort). Failed cards are refunded.
   Credit charges are atomic, so parallel requests can't overspend.

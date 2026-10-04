@@ -28,14 +28,43 @@ export function toGeminiSchema(schema: z.ZodType): unknown {
   return strip(z.toJSONSchema(schema));
 }
 
-const RETRY_DELAYS_MS = [4000, 10000];
-const isBusy = (error: unknown) => error instanceof ApiError && (error.status === 429 || error.status === 503);
+/** Thrown when Google's free-tier limits are hit; says when it's worth trying again. */
+export class GeminiBusyError extends GenerationError {
+  constructor(
+    readonly retryAfterSeconds: number,
+    readonly daily: boolean,
+  ) {
+    super(
+      daily
+        ? "Today's free AI limit has been reached. Please try again tomorrow."
+        : "The AI is busy right now (free plan limit). Retrying shortly…",
+    );
+  }
+}
+
+const isBusy = (error: unknown): error is ApiError =>
+  error instanceof ApiError && (error.status === 429 || error.status === 503);
+
+/** Reads Google's suggested wait and whether a per-day quota was hit from a busy error. */
+export function busyInfo(error: ApiError): { retryAfterSeconds: number; daily: boolean } {
+  const text = error.message ?? "";
+  const delay = /"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/.exec(text);
+  return {
+    retryAfterSeconds: delay ? Math.ceil(Number(delay[1])) : 15,
+    daily: /PerDay/i.test(text),
+  };
+}
+
+// Wait inside the request only for short delays; longer waits go back to the browser,
+// which retries the card itself (requests are limited to 60 seconds).
+const MAX_SERVER_WAIT_S = 20;
 
 export async function callGemini<T>(request: ModelRequest<T>): Promise<T> {
   client ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const systemInstruction = request.context ? `${request.instructions}\n\n${request.context}` : request.instructions;
+  let waited = 0;
 
-  for (let attempt = 0; ; attempt++) {
+  for (;;) {
     try {
       const response = await client.models.generateContent({
         model: request.model,
@@ -54,13 +83,14 @@ export async function callGemini<T>(request: ModelRequest<T>): Promise<T> {
       if (!parsed.success) throw new GeminiError("The AI's answer wasn't in the expected format. Please try again.");
       return parsed.data;
     } catch (error) {
-      // Free-tier limits are per minute: wait and retry a couple of times.
-      if (isBusy(error) && attempt < RETRY_DELAYS_MS.length) {
-        await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
-        continue;
-      }
       if (isBusy(error)) {
-        throw new GeminiError("The AI is busy right now. Please try again in a minute.");
+        const { retryAfterSeconds, daily } = busyInfo(error);
+        if (!daily && waited + retryAfterSeconds <= MAX_SERVER_WAIT_S) {
+          await new Promise((r) => setTimeout(r, retryAfterSeconds * 1000));
+          waited += retryAfterSeconds;
+          continue;
+        }
+        throw new GeminiBusyError(retryAfterSeconds, daily);
       }
       if (error instanceof SyntaxError) throw new GeminiError("The AI's answer was cut off. Please try again.");
       throw error;

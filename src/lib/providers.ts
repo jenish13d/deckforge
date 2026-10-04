@@ -17,10 +17,18 @@ export function textProvider(): Provider {
   return "anthropic";
 }
 
+// Both default to Flash-Lite, which has by far the highest free-tier limits; Standard
+// differs from Quick by letting the model think. Set GEMINI_STANDARD_MODEL to e.g.
+// "gemini-flash-latest" for stronger writing once you're on a paid Gemini plan.
 export const geminiModel = (mode: "quick" | "standard") =>
   mode === "quick"
     ? process.env.GEMINI_QUICK_MODEL || "gemini-flash-lite-latest"
-    : process.env.GEMINI_STANDARD_MODEL || "gemini-flash-latest";
+    : process.env.GEMINI_STANDARD_MODEL || "gemini-flash-lite-latest";
+
+/** How many cards the editor writes at once: one at a time on Gemini's free tier. */
+export function parallelCards(): number {
+  return !demoEnabled() && textProvider() === "gemini" ? 1 : 3;
+}
 
 export function premiumAvailable(): boolean {
   return demoEnabled() || Boolean(process.env.ANTHROPIC_API_KEY);

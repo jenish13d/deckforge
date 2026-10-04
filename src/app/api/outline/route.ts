@@ -1,7 +1,8 @@
 import { GenerationError, generateOutline } from "@/lib/ai";
+import { GeminiBusyError } from "@/lib/gemini";
 import { getCurrentUser } from "@/lib/auth";
 import { MAX_CARDS, MIN_CARDS } from "@/lib/cards";
-import { jsonError, readJson, str, unauthorized } from "@/lib/http";
+import { busyResponse, jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { clientKey, limits } from "@/lib/rate-limit";
 
 // AI calls can take a while, especially in Premium mode.
@@ -25,6 +26,11 @@ export async function POST(request: Request) {
   try {
     return Response.json(await generateOutline(prompt, cardCount));
   } catch (error) {
+    if (error instanceof GeminiBusyError) {
+      return busyResponse(
+        error.daily ? error : { ...error, message: "The AI is busy right now (free plan limit). Please try again in a minute." },
+      );
+    }
     console.error("Outline generation failed", error);
     const message = error instanceof GenerationError ? error.message : "Couldn't create an outline. Please try again.";
     return jsonError(message, 502);

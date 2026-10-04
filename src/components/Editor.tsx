@@ -12,7 +12,9 @@ import type { CardView as CardData, DeckView } from "@/lib/decks";
 import { MODES, MODE_IDS, isModeId, type ModeId } from "@/lib/plans";
 import { THEMES, isThemeId } from "@/lib/themes";
 
-const PARALLEL_CARDS = 3;
+// How many times a card waits out the AI's per-minute limit before giving up.
+const MAX_BUSY_RETRIES = 8;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function without<T>(record: Record<string, T>, key: string): Record<string, T> {
   const copy = { ...record };
@@ -24,16 +26,23 @@ export function Editor({
   initial,
   initialCredits,
   allowedModes,
+  parallel = 3,
 }: {
   initial: DeckView;
   initialCredits: number;
   allowedModes: ModeId[];
+  /** Cards written at once (1 on the free Gemini tier, which allows few requests per minute). */
+  parallel?: number;
 }) {
   const [deck, setDeck] = useState(initial);
   const [credits, setCredits] = useState(initialCredits);
   const [mode, setMode] = useState<ModeId>(allowedModes.includes(initial.mode) ? initial.mode : allowedModes[0]);
   // Set when the server says we're out of credits, so pending cards stop retrying.
   const [outOfCredits, setOutOfCredits] = useState(false);
+  // Set when the AI's daily limit is reached, for the same reason.
+  const [dailyLimit, setDailyLimit] = useState(false);
+  // "Waiting for the AI…" notes for cards that are waiting out a rate limit.
+  const [waiting, setWaiting] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<string | null>(null);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
   const [cardErrors, setCardErrors] = useState<Record<string, string>>({});
@@ -53,14 +62,28 @@ export function Editor({
       setBusy((b) => ({ ...b, [cardId]: true }));
       setCardErrors((errs) => without(errs, cardId));
       try {
-        const result = await api<{ card: CardData; credits: number }>(
-          `/api/decks/${deck.id}/cards/${cardId}/generate`,
-          { body: { instructions, mode: cardMode } },
-        );
-        replaceCard(result.card);
-        setCredits(result.credits);
+        for (let attempt = 0; ; attempt++) {
+          try {
+            const result = await api<{ card: CardData; credits: number }>(
+              `/api/decks/${deck.id}/cards/${cardId}/generate`,
+              { body: { instructions, mode: cardMode } },
+            );
+            replaceCard(result.card);
+            setCredits(result.credits);
+            break;
+          } catch (e) {
+            // The AI is rate limited for a moment: wait as long as it asks, then try again.
+            const busy = e instanceof ApiError && e.status === 429 && typeof e.data.retryAfter === "number";
+            if (!busy || e.data.daily || attempt >= MAX_BUSY_RETRIES) throw e;
+            const seconds = Math.min(Math.max(e.data.retryAfter as number, 5), 60);
+            setWaiting((w) => ({ ...w, [cardId]: `Waiting for the AI (free plan limit)… retrying in ${seconds}s` }));
+            await sleep(seconds * 1000);
+            setWaiting((w) => without(w, cardId));
+          }
+        }
       } catch (e) {
         if (e instanceof ApiError && e.status === 402) setOutOfCredits(true);
+        if (e instanceof ApiError && e.status === 429 && e.data.daily) setDailyLimit(true);
         setCardErrors((errs) => ({ ...errs, [cardId]: e instanceof Error ? e.message : String(e) }));
         setDeck((d) => ({
           ...d,
@@ -69,6 +92,7 @@ export function Editor({
       } finally {
         inFlight.current.delete(cardId);
         setBusy((b) => without(b, cardId));
+        setWaiting((w) => without(w, cardId));
         setTick((t) => t + 1);
       }
     },
@@ -77,13 +101,13 @@ export function Editor({
 
   // Write pending cards a few at a time; resumes after a page reload too.
   useEffect(() => {
-    if (outOfCredits) return;
-    const free = PARALLEL_CARDS - inFlight.current.size;
+    if (outOfCredits || dailyLimit) return;
+    const free = parallel - inFlight.current.size;
     deck.cards
       .filter((c) => c.status === "pending" && !inFlight.current.has(c.id))
       .slice(0, Math.max(free, 0))
       .forEach((c) => void generate(c.id));
-  }, [deck.cards, outOfCredits, generate, tick]);
+  }, [deck.cards, outOfCredits, dailyLimit, parallel, generate, tick]);
 
   async function run(action: () => Promise<void>) {
     setError("");
@@ -225,6 +249,13 @@ export function Editor({
           </p>
         )}
 
+        {dailyLimit && (
+          <p className="banner" role="alert">
+            Today&apos;s free AI limit has been reached, so some cards weren&apos;t written. Try again tomorrow, or
+            edit those cards by hand.
+          </p>
+        )}
+
         <div className={`deck theme-${deck.theme}`}>
           {deck.cards.map((card, i) => (
             <section key={card.id} className="editor-card">
@@ -250,8 +281,13 @@ export function Editor({
                   <CardView content={card.content} />
                 </div>
               ) : (
-                <CardPlaceholder title={card.brief.title} failed={card.status === "failed" && !busy[card.id]} />
+                <CardPlaceholder
+                  title={card.brief.title}
+                  failed={card.status === "failed" && !busy[card.id]}
+                  note={waiting[card.id]}
+                />
               )}
+              {card.content && waiting[card.id] && <p className="status">{waiting[card.id]}</p>}
               {cardErrors[card.id] && <p className="error">{cardErrors[card.id]}</p>}
 
               <button type="button" className="add-card" onClick={() => addAfter(card.position)}>+ Add card</button>

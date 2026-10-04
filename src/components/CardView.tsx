@@ -51,12 +51,12 @@ export function CardView({ content }: { content: CardContent }) {
   );
 }
 
-export function CardPlaceholder({ title, failed }: { title: string; failed?: boolean }) {
+export function CardPlaceholder({ title, failed, note }: { title: string; failed?: boolean; note?: string }) {
   return (
     <article className={`card card--placeholder${failed ? " card--failed" : ""}`}>
       <div className="card__inner">
         <h2 className="card__title">{title}</h2>
-        <p className="card__subtitle">{failed ? "This card couldn't be written. Try regenerating it." : "Writing…"}</p>
+        <p className="card__subtitle">{failed ? "This card couldn't be written. Try regenerating it." : note || "Writing…"}</p>
         {!failed && (
           <div className="skeleton" aria-hidden="true">
             <span />

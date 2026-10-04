@@ -139,7 +139,7 @@ describe("providers", () => {
     vi.stubEnv("GEMINI_API_KEY", "g-key");
     vi.stubEnv("AI_PROVIDER", "");
     expect(choiceForMode("quick")).toEqual({ provider: "gemini", model: "gemini-flash-lite-latest", effort: null });
-    expect(choiceForMode("standard")).toMatchObject({ provider: "gemini", model: "gemini-flash-latest" });
+    expect(choiceForMode("standard")).toEqual({ provider: "gemini", model: "gemini-flash-lite-latest", effort: "medium" });
     expect(choiceForMode("premium")).toMatchObject({ provider: "anthropic", model: "claude-opus-5-5" });
     expect(outlineChoice()).toMatchObject({ provider: "gemini", effort: "low" });
   });

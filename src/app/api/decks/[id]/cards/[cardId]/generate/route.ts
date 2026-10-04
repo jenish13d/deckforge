@@ -1,9 +1,10 @@
 import { GenerationError } from "@/lib/ai";
+import { GeminiBusyError } from "@/lib/gemini";
 import { getCurrentUser } from "@/lib/auth";
 import { chargeCredits, creditsOf, refundCredits } from "@/lib/credits";
 import { db } from "@/lib/db";
 import { generateDeckCard, ownsCard } from "@/lib/decks";
-import { forbidden, jsonError, readJson, str, unauthorized } from "@/lib/http";
+import { busyResponse, forbidden, jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { DEFAULT_MODE, MODES, canUseMode, cardCost, isModeId } from "@/lib/plans";
 import { premiumAvailable } from "@/lib/providers";
 import { clientKey, limits } from "@/lib/rate-limit";
@@ -42,6 +43,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/decks/[id]/
     return Response.json({ card, credits: await creditsOf(user.id) });
   } catch (error) {
     await refundCredits(user.id, cost);
+    if (error instanceof GeminiBusyError) return busyResponse(error);
     console.error(`Card generation failed (${id}/${cardId})`, error);
     const message = error instanceof GenerationError ? error.message : "Couldn't write this card. Try again.";
     return jsonError(message, 502);
