@@ -41,7 +41,7 @@ export async function SiteFooter() {
           {SITE.contactEmail && <a href={`mailto:${SITE.contactEmail}`}>Contact</a>}
         </nav>
       </div>
-      <p className="site-footer__legal muted small">© {new Date().getFullYear()} {SITE.name}. All rights reserved.</p>
+      <p className="site-footer__legal muted small">© {new Date().getFullYear()} {SITE.name}. All rights reserved. Made with <em>amore</em>.</p>
     </footer>
   );
 }

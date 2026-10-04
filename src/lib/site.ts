@@ -1,7 +1,7 @@
 export const SITE = {
-  name: "Deckforge",
-  tagline: "Ideas to slides in a minute",
-  description: "Describe your idea. We plan it, write it and design it. Then make it yours.",
+  name: "Slidezza",
+  tagline: "Beautiful slides in a minute",
+  description: "Describe your idea. We plan it, write it and design it, with a little Italian style. Then make it yours.",
   /** Shown in the footer and legal pages. Set NEXT_PUBLIC_CONTACT_EMAIL before launch. */
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "",
 };

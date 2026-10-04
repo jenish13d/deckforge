@@ -55,7 +55,7 @@ export function FeedbackButton({ loggedIn, captcha = false }: { loggedIn: boolea
         <div className="feedback__panel" role="dialog" aria-label="Send feedback">
           {state === "sent" ? (
             <div className="feedback__thanks">
-              <p className="strong">Thank you! 🙏</p>
+              <p className="strong">Grazie! Thank you.</p>
               <p className="muted small">We read every message.</p>
               <button type="button" className="button button--small" onClick={() => { setState("idle"); setOpen(false); }}>
                 Close

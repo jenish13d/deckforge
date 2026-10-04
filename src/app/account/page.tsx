@@ -20,7 +20,7 @@ export default async function AccountPage(props: PageProps<"/account">) {
     <AppShell next="/account">
       <div className="page page--narrow">
         <h1 className="page-title">Account</h1>
-        {upgraded && <p className="success" role="status">Thanks! Your Pro plan is active.</p>}
+        {upgraded && <p className="success" role="status">Grazie! Your Pro plan is active.</p>}
         {user.credits === 0 && !upgraded && (
           <p className="banner" role="alert">
             You&apos;ve used all your credits for this month. They refill on{" "}

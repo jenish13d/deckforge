@@ -23,7 +23,7 @@ export const TEMPLATES: Template[] = [
     name: "Startup pitch",
     description: "Problem, solution, market, traction and the ask.",
     prompt: "Investor pitch deck for my startup: [what you do, who it's for, traction so far, how much you're raising]",
-    theme: "midnight",
+    theme: "toscana",
     preview: { ...blank, layout: "title", icon: "🚀", title: "Fresh meals, zero effort", subtitle: "Seed round · Chef-made weekly meals delivered across Austin" },
   },
   {
@@ -32,7 +32,7 @@ export const TEMPLATES: Template[] = [
     name: "Sales proposal",
     description: "Win a client with a clear offer and next steps.",
     prompt: "Sales proposal for [client name]: their problem, our solution, scope, timeline, pricing and next steps",
-    theme: "minimal",
+    theme: "amalfi",
     preview: {
       ...blank,
       layout: "columns",

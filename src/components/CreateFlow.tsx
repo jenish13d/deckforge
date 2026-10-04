@@ -38,12 +38,15 @@ export function CreateFlow({
   allowedModes,
   comingSoon = [],
   credits,
+  greetingName,
   initialPrompt = "",
   initialTheme = "minimal",
 }: {
   allowedModes: ModeId[];
   comingSoon?: ModeId[];
   credits: number;
+  /** Shown as "Ciao, name!" above the prompt. */
+  greetingName?: string;
   initialPrompt?: string;
   initialTheme?: ThemeId;
 }) {
@@ -119,7 +122,8 @@ export function CreateFlow({
     return (
       <div className="create-start">
         <HeroArt className="create-start__art" />
-        <h1 className="create-start__title">What do you want to present?</h1>
+        {greetingName && <p className="create-start__hello">Ciao, {greetingName}!</p>}
+        <h1 className="create-start__title">What do you want to <em>present</em>?</h1>
 
         <form className="prompt-box" onSubmit={makeOutline}>
           <textarea

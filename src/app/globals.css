@@ -1,26 +1,30 @@
 /* ---------- App chrome ---------- */
 :root {
-  --bg: #f6f6f4;
-  --surface: #ffffff;
-  --text: #17171a;
-  --muted: #6b6b73;
-  --border: #e2e2e0;
-  --primary: #4f46e5;
+  --bg: #faf6ef;
+  --surface: #fffdf9;
+  --text: #2b211a;
+  --muted: #76685a;
+  --border: #ebe1d3;
+  --primary: #b4462a;
   --primary-text: #ffffff;
-  --danger: #c0392b;
+  --danger: #b42318;
+  --olive: #6b7a3a;
+  --lemon: #f2c94c;
   --radius: 10px;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #111114;
-    --surface: #1b1b20;
-    --text: #ececf1;
-    --muted: #9a9aa5;
-    --border: #2d2d35;
-    --primary: #7c74ff;
-    --danger: #ff6b5b;
+    --bg: #16120e;
+    --surface: #211b16;
+    --text: #f4ede4;
+    --muted: #ab9d8d;
+    --border: #3a2f26;
+    --primary: #e3825e;
+    --primary-text: #1c130d;
+    --danger: #ff7a66;
+    --olive: #b7c47a;
     color-scheme: dark;
   }
 }
@@ -1012,7 +1016,7 @@ a {
   margin-top: 72px;
   padding: 48px 24px;
   border-radius: 20px;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #a83f25 0%, #d9773a 100%);
   color: #fff;
   text-align: center;
 }
@@ -1025,7 +1029,7 @@ a {
 .cta-band .button--primary {
   background: #fff;
   border-color: #fff;
-  color: #4f46e5;
+  color: #a83f25;
 }
 
 .site-footer {
@@ -1205,6 +1209,26 @@ a {
   --card-body-font: var(--font-serif), Georgia, serif;
 }
 
+.theme-amalfi {
+  --card-bg: linear-gradient(160deg, #fffbea 0%, #fcefb4 100%);
+  --card-text: #12324a;
+  --card-muted: #47637a;
+  --card-accent: #1f6fa8;
+  --card-surface: rgba(255, 255, 255, 0.6);
+  --card-heading-font: var(--font-serif), Georgia, serif;
+  --card-body-font: var(--font-sans), system-ui, sans-serif;
+}
+
+.theme-toscana {
+  --card-bg: linear-gradient(150deg, #3b4724 0%, #56622f 100%);
+  --card-text: #f8f2e4;
+  --card-muted: #d6d0b5;
+  --card-accent: #eaa95e;
+  --card-surface: rgba(255, 255, 255, 0.08);
+  --card-heading-font: var(--font-serif), Georgia, serif;
+  --card-body-font: var(--font-sans), system-ui, sans-serif;
+}
+
 /* ---------- Cards ---------- */
 .deck {
   display: flex;
@@ -1353,14 +1377,16 @@ a {
 }
 
 .theme-midnight .card__step,
-.theme-forest .card__step {
+.theme-forest .card__step,
+.theme-toscana .card__step {
   color: #10131f;
 }
 
 .theme-minimal .card__step,
 .theme-ocean .card__step,
 .theme-sunset .card__step,
-.theme-paper .card__step {
+.theme-paper .card__step,
+.theme-amalfi .card__step {
   color: #fff;
 }
 
@@ -1905,12 +1931,12 @@ a {
 /* ---------- App shell (signed-in pages) ---------- */
 :root {
   --primary-soft: color-mix(in srgb, var(--primary) 11%, var(--surface));
-  --side: #fbfbfa;
+  --side: #f5eee3;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --side: #16161a;
+    --side: #1b1611;
   }
 
   .hero-art__glow {
@@ -1985,7 +2011,7 @@ a {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #b4462a, #e0953c);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
@@ -2257,7 +2283,7 @@ a {
   border: 0;
   border-radius: 50%;
   background: var(--primary);
-  color: #fff;
+  color: var(--primary-text);
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
@@ -2701,4 +2727,69 @@ a.quick-chip {
 .pill-select__chevron {
   margin-left: -20px;
   pointer-events: none;
+}
+
+/* ---------- Italian finish: classic serif headings, terracotta accents ---------- */
+.landing-top__title,
+.create-start__title,
+.section-heading,
+.page-title,
+.hero__title,
+.cta-band h2,
+.outline-panel__title,
+.auth-form__title,
+.price-card__price,
+.admin-stat__value,
+.prose h1,
+.logo,
+.toolbar__brand {
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.landing-top__title em,
+.create-start__title em {
+  color: var(--primary);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.create-start__hello {
+  margin: 0 0 -10px;
+  color: var(--olive);
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.15rem;
+  font-style: italic;
+}
+
+.site-footer__legal em {
+  font-family: var(--font-serif), Georgia, serif;
+  color: var(--primary);
+}
+
+.eyebrow {
+  color: var(--olive);
+}
+
+.logo {
+  font-size: 1.2rem;
+}
+
+.bravo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bravo strong {
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+}
+
+@media (min-width: 861px) {
+  .theme-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }

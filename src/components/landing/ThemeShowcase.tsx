@@ -5,7 +5,7 @@ import { THEMES } from "@/lib/themes";
 const SAMPLE: CardContent = {
   layout: "bullets",
   icon: "✨",
-  title: "One deck, six looks",
+  title: "One deck, eight looks",
   subtitle: "",
   items: [
     { heading: "Switch in one click", text: "Every card updates instantly." },

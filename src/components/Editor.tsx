@@ -54,6 +54,9 @@ export function Editor({
   const [presenting, setPresenting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [tick, setTick] = useState(0);
+  // Celebrate once a freshly generated deck has every card written.
+  const [startedWriting] = useState(() => initial.cards.some((c) => c.status === "pending"));
+  const [bravoClosed, setBravoClosed] = useState(false);
   const inFlight = useRef(new Set<string>());
 
   const replaceCard = (card: CardData) =>
@@ -185,6 +188,7 @@ export function Editor({
 
   const readyCards = deck.cards.flatMap((c) => (c.content ? [c.content] : []));
   const writing = deck.cards.filter((c) => c.status === "pending").length;
+  const bravo = startedWriting && !bravoClosed && deck.cards.length > 0 && deck.cards.every((c) => c.status === "ready");
 
   return (
     <>
@@ -246,6 +250,12 @@ export function Editor({
 
       <main className="page">
         {writing > 0 && <p className="status" role="status">Writing {writing} card{writing === 1 ? "" : "s"}…</p>}
+        {bravo && (
+          <p className="success bravo" role="status">
+            <span><strong>Bravo!</strong> Your deck is ready. Present it, share the link or download it.</span>
+            <button type="button" className="icon-button" aria-label="Close" onClick={() => setBravoClosed(true)}>×</button>
+          </p>
+        )}
         {error && <p className="error" role="alert">{error}</p>}
         {outOfCredits && (
           <p className="banner" role="alert">

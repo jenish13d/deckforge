@@ -42,7 +42,7 @@ ${link}
 If this wasn't you, ignore this email; your password stays the same.`;
   const html = `<div style="font-family:Arial,sans-serif;font-size:16px;line-height:1.5;color:#1d1d22;max-width:480px">
 <p>Someone asked to reset the password for your ${SITE.name} account.</p>
-<p><a href="${escapeHtml(link)}" style="display:inline-block;padding:10px 18px;background:#4f46e5;color:#fff;border-radius:8px;text-decoration:none">Reset password</a></p>
+<p><a href="${escapeHtml(link)}" style="display:inline-block;padding:10px 18px;background:#b4462a;color:#fff;border-radius:8px;text-decoration:none">Reset password</a></p>
 <p style="color:#6b6b73;font-size:14px">The link works for 1 hour. If this wasn't you, ignore this email; your password stays the same.</p>
 </div>`;
   return { subject, text, html };

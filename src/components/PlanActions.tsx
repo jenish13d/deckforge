@@ -76,7 +76,7 @@ export function PlanActions({
       )}
       {plan === "free" && !billing && !demo && (joined ? (
         <p className="success" role="status">
-          🎉 You&apos;re on the Pro list! Pro opens very soon and we&apos;ll email you first.
+          Perfetto! You&apos;re on the Pro list. Pro opens very soon and we&apos;ll email you first.
         </p>
       ) : (
         <>

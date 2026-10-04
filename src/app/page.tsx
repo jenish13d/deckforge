@@ -57,6 +57,7 @@ export default async function Home(props: PageProps<"/">) {
             allowedModes={availableModes(user.plan)}
             comingSoon={premiumAvailable() ? [] : ["premium"]}
             credits={user.credits}
+            greetingName={user.email.split("@")[0]}
             initialPrompt={template?.prompt ?? sharedPrompt}
             initialTheme={template?.theme}
           />
@@ -81,7 +82,7 @@ export default async function Home(props: PageProps<"/">) {
         <section className="landing-top">
           <HeroArt className="landing-top__art" />
           <p className="eyebrow">AI presentation maker</p>
-          <h1 className="landing-top__title">{SITE.tagline}</h1>
+          <h1 className="landing-top__title">Beautiful slides, <em>in a minute</em></h1>
           <p className="landing-top__subtitle">{SITE.description}</p>
           <TryPrompt />
           <div className="quick-chips" aria-label="Start from a template">
@@ -116,7 +117,7 @@ export default async function Home(props: PageProps<"/">) {
           </section>
 
           <section id="themes" className="section">
-            <h2 className="section-heading center">Six themes, one click</h2>
+            <h2 className="section-heading center">Eight themes, one click</h2>
             <p className="muted center">Switch the look of every card at once, any time.</p>
             <ThemeShowcase />
           </section>

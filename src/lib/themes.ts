@@ -5,6 +5,8 @@ export const THEMES = [
   { id: "sunset", name: "Sunset" },
   { id: "forest", name: "Forest" },
   { id: "paper", name: "Paper" },
+  { id: "amalfi", name: "Amalfi" },
+  { id: "toscana", name: "Toscana" },
 ] as const;
 
 export type ThemeId = (typeof THEMES)[number]["id"];
@@ -32,6 +34,8 @@ export const THEME_STYLES: Record<ThemeId, ThemeStyle> = {
   sunset: { bg: ["FFF3E8", "FFD9CC"], text: "3A1A12", muted: "7A4A3C", accent: "D9480F", surface: "FFF4EC", onAccent: "FFFFFF", serifHeadings: true, serifBody: false },
   forest: { bg: ["13261D", "1F3A2C"], text: "EEF6EF", muted: "A9C4B2", accent: "7ED39B", surface: "26392F", onAccent: "10131F", serifHeadings: true, serifBody: false },
   paper: { bg: ["FBF8F1", "FBF8F1"], text: "2B2620", muted: "6E6457", accent: "8A5A2B", surface: "F1EBDD", onAccent: "FFFFFF", serifHeadings: true, serifBody: true },
+  amalfi: { bg: ["FFFBEA", "FCEFB4"], text: "12324A", muted: "47637A", accent: "1F6FA8", surface: "FFFDF3", onAccent: "FFFFFF", serifHeadings: true, serifBody: false },
+  toscana: { bg: ["3B4724", "56622F"], text: "F8F2E4", muted: "D6D0B5", accent: "EAA95E", surface: "4A5530", onAccent: "2A2010", serifHeadings: true, serifBody: false },
 };
 
 export function themeStyle(id: string): ThemeStyle {

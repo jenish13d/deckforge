@@ -1,4 +1,6 @@
-# Putting Deckforge online (step by step)
+# Putting Slidezza online (step by step)
+
+(The code repository and Vercel project are named `deckforge`, the original name.)
 
 You need: a **Neon** account (database) and a **Vercel** account (website). Both are free to start.
 Time: about 20 minutes.
@@ -72,7 +74,7 @@ separate Neon "branch" for testing.)
 - **Photos on slides:** on automatically (Openverse, no key). Optional: a Pexels key in `PEXELS_API_KEY`.
 - **Forgot-password emails (free, from your Gmail):**
   1. Turn on 2-Step Verification for your Google account (myaccount.google.com → Security).
-  2. Create an app password: myaccount.google.com/apppasswords → name it "Deckforge" → copy the 16 letters.
+  2. Create an app password: myaccount.google.com/apppasswords → name it "Slidezza" → copy the 16 letters.
   3. In Vercel add: `SMTP_HOST` = `smtp.gmail.com`, `SMTP_PORT` = `465`, `SMTP_USER` = your Gmail address,
      `SMTP_PASS` = the 16-letter app password (Secret), `APP_URL` = your site address → Redeploy.
 
@@ -90,4 +92,4 @@ separate Neon "branch" for testing.)
 - **Before taking real payments:** remove `BILLING_DEMO`, add the Stripe variables (see README).
   Note: Vercel's free **Hobby** plan is for non-commercial use. Upgrade the Vercel project to **Pro**
   (about $20/month) before you start charging customers.
-- **Your own domain** (e.g. `deckforge.app`): buy it at any registrar, then Vercel → **Settings → Domains → Add**.
+- **Your own domain** (e.g. `slidezza.com`): buy it at any registrar, then Vercel → **Settings → Domains → Add**.

@@ -1,6 +1,8 @@
-# Deckforge
+# Slidezza
 
-An AI presentation builder in the spirit of Gamma. Describe what you want to present; Deckforge
+(Code repository: `deckforge`, the project's original name.)
+
+An AI presentation builder in the spirit of Gamma. Describe what you want to present; Slidezza
 plans an outline you can edit, then writes a themed deck card by card. Edit any card, regenerate it
 with instructions, reorder, switch themes in one click, present full-screen, share a link or download a PDF.
 
@@ -10,7 +12,7 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 - **Cards appear one by one** (3 at a time); one failure doesn't sink the deck, and reloading resumes unfinished cards.
 - **7 card layouts** (title, section, bullets, columns, big numbers, quote, timeline), picked per card by the AI.
 - **Editing:** edit form per card, regenerate with instructions, add, delete, reorder.
-- **6 themes**, **present mode** and **share links** (view-only).
+- **8 themes** (including Italian-inspired Amalfi and Toscana), **present mode** and **share links** (view-only).
 - **Downloads:** **PDF** (built in the browser: each card rendered at 1280×720 into a 16:9 page, identical in
   every browser) and **PowerPoint (.pptx)** with native, editable text, shapes and photos in the deck's theme.
 - **Photos:** the AI suggests photo keywords per card and Title, Section, Bullets and Quote cards get a photo

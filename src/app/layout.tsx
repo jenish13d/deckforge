@@ -8,7 +8,7 @@ import "./globals.css";
 import { SITE } from "@/lib/site";
 
 const sans = Geist({ variable: "--font-sans", subsets: ["latin"] });
-const serif = Fraunces({ variable: "--font-serif", subsets: ["latin"] });
+const serif = Fraunces({ variable: "--font-serif", subsets: ["latin"], style: ["normal", "italic"] });
 
 export const metadata: Metadata = {
   title: { default: `${SITE.name}: AI presentation maker`, template: `%s · ${SITE.name}` },
