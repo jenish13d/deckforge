@@ -12,6 +12,7 @@ import { ThemeShowcase } from "@/components/landing/ThemeShowcase";
 import { TryPrompt } from "@/components/landing/TryPrompt";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { StructuredData } from "@/components/StructuredData";
 import { TemplateIcon } from "@/components/TemplateIcon";
 import { getCurrentUser } from "@/lib/auth";
 import { listDecks } from "@/lib/decks";
@@ -78,6 +79,7 @@ export default async function Home(props: PageProps<"/">) {
   return (
     <>
       <SiteHeader />
+      <StructuredData />
       <main>
         <section className="landing-top">
           <HeroArt className="landing-top__art" />

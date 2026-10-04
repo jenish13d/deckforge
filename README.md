@@ -34,6 +34,9 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
   show/hide password, download all my data (JSON) and delete my account (password required).
 - **Site basics:** custom 404 and error pages, robots.txt, sitemap.xml, web app manifest and home-screen icon.
   The site always uses its light design, whatever the device's dark-mode setting.
+- **Search engines and AI assistants:** schema.org data on the home page (product, prices, FAQ), `/llms.txt`
+  (a plain-text summary for AI tools), sitemap, robots.txt open to AI crawlers, and optional Google/Bing
+  ownership codes (`GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`).
 - **Bot protection:** an "I'm not a robot" checkbox ([ALTCHA](https://altcha.org), self-hosted proof-of-work,
   no third-party service or key) on sign-up, forgot password and feedback from visitors. It takes about
   1–3 seconds in the background; each answer works once and expires after 10 minutes. `CAPTCHA=off` disables it.

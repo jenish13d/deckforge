@@ -1,7 +1,7 @@
 import { PLANS } from "@/lib/plans";
 import { SITE } from "@/lib/site";
 
-const QUESTIONS = [
+export const QUESTIONS = [
   {
     q: "How does it work?",
     a: `Describe what you want to present, or paste your notes. ${SITE.name} suggests an outline you can edit, then writes and designs each card. You can change any card afterwards.`,

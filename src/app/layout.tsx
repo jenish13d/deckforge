@@ -16,6 +16,11 @@ export const viewport: Viewport = { colorScheme: "light", themeColor: "#ffffff" 
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
+  // Ownership checks for Google Search Console and Bing Webmaster Tools (public codes, set in Vercel).
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION } : undefined,
+  },
   title: { default: `${SITE.name}: AI presentation maker`, template: `%s · ${SITE.name}` },
   description: SITE.description,
   openGraph: {
