@@ -21,6 +21,8 @@ model User {
   creditsResetAt       DateTime
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?
+  // When the user asked to upgrade while payments weren't set up yet (the Pro waitlist).
+  proWaitlistAt        DateTime?
   createdAt            DateTime  @default(now())
   sessions             Session[]
   decks                Deck[]

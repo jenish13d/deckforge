@@ -16,7 +16,7 @@ export default async function PricingPage() {
           <h1 className="hero__title hero__title--small">Simple pricing</h1>
           <p className="hero__subtitle">Start free. Upgrade when you present every week.</p>
         </header>
-        <Pricing ctaHref={user ? "/account" : "/signup"} />
+        <Pricing ctaHref={user ? "/account#upgrade" : "/signup"} />
         <section className="section">
           <h2 className="section-heading center">Questions</h2>
           <Faq />

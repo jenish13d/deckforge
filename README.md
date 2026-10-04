@@ -47,6 +47,9 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 - **Plans:** Free (60 credits/month, Quick + Standard) and Pro ($12/month, 1,000 credits, all modes).
   Credits refill every 30 days and don't roll over. Edit plans and prices in `src/lib/plans.ts`.
 - **Payments:** Stripe Checkout subscriptions, customer portal, and webhooks for upgrades, renewals and cancellations.
+  Until Stripe is configured, **Upgrade to Pro** puts the user on a **Pro waitlist** instead (no payment): they see
+  "You're on the Pro list", the owner gets an email, and **/admin** lists everyone who asked, to email when Pro opens.
+  Running out of credits points users to the upgrade button (editor banner, create page and Account page).
 - **Demo modes for testing at $0:** `DEMO_AI=1` replaces the AI with sample content; `BILLING_DEMO=1`
   adds a no-payment Free/Pro switch on the Account page (ignored when Stripe is configured; never enable in production).
 

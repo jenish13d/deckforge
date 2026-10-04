@@ -23,6 +23,13 @@ export default async function AccountPage(props: PageProps<"/account">) {
       <main className="page page--narrow">
         <h1 className="page-title">Account</h1>
         {upgraded && <p className="success" role="status">Thanks! Your Pro plan is active.</p>}
+        {user.credits === 0 && !upgraded && (
+          <p className="banner" role="alert">
+            You&apos;ve used all your credits for this month. They refill on{" "}
+            {user.creditsResetAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            {plan === "free" && <>, or <a href="#upgrade">upgrade to Pro</a> for {PLANS.pro.monthlyCredits.toLocaleString()} credits a month</>}.
+          </p>
+        )}
 
         <section className="panel">
           <div className="row row--between">
@@ -69,6 +76,7 @@ export default async function AccountPage(props: PageProps<"/account">) {
           billing={billingConfigured()}
           demo={billingDemoEnabled()}
           hasCustomer={Boolean(user.stripeCustomerId)}
+          onWaitlist={Boolean(user.proWaitlistAt)}
         />
 
         <section className="section section--tight">

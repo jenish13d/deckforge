@@ -10,14 +10,18 @@ export function PlanActions({
   billing,
   demo,
   hasCustomer,
+  onWaitlist = false,
 }: {
   plan: "free" | "pro";
   billing: boolean;
   demo: boolean;
   hasCustomer: boolean;
+  /** Already asked for Pro while payments weren't set up. */
+  onWaitlist?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [joined, setJoined] = useState(onWaitlist);
   const [error, setError] = useState("");
 
   async function go(action: () => Promise<void>) {
@@ -44,8 +48,14 @@ export function PlanActions({
       router.refresh();
     });
 
+  const joinWaitlist = () =>
+    go(async () => {
+      await api("/api/billing/waitlist", { body: {} });
+      setJoined(true);
+    });
+
   return (
-    <div className="stack">
+    <div className="stack" id="upgrade">
       {plan === "free" && billing && (
         <button type="button" className="button button--primary" disabled={busy} onClick={() => redirectTo("/api/billing/checkout")}>
           Upgrade to Pro
@@ -64,7 +74,18 @@ export function PlanActions({
           <p className="muted small">Demo billing is on: plans switch without payment. Turn it off before launch.</p>
         </>
       )}
-      {!billing && !demo && <p className="muted small">Payments aren&apos;t set up yet.</p>}
+      {plan === "free" && !billing && !demo && (joined ? (
+        <p className="success" role="status">
+          🎉 You&apos;re on the Pro list! Pro opens very soon and we&apos;ll email you first.
+        </p>
+      ) : (
+        <>
+          <button type="button" className="button button--primary" disabled={busy} onClick={joinWaitlist}>
+            Upgrade to Pro
+          </button>
+          <p className="muted small">Pro is opening soon. Click to get on the list and we&apos;ll email you the moment it&apos;s ready.</p>
+        </>
+      ))}
       {error && <p className="error" role="alert">{error}</p>}
     </div>
   );

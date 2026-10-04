@@ -191,7 +191,7 @@ export function CreateFlow({
       <ModePicker value={mode} onChange={setMode} allowed={allowedModes} comingSoon={comingSoon} />
       {!allowedModes.includes("premium") && !comingSoon.includes("premium") && (
         <p className="muted small">
-          Premium needs Pro. <Link href="/account">See plans</Link>
+          Premium needs Pro. <Link href="/account#upgrade">See plans</Link>
         </p>
       )}
       <CostLine cost={cardCost(mode, cards.filter((c) => c.title.trim()).length)} credits={credits} />
@@ -225,7 +225,7 @@ function CostLine({ cost, credits }: { cost: number; credits: number }) {
       This deck uses <strong>{cost} credits</strong>. You have {credits}.
       {!enough && (
         <>
-          {" "}Remove some cards, pick a cheaper mode, or <Link href="/account">upgrade</Link>.
+          {" "}Remove some cards, pick a cheaper mode, or <Link href="/account#upgrade">upgrade to Pro</Link>.
         </>
       )}
     </p>

@@ -248,7 +248,7 @@ export function Editor({
         {error && <p className="error" role="alert">{error}</p>}
         {outOfCredits && (
           <p className="banner" role="alert">
-            You&apos;re out of credits, so some cards weren&apos;t written. <Link href="/account">Upgrade to Pro</Link>{" "}
+            You&apos;re out of credits, so some cards weren&apos;t written. <Link href="/account#upgrade">Upgrade to Pro</Link>{" "}
             or edit those cards by hand.
           </p>
         )}
