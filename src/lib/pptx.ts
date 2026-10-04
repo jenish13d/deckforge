@@ -179,7 +179,7 @@ export async function buildPptx(cards: CardContent[], theme: string, title: stri
       const px = W * 0.58;
       slide.addImage({ data: photo, x: px, y: 0, w: W - px, h: H, sizing: { type: "cover", w: W - px, h: H }, altText: card.image.alt });
       if (card.image.credit) {
-        slide.addText(`Photo: ${card.image.credit} / Pexels`, {
+        slide.addText(`Photo: ${card.image.credit}`, {
           x: px, y: H - 0.4, w: W - px - 0.15, h: 0.3, align: "right", fontFace: SANS, fontSize: 9, color: "FFFFFF",
           hyperlink: card.image.creditUrl ? { url: card.image.creditUrl } : undefined, margin: 0,
         });

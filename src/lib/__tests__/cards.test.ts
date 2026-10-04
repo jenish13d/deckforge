@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CardContentSchema, imageSrc, normalizeCard, normalizeOutline, parseStored, showsImage, type GeneratedCard } from "../cards";
+import { CardContentSchema, imageSrc, isProxyableImageUrl, normalizeCard, normalizeOutline, parseStored, showsImage, type GeneratedCard } from "../cards";
 
 const base: GeneratedCard = {
   layout: "bullets",
@@ -74,8 +74,13 @@ describe("parseStored", () => {
 describe("card photos", () => {
   const photo = { url: "https://images.pexels.com/photos/1/a.jpeg", alt: "Pizza", credit: "Ana", creditUrl: "https://www.pexels.com/photo/1" };
 
-  it("keeps Pexels photos and drops photos from anywhere else", () => {
+  it("keeps photos from the searched sources and drops photos from anywhere else", () => {
     expect(normalizeCard({ ...base, image: photo }).image?.url).toBe(photo.url);
+    for (const url of ["https://live.staticflickr.com/1/2_b.jpg", "https://farm4.staticflickr.com/1/2.jpg", "https://upload.wikimedia.org/wikipedia/commons/b/bc/x.jpg"]) {
+      expect(normalizeCard({ ...base, image: { ...photo, url } }).image?.url).toBe(url);
+    }
+    expect(normalizeCard({ ...base, image: { ...photo, url: "http://live.staticflickr.com/1/2_b.jpg" } }).image).toBeNull();
+    expect(normalizeCard({ ...base, image: { ...photo, url: "https://staticflickr.com.evil.example/x.jpg" } }).image).toBeNull();
     expect(normalizeCard({ ...base, image: { ...photo, url: "https://evil.example.com/x.jpg" } }).image).toBeNull();
     expect(normalizeCard({ ...base, image: { ...photo, url: "javascript:alert(1)" } }).image).toBeNull();
     expect(normalizeCard({ ...base, image: { ...photo, creditUrl: "javascript:alert(1)" } }).image?.creditUrl).toBe("");
@@ -85,6 +90,13 @@ describe("card photos", () => {
     expect(showsImage(normalizeCard({ ...base, layout: "bullets", image: photo }))).toBe(true);
     expect(showsImage(normalizeCard({ ...base, layout: "stats", image: photo }))).toBe(false);
     expect(showsImage(normalizeCard(base))).toBe(false);
+  });
+
+  it("lets the image route fetch Openverse thumbnails but nothing else from that host", () => {
+    expect(isProxyableImageUrl("https://api.openverse.org/v1/images/8bb3bfcc-0ca0-4394-bc4a-81c7a2e21741/thumb/")).toBe(true);
+    expect(isProxyableImageUrl("https://api.openverse.org/v1/images/?q=x")).toBe(false);
+    expect(isProxyableImageUrl("https://api.openverse.org/v1/auth_tokens/token/")).toBe(false);
+    expect(isProxyableImageUrl("https://images.pexels.com/photos/1/a.jpeg")).toBe(true);
   });
 
   it("serves photos through the same-origin image route", () => {

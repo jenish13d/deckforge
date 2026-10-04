@@ -69,8 +69,7 @@ separate Neon "branch" for testing.)
 
 ## Later steps
 
-- **Photos on slides (free):** sign up at https://www.pexels.com/api/ → copy your API key → add
-  `PEXELS_API_KEY` in Vercel → Redeploy.
+- **Photos on slides:** on automatically (Openverse, no key). Optional: a Pexels key in `PEXELS_API_KEY`.
 - **Forgot-password emails (free, from your Gmail):**
   1. Turn on 2-Step Verification for your Google account (myaccount.google.com → Security).
   2. Create an app password: myaccount.google.com/apppasswords → name it "Deckforge" → copy the 16 letters.

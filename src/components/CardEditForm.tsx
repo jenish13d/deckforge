@@ -202,7 +202,7 @@ function PhotoPicker({ card, onChange }: { card: CardContent; onChange: (image: 
         <div className="photo-current">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={imageSrc(card.image.url)} alt={card.image.alt} />
-          <span className="muted small">Photo by {card.image.credit} on Pexels</span>
+          <span className="muted small">Photo: {card.image.credit}</span>
           <button type="button" className="button button--small button--danger" onClick={() => onChange(null)}>
             Remove photo
           </button>
@@ -236,15 +236,15 @@ function PhotoPicker({ card, onChange }: { card: CardContent; onChange: (image: 
               type="button"
               className={`photo-option${card.image?.url === photo.url ? " is-selected" : ""}`}
               onClick={() => onChange({ url: photo.url, alt: photo.alt, credit: photo.credit, creditUrl: photo.creditUrl })}
-              title={`Photo by ${photo.credit} on Pexels`}
+              title={`Photo: ${photo.credit}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photo.thumb} alt={photo.alt} />
+              <img src={imageSrc(photo.thumb)} alt={photo.alt} />
             </button>
           ))}
         </div>
       )}
-      <p className="muted small">Photos from Pexels, free to use. The photographer is credited on the slide.</p>
+      <p className="muted small">Free photos that allow commercial use. The photographer and license are credited on the slide.</p>
     </fieldset>
   );
 }

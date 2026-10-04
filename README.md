@@ -13,9 +13,12 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 - **6 themes**, **present mode** and **share links** (view-only).
 - **Downloads:** **PDF** (built in the browser: each card rendered at 1280×720 into a 16:9 page, identical in
   every browser) and **PowerPoint (.pptx)** with native, editable text, shapes and photos in the deck's theme.
-- **Photos:** with `PEXELS_API_KEY` set, the AI suggests photo keywords per card and Title, Section, Bullets
-  and Quote cards get a Pexels photo beside the text, credited on the slide. Users can search, swap or remove
-  photos in the card editor. Photos are served through `/api/image` (Pexels only) so exports can read them.
+- **Photos:** the AI suggests photo keywords per card and Title, Section, Bullets and Quote cards get a photo
+  beside the text, credited on the slide (creator and license). Default source is **Openverse** (no key; only
+  Flickr/Wikimedia photos under CC BY, CC0 or public domain, so commercial use is allowed without
+  share-alike); set `PEXELS_API_KEY` to use Pexels instead, or `PHOTOS=off` to disable. Users can search, swap
+  or remove photos in the card editor. Photos and picker previews are served through `/api/image` (allowed
+  hosts only) so exports can read them and viewers' browsers don't contact photo sites directly.
 - **Accounts:** email + password, "My decks", only the owner can edit. **Forgot password** sends a one-time
   link valid for 1 hour (SMTP, e.g. Gmail with an app password; the same answer is shown whether or not the
   email has an account). **Change password** on the Account page. Both sign out other devices.

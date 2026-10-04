@@ -10,7 +10,7 @@ export const MAX_CARDS = 12;
 /** Layouts that have room for a photo beside the text. */
 export const IMAGE_LAYOUTS: readonly Layout[] = ["title", "section", "bullets", "quote"];
 
-/** A stock photo shown beside the text. Only Pexels images are accepted. */
+/** A photo shown beside the text. `credit` is shown as "Photo: <credit>", linking to creditUrl. */
 export const CardImageSchema = z.object({
   url: z.string(),
   alt: z.string(),
@@ -50,11 +50,17 @@ export const GeneratedCardSchema = z.object({
 });
 export type GeneratedCard = z.infer<typeof GeneratedCardSchema>;
 
-/** Accepts only https photos from Pexels' image CDN. */
+/** Accepts only https photos from the sources the app searches (Pexels, Flickr, Wikimedia). */
 export function isAllowedImageUrl(url: string): boolean {
   try {
     const u = new URL(url);
-    return u.protocol === "https:" && u.hostname === "images.pexels.com";
+    return (
+      u.protocol === "https:" &&
+      (u.hostname === "images.pexels.com" ||
+        u.hostname === "upload.wikimedia.org" ||
+        u.hostname === "staticflickr.com" ||
+        u.hostname.endsWith(".staticflickr.com"))
+    );
   } catch {
     return false;
   }
@@ -106,6 +112,17 @@ export function normalizeCard(raw: CardInput): CardContent {
 function isSafeLink(url: string): boolean {
   try {
     return new URL(url).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/** What /api/image may fetch: slide photos plus Openverse's search-result thumbnails. */
+export function isProxyableImageUrl(url: string): boolean {
+  if (isAllowedImageUrl(url)) return true;
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" && u.hostname === "api.openverse.org" && /^\/v1\/images\/[\w-]+\/thumb\/$/.test(u.pathname);
   } catch {
     return false;
   }

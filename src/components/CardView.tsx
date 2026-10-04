@@ -54,7 +54,7 @@ export function CardView({ content }: { content: CardContent }) {
           <img src={imageSrc(photo.url)} alt={photo.alt} crossOrigin="anonymous" />
           {photo.credit && (
             <figcaption className="card__credit">
-              Photo: {photo.creditUrl ? <a href={photo.creditUrl} target="_blank" rel="noreferrer">{photo.credit}</a> : photo.credit} / Pexels
+              Photo: {photo.creditUrl ? <a href={photo.creditUrl} target="_blank" rel="noreferrer">{photo.credit}</a> : photo.credit}
             </figcaption>
           )}
         </figure>
