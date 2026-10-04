@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Deck {
+  id            String   @id @default(cuid())
+  title         String
+  prompt        String
+  theme         String   @default("minimal")
+  // sha256 of the secret edit token; the token itself only lives in the creator's browser.
+  editTokenHash String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  cards         Card[]
+}
+
+model Card {
+  id        String   @id @default(cuid())
+  deckId    String
+  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  position  Int
+  // pending | ready | failed
+  status    String   @default("pending")
+  // JSON: the outline entry this card was planned from ({ title, points })
+  brief     String
+  // JSON: CardContent, empty until generated
+  content   String   @default("")
+  updatedAt DateTime @updatedAt
+
+  @@index([deckId, position])
+}

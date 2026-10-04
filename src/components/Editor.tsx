@@ -1,0 +1,246 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+
+import { CardEditForm } from "@/components/CardEditForm";
+import { CardPlaceholder, CardView } from "@/components/CardView";
+import { Presenter } from "@/components/Presenter";
+import { emptyCard, type CardContent } from "@/lib/cards";
+import { api, loadToken } from "@/lib/client";
+import type { CardView as CardData, DeckView } from "@/lib/decks";
+import { THEMES, isThemeId } from "@/lib/themes";
+
+const PARALLEL_CARDS = 3;
+const noopSubscribe = () => () => {};
+
+function without<T>(record: Record<string, T>, key: string): Record<string, T> {
+  const copy = { ...record };
+  delete copy[key];
+  return copy;
+}
+
+export function Editor({ initial }: { initial: DeckView }) {
+  const [deck, setDeck] = useState(initial);
+  const token = useSyncExternalStore(noopSubscribe, () => loadToken(initial.id), () => null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [busy, setBusy] = useState<Record<string, boolean>>({});
+  const [cardErrors, setCardErrors] = useState<Record<string, string>>({});
+  const [error, setError] = useState("");
+  const [presenting, setPresenting] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [tick, setTick] = useState(0);
+  const inFlight = useRef(new Set<string>());
+
+  const replaceCard = (card: CardData) =>
+    setDeck((d) => ({ ...d, cards: d.cards.map((c) => (c.id === card.id ? card : c)) }));
+
+  const generate = useCallback(
+    async (cardId: string, instructions?: string) => {
+      if (!token || inFlight.current.has(cardId)) return;
+      inFlight.current.add(cardId);
+      setBusy((b) => ({ ...b, [cardId]: true }));
+      setCardErrors((errs) => without(errs, cardId));
+      try {
+        const card = await api<CardData>(`/api/decks/${deck.id}/cards/${cardId}/generate`, {
+          body: { instructions },
+          token,
+        });
+        replaceCard(card);
+      } catch (e) {
+        setCardErrors((errs) => ({ ...errs, [cardId]: e instanceof Error ? e.message : String(e) }));
+        setDeck((d) => ({
+          ...d,
+          cards: d.cards.map((c) => (c.id === cardId && !c.content ? { ...c, status: "failed" } : c)),
+        }));
+      } finally {
+        inFlight.current.delete(cardId);
+        setBusy((b) => without(b, cardId));
+        setTick((t) => t + 1);
+      }
+    },
+    [deck.id, token],
+  );
+
+  // Write pending cards a few at a time; resumes after a page reload too.
+  useEffect(() => {
+    if (!token) return;
+    const free = PARALLEL_CARDS - inFlight.current.size;
+    deck.cards
+      .filter((c) => c.status === "pending" && !inFlight.current.has(c.id))
+      .slice(0, Math.max(free, 0))
+      .forEach((c) => void generate(c.id));
+  }, [deck.cards, token, generate, tick]);
+
+  async function run(action: () => Promise<void>) {
+    setError("");
+    try {
+      await action();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setDeck(await api<DeckView>(`/api/decks/${deck.id}`)); // resync after a failed change
+    }
+  }
+
+  const patchDeck = (body: Record<string, unknown>) =>
+    run(async () => {
+      await api(`/api/decks/${deck.id}`, { method: "PATCH", body, token });
+    });
+
+  function move(index: number, delta: number) {
+    const target = index + delta;
+    if (target < 0 || target >= deck.cards.length) return;
+    const cards = [...deck.cards];
+    [cards[index], cards[target]] = [cards[target], cards[index]];
+    setDeck({ ...deck, cards });
+    void run(async () => {
+      // The response carries the new positions, which "add card" relies on.
+      setDeck(await api<DeckView>(`/api/decks/${deck.id}`, { method: "PATCH", body: { order: cards.map((c) => c.id) }, token }));
+    });
+  }
+
+  function remove(card: CardData) {
+    if (!window.confirm(`Delete "${card.content?.title ?? card.brief.title}"?`)) return;
+    setDeck((d) => ({ ...d, cards: d.cards.filter((c) => c.id !== card.id) }));
+    void run(async () => {
+      await api(`/api/decks/${deck.id}/cards/${card.id}`, { method: "DELETE", token });
+    });
+  }
+
+  function addAfter(position: number) {
+    const title = window.prompt("What should the new card be about?");
+    if (!title?.trim()) return;
+    void run(async () => {
+      await api(`/api/decks/${deck.id}/cards`, { body: { afterPosition: position, title }, token });
+      setDeck(await api<DeckView>(`/api/decks/${deck.id}`));
+    });
+  }
+
+  function regenerate(card: CardData) {
+    const instructions = window.prompt("Anything to change? (optional, e.g. 'shorter', 'use a timeline')", "");
+    if (instructions === null) return;
+    void generate(card.id, instructions.trim() || undefined);
+  }
+
+  async function saveCard(cardId: string, content: CardContent) {
+    try {
+      replaceCard(await api<CardData>(`/api/decks/${deck.id}/cards/${cardId}`, { method: "PATCH", body: { content }, token }));
+      setEditing(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function share() {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/d/${deck.id}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copy this link:", `${window.location.origin}/d/${deck.id}`);
+    }
+  }
+
+  const readyCards = deck.cards.flatMap((c) => (c.content ? [c.content] : []));
+  const writing = deck.cards.filter((c) => c.status === "pending").length;
+
+  if (!token) {
+    return (
+      <main className="page">
+        <div className="notice">
+          <p>Only the browser that created this deck can edit it.</p>
+          <Link className="button" href={`/d/${deck.id}`}>View the deck</Link>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <>
+      <header className="toolbar">
+        <Link href="/" className="toolbar__brand">Deckforge</Link>
+        <input
+          className="input toolbar__title"
+          aria-label="Deck title"
+          defaultValue={deck.title}
+          maxLength={120}
+          onBlur={(e) => {
+            const title = e.target.value.trim();
+            if (title && title !== deck.title) {
+              setDeck((d) => ({ ...d, title }));
+              void patchDeck({ title });
+            }
+          }}
+        />
+        <select
+          className="input"
+          aria-label="Theme"
+          value={deck.theme}
+          onChange={(e) => {
+            if (!isThemeId(e.target.value)) return;
+            setDeck((d) => ({ ...d, theme: e.target.value }));
+            void patchDeck({ theme: e.target.value });
+          }}
+        >
+          {THEMES.map((t) => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
+        <button type="button" className="button" onClick={share}>{copied ? "Link copied" : "Share"}</button>
+        <Link className="button" href={`/d/${deck.id}`} target="_blank">View / PDF</Link>
+        <button
+          type="button"
+          className="button button--primary"
+          onClick={() => setPresenting(true)}
+          disabled={readyCards.length === 0}
+        >
+          Present
+        </button>
+      </header>
+
+      <main className="page">
+        {writing > 0 && <p className="status" role="status">Writing {writing} card{writing === 1 ? "" : "s"}…</p>}
+        {error && <p className="error" role="alert">{error}</p>}
+
+        <div className={`deck theme-${deck.theme}`}>
+          {deck.cards.map((card, i) => (
+            <section key={card.id} className="editor-card">
+              <div className="editor-card__tools">
+                <span className="editor-card__number">{i + 1}</span>
+                <button type="button" className="icon-button" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up">↑</button>
+                <button type="button" className="icon-button" onClick={() => move(i, 1)} disabled={i === deck.cards.length - 1} aria-label="Move down">↓</button>
+                <button type="button" className="button button--small" onClick={() => setEditing(card.id)} disabled={busy[card.id]}>Edit</button>
+                <button type="button" className="button button--small" onClick={() => regenerate(card)} disabled={busy[card.id]}>
+                  {busy[card.id] ? "Writing…" : "Regenerate"}
+                </button>
+                <button type="button" className="button button--small button--danger" onClick={() => remove(card)} disabled={busy[card.id]}>Delete</button>
+              </div>
+
+              {editing === card.id ? (
+                <CardEditForm
+                  initial={card.content ?? emptyCard(card.brief.title)}
+                  onSave={(content) => saveCard(card.id, content)}
+                  onCancel={() => setEditing(null)}
+                />
+              ) : card.content ? (
+                <div className={busy[card.id] ? "is-busy" : undefined}>
+                  <CardView content={card.content} />
+                </div>
+              ) : (
+                <CardPlaceholder title={card.brief.title} failed={card.status === "failed" && !busy[card.id]} />
+              )}
+              {cardErrors[card.id] && <p className="error">{cardErrors[card.id]}</p>}
+
+              <button type="button" className="add-card" onClick={() => addAfter(card.position)}>+ Add card</button>
+            </section>
+          ))}
+          {deck.cards.length === 0 && (
+            <button type="button" className="add-card" onClick={() => addAfter(-1)}>+ Add card</button>
+          )}
+        </div>
+      </main>
+
+      {presenting && <Presenter cards={readyCards} theme={deck.theme} onClose={() => setPresenting(false)} />}
+    </>
+  );
+}
