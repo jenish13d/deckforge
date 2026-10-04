@@ -16,7 +16,9 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 - **Photos:** with `PEXELS_API_KEY` set, the AI suggests photo keywords per card and Title, Section, Bullets
   and Quote cards get a Pexels photo beside the text, credited on the slide. Users can search, swap or remove
   photos in the card editor. Photos are served through `/api/image` (Pexels only) so exports can read them.
-- **Accounts:** email + password, "My decks", only the owner can edit.
+- **Accounts:** email + password, "My decks", only the owner can edit. **Forgot password** sends a one-time
+  link valid for 1 hour (SMTP, e.g. Gmail with an app password; the same answer is shown whether or not the
+  email has an account). **Change password** on the Account page. Both sign out other devices.
 - **Quality modes and credits:**
 
   | Mode | With Claude (`ANTHROPIC_API_KEY`) | With Gemini only (`GEMINI_API_KEY`) | Credits per card |

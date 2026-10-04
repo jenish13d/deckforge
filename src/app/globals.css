@@ -1814,3 +1814,7 @@ a {
   opacity: 0.6;
   cursor: default;
 }
+
+.section--tight {
+  margin-top: 32px;
+}

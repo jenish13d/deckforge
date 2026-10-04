@@ -29,6 +29,11 @@ export async function startSession(userId: string): Promise<void> {
   });
 }
 
+/** Signs the user out everywhere (after a password change or reset). */
+export async function endAllSessions(userId: string): Promise<void> {
+  await db.session.deleteMany({ where: { userId } });
+}
+
 export async function endSession(): Promise<void> {
   const store = await cookies();
   const token = store.get(COOKIE)?.value;

@@ -48,6 +48,9 @@ export function AuthForm({ mode, next = "/" }: { mode: "login" | "signup"; next?
           onChange={(e) => setPassword(e.target.value)}
         />
       </label>
+      {!signup && (
+        <Link href="/forgot-password" className="small">Forgot password?</Link>
+      )}
       {error && <p className="error" role="alert">{error}</p>}
       <button className="button button--primary" type="submit" disabled={busy}>
         {busy ? "Please wait…" : signup ? "Sign up free" : "Log in"}

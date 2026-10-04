@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { ChangePasswordForm } from "@/components/ChangePasswordForm";
 import { PlanActions } from "@/components/PlanActions";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -69,6 +70,10 @@ export default async function AccountPage(props: PageProps<"/account">) {
           demo={billingDemoEnabled()}
           hasCustomer={Boolean(user.stripeCustomerId)}
         />
+
+        <section className="section section--tight">
+          <ChangePasswordForm />
+        </section>
       </main>
       <SiteFooter />
     </>

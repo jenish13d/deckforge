@@ -69,6 +69,14 @@ separate Neon "branch" for testing.)
 
 ## Later steps
 
+- **Photos on slides (free):** sign up at https://www.pexels.com/api/ → copy your API key → add
+  `PEXELS_API_KEY` in Vercel → Redeploy.
+- **Forgot-password emails (free, from your Gmail):**
+  1. Turn on 2-Step Verification for your Google account (myaccount.google.com → Security).
+  2. Create an app password: myaccount.google.com/apppasswords → name it "Deckforge" → copy the 16 letters.
+  3. In Vercel add: `SMTP_HOST` = `smtp.gmail.com`, `SMTP_PORT` = `465`, `SMTP_USER` = your Gmail address,
+     `SMTP_PASS` = the 16-letter app password (Secret), `APP_URL` = your site address → Redeploy.
+
 - **Free real AI (Gemini):** get a free key at https://aistudio.google.com → **Get API key**. In Vercel →
   **Settings → Environment Variables**: add `GEMINI_API_KEY` (Secret), **delete** `DEMO_AI` and
   `BILLING_DEMO`, then **Deployments → ⋯ → Redeploy**. Quick and Standard now use real AI; Premium shows
