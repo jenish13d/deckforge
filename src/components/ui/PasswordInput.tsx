@@ -3,7 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
-/** Password field with a show/hide button. */
+/** Password field with a show/hide button. Pass `aria-label` so the button's name isn't read as part of the field's. */
 export function PasswordInput(props: Omit<React.InputHTMLAttributes<HTMLInputElement>, "type">) {
   const [visible, setVisible] = useState(false);
   return (

@@ -40,12 +40,12 @@ export function demoOutline(prompt: string, cardCount: number): Outline {
   };
 }
 
-const LAYOUT_CYCLE = ["bullets", "columns", "stats", "timeline", "quote", "bullets"] as const;
+const LAYOUT_CYCLE = ["bullets", "stats", "timeline", "table", "columns", "quote"] as const;
 const ICONS = ["💡", "🧭", "📊", "🗓️", "💬", "✅"];
 
 export function demoCard(cardTitle: string, _deckTitle: string, index: number, total: number): GeneratedCard {
   // Photos are looked up from the card title when a Pexels key is set.
-  const base = { icon: "", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "", imageQuery: cardTitle };
+  const base: GeneratedCard = { layout: "", eyebrow: "", title: cardTitle, icon: "", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "", table: { columns: [], rows: [] }, imageQuery: cardTitle };
   if (index === 0) {
     return { ...base, layout: "title", icon: "🚀", title: cardTitle, subtitle: "Demo content: connect an AI key (Gemini or Claude) to have the AI write real slides for this topic." };
   }
@@ -54,7 +54,13 @@ export function demoCard(cardTitle: string, _deckTitle: string, index: number, t
   }
   const layout = LAYOUT_CYCLE[(index - 1) % LAYOUT_CYCLE.length];
   const icon = ICONS[(index - 1) % ICONS.length];
+  base.eyebrow = `Part ${index}`;
   switch (layout) {
+    case "table":
+      return { ...base, layout, icon, title: cardTitle, subtitle: "Illustrative comparison for the demo.", table: {
+        columns: ["Option", "Cost", "Time", "Best for"],
+        rows: [["Do it yourself", "Low", "Slow", "Small teams"], ["Hire help", "Medium", "Fast", "Busy teams"], ["Buy a tool", "Monthly", "Fastest", "Growing teams"]],
+      } };
     case "columns":
       return { ...base, layout, icon, title: cardTitle, items: [
         { heading: "Simple", text: "Easy to understand and explain in one sentence." },

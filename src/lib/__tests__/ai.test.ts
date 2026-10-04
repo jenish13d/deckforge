@@ -7,6 +7,7 @@ import {
   choiceForMode,
   deckContext,
   generateCard,
+  varyLayout,
   generateOutline,
   type CallModel,
   type ModelRequest,
@@ -83,6 +84,36 @@ describe("generateCard", () => {
     await generateCard({ deckTitle: "d", prompt: "p", outline, index: 2, mode: "quick" }, call);
     expect(requests[0].instructions).toBe(requests[1].instructions);
     expect(requests[0].context).toBe(requests[1].context);
+  });
+});
+
+describe("deck variety", () => {
+  const card = {
+    layout: "timeline", eyebrow: "", icon: "", title: "t", subtitle: "", items: [{ heading: "a", text: "" }, { heading: "b", text: "" }],
+    stats: [], quote: "", quoteAuthor: "", table: { columns: [], rows: [] }, imageQuery: "",
+  };
+
+  it("always makes the first card the cover, named after the deck", async () => {
+    const { call, requests } = fakeModel(card);
+    const result = await generateCard({ deckTitle: "Messi's journey", prompt: "p", outline, index: 0, mode: "quick" }, call);
+    expect(result.card.layout).toBe("title");
+    expect(requests[0].user).toContain("Messi's journey");
+  });
+
+  it("tells the model the previous layout and switches a repeated list layout", async () => {
+    const { call, requests } = fakeModel(card);
+    const result = await generateCard({ deckTitle: "d", prompt: "p", outline, index: 1, mode: "quick", previousLayout: "timeline" }, call);
+    expect(requests[0].user).toContain('previous card used the "timeline" layout');
+    expect(result.card.layout).toBe("columns");
+  });
+
+  it("leaves layouts alone when they differ or can't be swapped", () => {
+    const base = { ...card, layout: "bullets" as const, eyebrow: "", image: null };
+    expect(varyLayout(base, "stats").layout).toBe("bullets");
+    expect(varyLayout(base, undefined).layout).toBe("bullets");
+    const many = { ...base, items: Array.from({ length: 5 }, () => ({ heading: "h", text: "t" })) };
+    expect(varyLayout(many, "bullets").layout).toBe("bullets");
+    expect(varyLayout({ ...many, layout: "timeline" }, "timeline").layout).toBe("bullets");
   });
 });
 

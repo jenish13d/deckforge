@@ -4,8 +4,9 @@ import { THEMES } from "@/lib/themes";
 
 const SAMPLE: CardContent = {
   layout: "bullets",
+  eyebrow: "",
   icon: "✨",
-  title: "One deck, eight looks",
+  title: "One deck, many looks",
   subtitle: "",
   items: [
     { heading: "Switch in one click", text: "Every card updates instantly." },
@@ -14,6 +15,7 @@ const SAMPLE: CardContent = {
   stats: [],
   quote: "",
   quoteAuthor: "",
+  table: { columns: [], rows: [] },
 };
 
 export function ThemeShowcase() {

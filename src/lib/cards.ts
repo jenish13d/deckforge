@@ -1,14 +1,16 @@
 import { z } from "zod";
 
-export const LAYOUTS = ["title", "bullets", "columns", "stats", "quote", "timeline", "section"] as const;
+export const LAYOUTS = ["title", "bullets", "columns", "stats", "quote", "timeline", "section", "table"] as const;
 export type Layout = (typeof LAYOUTS)[number];
 
 export const MAX_ITEMS = 5;
+export const MAX_TABLE_COLUMNS = 4;
+export const MAX_TABLE_ROWS = 7;
 export const MIN_CARDS = 3;
 export const MAX_CARDS = 12;
 
-/** Layouts that have room for a photo beside the text. */
-export const IMAGE_LAYOUTS: readonly Layout[] = ["title", "section", "bullets", "quote"];
+/** Layouts that have room for a photo (beside the text, or behind it on the cover). */
+export const IMAGE_LAYOUTS: readonly Layout[] = ["title", "section", "bullets", "quote", "stats", "timeline"];
 
 /** A photo shown beside the text. `credit` is shown as "Photo: <credit>", linking to creditUrl. */
 export const CardImageSchema = z.object({
@@ -18,6 +20,9 @@ export const CardImageSchema = z.object({
   creditUrl: z.string(),
 });
 export type CardImage = z.infer<typeof CardImageSchema>;
+
+const TableSchema = z.object({ columns: z.array(z.string()), rows: z.array(z.array(z.string())) });
+export type CardTable = z.infer<typeof TableSchema>;
 
 const textFields = {
   icon: z.string(),
@@ -33,6 +38,9 @@ const textFields = {
 export const CardContentSchema = z.object({
   layout: z.enum(LAYOUTS),
   ...textFields,
+  /** Small label above the title, e.g. "2014 · Brazil". Missing in older cards. */
+  eyebrow: z.string().default(""),
+  table: TableSchema.default({ columns: [], rows: [] }),
   image: CardImageSchema.nullable().optional(),
 });
 export type CardContent = z.infer<typeof CardContentSchema>;
@@ -45,7 +53,9 @@ export type CardContent = z.infer<typeof CardContentSchema>;
  */
 export const GeneratedCardSchema = z.object({
   layout: z.string(),
+  eyebrow: z.string(),
   ...textFields,
+  table: TableSchema,
   imageQuery: z.string(),
 });
 export type GeneratedCard = z.infer<typeof GeneratedCardSchema>;
@@ -79,7 +89,21 @@ export type CardBrief = Outline["cards"][number];
 
 const clip = (s: string, max: number) => (s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s);
 
-type CardInput = Omit<GeneratedCard, "imageQuery"> & { image?: CardImage | null };
+type CardInput = Omit<GeneratedCard, "imageQuery" | "eyebrow" | "table"> & {
+  eyebrow?: string;
+  table?: CardTable;
+  image?: CardImage | null;
+};
+
+function normalizeTable(table: CardTable | undefined): CardTable {
+  const columns = (table?.columns ?? []).slice(0, MAX_TABLE_COLUMNS).map((c) => clip(c.trim(), 40));
+  if (!columns.some(Boolean)) return { columns: [], rows: [] };
+  const rows = (table?.rows ?? [])
+    .map((row) => columns.map((_, i) => clip((row[i] ?? "").trim(), 80)))
+    .filter((row) => row.some(Boolean))
+    .slice(0, MAX_TABLE_ROWS);
+  return { columns, rows };
+}
 
 /** Keeps generated or user-edited content within what a card can display. */
 export function normalizeCard(raw: CardInput): CardContent {
@@ -92,8 +116,12 @@ export function normalizeCard(raw: CardInput): CardContent {
         creditUrl: isSafeLink(raw.image.creditUrl) ? raw.image.creditUrl : "",
       }
     : null;
+  const table = normalizeTable(raw.table);
+  const known = isLayout(layout) ? layout : "bullets";
   return {
-    layout: isLayout(layout) ? layout : "bullets",
+    // A table card needs a table; without one it falls back to a list.
+    layout: known === "table" && table.rows.length === 0 ? "bullets" : known,
+    eyebrow: clip((raw.eyebrow ?? "").trim(), 40),
     icon: [...raw.icon.trim()].slice(0, 2).join(""),
     title: clip(raw.title.trim(), 120),
     subtitle: clip(raw.subtitle.trim(), 240),
@@ -105,6 +133,7 @@ export function normalizeCard(raw: CardInput): CardContent {
       .map((s) => ({ value: clip(s.value.trim(), 16), label: clip(s.label.trim(), 80) })),
     quote: clip(raw.quote.trim(), 300),
     quoteAuthor: clip(raw.quoteAuthor.trim(), 80),
+    table,
     image,
   };
 }
@@ -154,6 +183,7 @@ export function normalizeOutline(raw: Outline, maxCards: number): Outline {
 export function emptyCard(title: string): CardContent {
   return {
     layout: "bullets",
+    eyebrow: "",
     icon: "",
     title,
     subtitle: "",
@@ -161,6 +191,7 @@ export function emptyCard(title: string): CardContent {
     stats: [],
     quote: "",
     quoteAuthor: "",
+    table: { columns: [], rows: [] },
     image: null,
   };
 }

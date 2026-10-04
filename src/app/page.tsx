@@ -19,6 +19,7 @@ import { listDecks } from "@/lib/decks";
 import { availableModes, premiumAvailable } from "@/lib/providers";
 import { SITE } from "@/lib/site";
 import { TEMPLATES, findTemplate } from "@/lib/templates";
+import { THEMES } from "@/lib/themes";
 
 interface Point {
   icon: LucideIcon;
@@ -119,7 +120,7 @@ export default async function Home(props: PageProps<"/">) {
           </section>
 
           <section id="themes" className="section">
-            <h2 className="section-heading center">Eight themes, one click</h2>
+            <h2 className="section-heading center">{THEMES.length} themes, one click</h2>
             <p className="muted center">Switch the look of every card at once, any time.</p>
             <ThemeShowcase />
           </section>

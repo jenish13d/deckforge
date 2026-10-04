@@ -14,7 +14,7 @@ export interface Template {
   preview: CardContent;
 }
 
-const blank = { icon: "", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "" };
+const blank = { eyebrow: "", icon: "", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "", table: { columns: [], rows: [] } };
 
 export const TEMPLATES: Template[] = [
   {

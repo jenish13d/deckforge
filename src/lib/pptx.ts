@@ -7,22 +7,26 @@ import { themeStyle, type ThemeStyle } from "./themes";
 import { SITE } from "@/lib/site";
 
 // Builds an editable PowerPoint deck (16:9, 13.333 × 7.5 in) from cards. Sizes mirror
-// the on-screen card, where 1% of the card width (1cqi) is 0.1333 in ≈ 9.6 pt.
+// the on-screen card, where 1% of the card width (1cqi) is 0.1333 in ≈ 9.6 pt, and
+// layouts follow CardView: photo side alternates, covers put a panel over the photo,
+// and text is scaled down until it fits, like on screen.
 
 const W = 13.333;
 const H = 7.5;
 const PAD_X = 0.93;
 const PAD_Y = 0.8;
-const pt = (cqi: number) => Math.round(cqi * 9.6);
+const CQI = W / 100;
 const SANS = "Arial";
 const SERIF = "Georgia";
 
 type Slide = PptxGenJS.Slide;
+type Shapes = typeof PptxGenJS.prototype.ShapeType;
 
 /** Rough height (in inches) of text in a box, to stack and centre blocks vertically. */
-function textHeight(text: string, sizePt: number, widthIn: number, lineHeight = 1.25): number {
-  // ~0.47em is an average character width for Arial/Georgia text.
-  const charsPerLine = Math.max(8, Math.floor((widthIn * 72) / (sizePt * 0.47)));
+function textHeight(text: string, sizePt: number, widthIn: number, lineHeight = 1.25, charWidth = 0.47): number {
+  if (!text) return 0;
+  // ~0.47em is an average character width for Arial/Georgia text (capitals are wider).
+  const charsPerLine = Math.max(6, Math.floor((widthIn * 72) / (sizePt * charWidth)));
   const lines = text.split("\n").reduce((n, line) => n + Math.max(1, Math.ceil(line.length / charsPerLine)), 0);
   return (lines * sizePt * lineHeight) / 72;
 }
@@ -63,101 +67,223 @@ interface Block {
   draw: (slide: Slide, y: number) => void;
 }
 
-function buildBlocks(card: CardContent, style: ThemeStyle, x: number, w: number, shapes: typeof PptxGenJS.prototype.ShapeType): Block[] {
+interface Colors {
+  title: string;
+  text: string;
+  muted: string;
+  panel: string;
+}
+
+/** Lays out one card's content as stacked blocks at `scale` (1 = on-screen size). */
+function buildBlocks(card: CardContent, style: ThemeStyle, colors: Colors, x: number, w: number, shapes: Shapes, scale: number, hasPhoto: boolean, fullBleed: boolean): Block[] {
+  const pt = (cqi: number) => Math.max(8, Math.round(cqi * 9.6 * scale));
+  const inch = (cqi: number) => cqi * CQI * scale;
   const heading = style.serifHeadings ? SERIF : SANS;
   const body = style.serifBody ? SERIF : SANS;
   const blocks: Block[] = [];
-  const gap = 0.3;
-  const add = (height: number, draw: Block["draw"]) => blocks.push({ height: height + gap, draw });
+  const add = (height: number, draw: Block["draw"], gap = inch(2.2)) => blocks.push({ height: height + gap, draw });
+  const items = card.items.filter((i) => i.heading || i.text);
+  const stats = card.stats.filter((st) => st.value || st.label);
+  const hero = card.layout === "stats" && stats.length === 1;
+  const panelBody = style.panelBody && !fullBleed;
+  const boxedOnBg = panelBody && (card.layout === "columns" || card.layout === "timeline" || (card.layout === "bullets" && !hasPhoto && items.length >= 4));
 
-  if (card.icon) {
-    add(0.62, (s, y) => s.addText(card.icon, { x, y, w: 1, h: 0.62, fontSize: pt(4.5), margin: 0 }));
+  // --- Head: icon, label, title
+  if (card.icon && !style.hideIcon) add(inch(4.2), (s, y) => s.addText(card.icon, { x, y, w: 1, h: inch(4.2), fontSize: pt(4.2), margin: 0 }), inch(1.2));
+  if (card.eyebrow) {
+    const size = pt(1.5);
+    const label = card.eyebrow.toUpperCase();
+    // Capitals are ~0.72em wide plus 2pt letter spacing; the box hugs the label.
+    const lw = Math.min(w, (label.length * (size * 0.72 + 2)) / 72 + 0.35);
+    add(size / 72 + 0.16, (s, y) => {
+      if (style.tag) s.addShape(shapes.rect, { x, y, w: lw, h: size / 72 + 0.16, fill: { color: style.tag }, line: { color: style.tag } });
+      s.addText(label, { x: style.tag ? x + 0.12 : x, y, w: lw, h: size / 72 + 0.16, fontFace: style.tag ? heading : body, fontSize: size, bold: !style.tag, charSpacing: 2, color: style.tag ? "FDF6E9" : style.accent, valign: "middle", margin: 0, wrap: false });
+    }, inch(1.2));
   }
+  if (card.layout !== "quote") {
+    const size = pt(card.layout === "title" ? (fullBleed ? 5.4 : 6.6) : card.layout === "section" ? 5.6 : 4.6);
+    const text = style.upperTitles ? card.title.toUpperCase() : card.title;
+    const th = textHeight(text, size, w, style.upperTitles ? 1.2 : 1.12, style.upperTitles ? 0.7 : 0.5);
+    add(th, (s, y) => s.addText(text, { x, y, w, h: th, fontFace: heading, fontSize: size, bold: !style.upperTitles, color: colors.title, valign: "top", margin: 0, lineSpacingMultiple: 0.95 }));
+  }
+
+  // --- Body
+  const bodyBlocks: Block[] = [];
+  const pad = panelBody && !boxedOnBg ? inch(3.2) : 0;
+  const bx = x + pad;
+  const bw = w - pad * 2;
+  const addBody = (height: number, draw: Block["draw"], gap = inch(2)) => bodyBlocks.push({ height: height + gap, draw });
+  const subtitleColor = boxedOnBg ? colors.title : colors.muted;
+  const subtitle = (size: number) => {
+    const sw = bw * 0.9;
+    const sh = textHeight(card.subtitle, pt(size), sw, 1.45);
+    addBody(sh, (s, y) => s.addText(card.subtitle, { x: bx, y, w: sw, h: sh, fontFace: body, fontSize: pt(size), color: subtitleColor, valign: "top", margin: 0 }));
+  };
 
   if (card.layout === "quote") {
     const quote = `“${card.quote || card.title}”`;
-    const qh = textHeight(quote, pt(3.6), w - 0.5, 1.3);
-    add(qh, (s, y) => {
-      s.addShape(shapes.rect, { x, y, w: 0.08, h: qh, fill: { color: style.accent }, line: { color: style.accent } });
-      s.addText(quote, { x: x + 0.4, y, w: w - 0.4, h: qh, fontFace: heading, fontSize: pt(3.6), color: style.text, valign: "top", margin: 0, lineSpacingMultiple: 1.1 });
+    const qh = textHeight(quote, pt(3.6), bw - 0.5, 1.3);
+    addBody(qh, (s, y) => {
+      s.addShape(shapes.rect, { x: bx, y, w: 0.08, h: qh, fill: { color: style.accent }, line: { color: style.accent } });
+      s.addText(quote, { x: bx + 0.4, y, w: bw - 0.4, h: qh, fontFace: heading, fontSize: pt(3.6), color: colors.text, valign: "top", margin: 0, lineSpacingMultiple: 1.1 });
     });
-    if (card.quoteAuthor) add(0.4, (s, y) => s.addText(`— ${card.quoteAuthor}`, { x: x + 0.48, y, w, h: 0.4, fontFace: body, fontSize: pt(1.9), color: style.muted, margin: 0 }));
-    if (card.quote && card.title) add(0.4, (s, y) => s.addText(card.title, { x, y, w, h: 0.4, fontFace: body, fontSize: pt(2.2), color: style.muted, margin: 0 }));
-    return blocks;
-  }
-
-  const titleSize = pt(card.layout === "title" ? 6.4 : card.layout === "section" ? 5.4 : 4.4);
-  const th = textHeight(card.title, titleSize, w, 1.12);
-  add(th, (s, y) => s.addText(card.title, { x, y, w, h: th, fontFace: heading, fontSize: titleSize, bold: true, color: style.text, valign: "top", margin: 0, lineSpacingMultiple: 0.95 }));
-
-  if (card.subtitle) {
-    const sw = w * 0.85;
-    const size = pt(card.layout === "title" ? 2.5 : 2.2);
-    const sh = textHeight(card.subtitle, size, sw, 1.4);
-    add(sh, (s, y) => s.addText(card.subtitle, { x, y, w: sw, h: sh, fontFace: body, fontSize: size, color: style.muted, valign: "top", margin: 0 }));
+    if (card.quoteAuthor) addBody(0.4, (s, y) => s.addText(`— ${card.quoteAuthor}`, { x: bx + 0.48, y, w: bw, h: 0.4, fontFace: body, fontSize: pt(1.9), color: colors.muted, margin: 0 }));
+    if (card.quote && card.title) addBody(0.4, (s, y) => s.addText(card.title, { x: bx, y, w: bw, h: 0.4, fontFace: body, fontSize: pt(2.2), color: colors.muted, margin: 0 }));
+  } else if (card.subtitle && !hero) {
+    subtitle(card.layout === "title" ? 2.6 : 2.2);
   }
 
   if (card.layout === "title" || card.layout === "section") {
-    add(0.06, (s, y) => s.addShape(shapes.roundRect, { x, y, w: 1.33, h: 0.08, fill: { color: style.accent }, line: { color: style.accent }, rectRadius: 0.04 }));
+    addBody(0.06, (s, y) => s.addShape(shapes.roundRect, { x: bx, y, w: inch(10) / scale, h: 0.08, fill: { color: style.accent }, line: { color: style.accent }, rectRadius: 0.04 }));
   }
 
-  const items = card.items.filter((i) => i.heading || i.text);
+  const itemSize = pt(2.1);
+  const headSize = Math.round(itemSize * 1.08);
+  const box = (s: Slide, bxx: number, y: number, bww: number, h: number, fill: string) =>
+    s.addShape(shapes.roundRect, { x: bxx, y, w: bww, h, fill: { color: fill }, line: { color: fill }, rectRadius: style.panelBody ? 0.03 : 0.12 });
+  const boxFill = style.panelBody ? colors.panel : style.surface;
+
   if ((card.layout === "bullets" || card.layout === "timeline") && items.length) {
-    const indent = card.layout === "timeline" ? 0.65 : 0.4;
-    for (const [n, item] of items.entries()) {
-      const hh = item.heading ? textHeight(item.heading, pt(2.25), w - indent, 1.2) : 0;
-      const bh = item.text ? textHeight(item.text, pt(2.05), w - indent, 1.35) : 0;
-      blocks.push({
-        height: hh + bh + 0.22,
-        draw: (s, y) => {
-          if (card.layout === "timeline") {
-            s.addShape(shapes.ellipse, { x, y: y + 0.02, w: 0.45, h: 0.45, fill: { color: style.accent }, line: { color: style.accent } });
-            s.addText(String(n + 1), { x, y: y + 0.02, w: 0.45, h: 0.45, align: "center", valign: "middle", fontFace: SANS, fontSize: pt(1.6), bold: true, color: style.onAccent, margin: 0 });
-          } else {
-            s.addShape(shapes.ellipse, { x: x + 0.05, y: y + 0.12, w: 0.12, h: 0.12, fill: { color: style.accent }, line: { color: style.accent } });
-          }
-          if (item.heading) s.addText(item.heading, { x: x + indent, y, w: w - indent, h: hh, fontFace: heading, fontSize: pt(2.25), bold: true, color: style.text, valign: "top", margin: 0 });
-          if (item.text) s.addText(item.text, { x: x + indent, y: y + hh, w: w - indent, h: bh, fontFace: body, fontSize: pt(2.05), color: style.muted, valign: "top", margin: 0 });
-        },
+    const row = card.layout === "timeline" && !hasPhoto && items.length <= 4;
+    const grid = card.layout === "bullets" && !hasPhoto && items.length >= 4;
+    const boxed = grid || (card.layout === "timeline" && !row);
+    if (row) {
+      const gap = inch(2.6);
+      const cw = (bw - gap * (items.length - 1)) / items.length;
+      const step = inch(3.4);
+      const h = step + 0.15 + Math.max(...items.map((i) => textHeight(i.heading, headSize, cw, 1.2) + textHeight(i.text, itemSize, cw, 1.4)));
+      addBody(h, (s, y) => {
+        s.addShape(shapes.rect, { x: bx + step / 2, y: y + step / 2 - 0.015, w: bw - step, h: 0.03, fill: { color: style.accent, transparency: 60 }, line: { color: style.accent, transparency: 60 } });
+        items.forEach((item, n) => {
+          const cx = bx + n * (cw + gap);
+          s.addShape(shapes.ellipse, { x: cx, y, w: step, h: step, fill: { color: style.accent }, line: { color: style.accent } });
+          s.addText(String(n + 1), { x: cx, y, w: step, h: step, align: "center", valign: "middle", fontFace: SANS, fontSize: pt(1.6), bold: true, color: style.onAccent, margin: 0 });
+          const hh = textHeight(item.heading, headSize, cw, 1.2);
+          if (item.heading) s.addText(item.heading, { x: cx, y: y + step + 0.15, w: cw, h: hh, fontFace: heading, fontSize: headSize, bold: true, color: colors.text, valign: "top", margin: 0 });
+          if (item.text) s.addText(item.text, { x: cx, y: y + step + 0.15 + hh, w: cw, h: textHeight(item.text, itemSize, cw, 1.4), fontFace: body, fontSize: itemSize, color: colors.muted, valign: "top", margin: 0 });
+        });
       });
+    } else {
+      const cols = grid ? 2 : 1;
+      const gap = inch(1.6);
+      const cw = (bw - gap * (cols - 1)) / cols;
+      const indent = card.layout === "timeline" ? inch(3.4) + 0.2 : 0.35;
+      const innerPad = boxed ? inch(2) : 0;
+      const tw = cw - indent - innerPad * 2;
+      const heights = items.map((i) => textHeight(i.heading, headSize, tw, 1.2) + textHeight(i.text, itemSize, tw, 1.4) + (boxed ? inch(1.5) * 2 : 0.05));
+      for (let r = 0; r < items.length; r += cols) {
+        const rowItems = items.slice(r, r + cols);
+        const rh = Math.max(...heights.slice(r, r + cols));
+        addBody(rh, (s, y) =>
+          rowItems.forEach((item, c) => {
+            const n = r + c;
+            const cx = bx + c * (cw + gap);
+            const ty = y + (boxed ? inch(1.5) : 0);
+            if (boxed) box(s, cx, y, cw, rh, boxFill);
+            if (card.layout === "timeline") {
+              const step = inch(3.4);
+              s.addShape(shapes.ellipse, { x: cx + innerPad, y: ty, w: step, h: step, fill: { color: style.accent }, line: { color: style.accent } });
+              s.addText(String(n + 1), { x: cx + innerPad, y: ty, w: step, h: step, align: "center", valign: "middle", fontFace: SANS, fontSize: pt(1.6), bold: true, color: style.onAccent, margin: 0 });
+            } else {
+              s.addShape(shapes.ellipse, { x: cx + innerPad + 0.05, y: ty + 0.1, w: 0.11, h: 0.11, fill: { color: style.accent }, line: { color: style.accent } });
+            }
+            const tx = cx + innerPad + indent;
+            const hh = textHeight(item.heading, headSize, tw, 1.2);
+            if (item.heading) s.addText(item.heading, { x: tx, y: ty, w: tw, h: hh, fontFace: heading, fontSize: headSize, bold: true, color: colors.text, valign: "top", margin: 0 });
+            if (item.text) s.addText(item.text, { x: tx, y: ty + hh, w: tw, h: textHeight(item.text, itemSize, tw, 1.4), fontFace: body, fontSize: itemSize, color: colors.muted, valign: "top", margin: 0 });
+          }),
+          inch(1.6),
+        );
+      }
     }
   }
 
   if (card.layout === "columns" && items.length) {
-    const colGap = 0.27;
-    const cw = (w - colGap * (items.length - 1)) / items.length;
-    const inner = cw - 0.6;
-    const h = Math.max(...items.map((i) => textHeight(i.heading, pt(2.25), inner, 1.2) + textHeight(i.text, pt(2.05), inner, 1.35))) + 0.7;
-    add(h, (s, y) =>
+    const gap = inch(2);
+    const cw = (bw - gap * (items.length - 1)) / items.length;
+    const inner = cw - inch(2.2) * 2;
+    const h = Math.max(...items.map((i) => textHeight(i.heading, headSize, inner, 1.2) + textHeight(i.text, itemSize, inner, 1.4))) + inch(2.2) * 2;
+    addBody(h, (s, y) =>
       items.forEach((item, i) => {
-        const cx = x + i * (cw + colGap);
-        s.addShape(shapes.roundRect, { x: cx, y, w: cw, h, fill: { color: style.surface }, line: { color: style.surface }, rectRadius: 0.15 });
-        s.addShape(shapes.rect, { x: cx, y, w: cw, h: 0.07, fill: { color: style.accent }, line: { color: style.accent } });
-        const hh = textHeight(item.heading, pt(2.25), inner, 1.2);
-        s.addText(item.heading, { x: cx + 0.3, y: y + 0.3, w: inner, h: hh, fontFace: heading, fontSize: pt(2.25), bold: true, color: style.text, valign: "top", margin: 0 });
-        s.addText(item.text, { x: cx + 0.3, y: y + 0.3 + hh, w: inner, h: h - hh - 0.5, fontFace: body, fontSize: pt(2.05), color: style.muted, valign: "top", margin: 0 });
+        const cx = bx + i * (cw + gap);
+        box(s, cx, y, cw, h, boxFill);
+        if (!style.panelBody) s.addShape(shapes.rect, { x: cx, y, w: cw, h: 0.07, fill: { color: style.accent }, line: { color: style.accent } });
+        const hh = textHeight(item.heading, headSize, inner, 1.2);
+        s.addText(item.heading, { x: cx + inch(2.2), y: y + inch(2.2), w: inner, h: hh, fontFace: heading, fontSize: headSize, bold: true, color: colors.text, valign: "top", margin: 0 });
+        s.addText(item.text, { x: cx + inch(2.2), y: y + inch(2.2) + hh, w: inner, h: h - hh - inch(2.2) * 2, fontFace: body, fontSize: itemSize, color: colors.muted, valign: "top", margin: 0 });
       }),
     );
   }
 
-  const stats = card.stats.filter((st) => st.value || st.label);
   if (card.layout === "stats" && stats.length) {
-    const colGap = 0.27;
-    const cw = (w - colGap * (stats.length - 1)) / stats.length;
-    const inner = cw - 0.6;
-    const h = 0.75 + Math.max(...stats.map((st) => textHeight(st.label, pt(1.8), inner, 1.35))) + 0.7;
-    add(h, (s, y) =>
-      stats.forEach((st, i) => {
-        const cx = x + i * (cw + colGap);
-        s.addShape(shapes.roundRect, { x: cx, y, w: cw, h, fill: { color: style.surface }, line: { color: style.surface }, rectRadius: 0.15 });
-        s.addText(st.value, { x: cx + 0.3, y: y + 0.3, w: inner, h: 0.75, fontFace: heading, fontSize: pt(5), bold: true, color: style.accent, valign: "top", margin: 0 });
-        s.addText(st.label, { x: cx + 0.3, y: y + 1.1, w: inner, h: h - 1.3, fontFace: body, fontSize: pt(1.8), color: style.muted, valign: "top", margin: 0 });
-      }),
+    if (hero) {
+      const [st] = stats;
+      const vs = pt(10);
+      addBody((vs / 72) * 1.15, (s, y) => s.addText(st.value, { x: bx, y, w: bw, h: (vs / 72) * 1.15, fontFace: heading, fontSize: vs, bold: !style.panelBody, color: style.accent, valign: "top", margin: 0 }), inch(1.2));
+      const lh = textHeight(st.label, pt(2.6), bw, 1.3);
+      addBody(lh, (s, y) => s.addText(st.label, { x: bx, y, w: bw, h: lh, fontFace: heading, fontSize: pt(2.6), bold: true, color: colors.text, valign: "top", margin: 0 }), inch(1.2));
+      if (card.subtitle) subtitle(2.2);
+    } else {
+      const cols = hasPhoto ? Math.min(2, stats.length) : stats.length;
+      const gap = inch(2);
+      const cw = (bw - gap * (cols - 1)) / cols;
+      const inner = cw - inch(2.4) * 2;
+      const h = pt(5) / 72 + 0.1 + Math.max(...stats.map((st) => textHeight(st.label, pt(1.8), inner, 1.35))) + inch(2.4) * 2;
+      for (let r = 0; r < stats.length; r += cols) {
+        const rowStats = stats.slice(r, r + cols);
+        addBody(h, (s, y) =>
+          rowStats.forEach((st, i) => {
+            const cx = bx + i * (cw + gap);
+            box(s, cx, y, cw, h, style.surface);
+            s.addText(st.value, { x: cx + inch(2.4), y: y + inch(2.4), w: inner, h: pt(5) / 72 + 0.05, fontFace: heading, fontSize: pt(5), bold: true, color: style.accent, valign: "top", margin: 0 });
+            s.addText(st.label, { x: cx + inch(2.4), y: y + inch(2.4) + pt(5) / 72 + 0.1, w: inner, h: h - pt(5) / 72 - inch(2.4) * 2, fontFace: body, fontSize: pt(1.8), color: colors.muted, valign: "top", margin: 0 });
+          }),
+          inch(2),
+        );
+      }
+    }
+  }
+
+  if (card.layout === "table" && card.table.rows.length) {
+    const size = pt(1.8);
+    const cols = card.table.columns.length;
+    const cw = bw / cols;
+    const rowH = (cells: string[]) => Math.max(...cells.map((c) => textHeight(c, size, cw - 0.2, 1.3))) + 0.16;
+    const heights = [rowH(card.table.columns), ...card.table.rows.map(rowH)];
+    const total = heights.reduce((a, b) => a + b, 0);
+    const head = style.tableHead ?? style.accent;
+    addBody(total, (s, y) =>
+      s.addTable(
+        [
+          card.table.columns.map((c) => ({ text: c, options: { bold: true, color: style.onAccent, fill: { color: head }, fontFace: heading } })),
+          ...card.table.rows.map((row, r) =>
+            row.map((c) => ({ text: c, options: { color: colors.text, fill: { color: r % 2 ? style.surface : colors.panel }, fontFace: body } })),
+          ),
+        ],
+        { x: bx, y, w: bw, colW: Array(cols).fill(cw), rowH: heights, fontSize: size, valign: "middle", margin: 0.08, border: { type: "solid", pt: 0.5, color: "D9D4C7" } },
+      ),
     );
   }
 
+  // Panel themes: the body sits on a panel (except boxed lists, whose boxes are the panels).
+  const bodyHeight = bodyBlocks.reduce((sum, b) => sum + b.height, 0) - (bodyBlocks.length ? inch(2) : 0);
+  if (bodyBlocks.length) {
+    blocks.push({
+      height: bodyHeight + pad * 2,
+      draw: (s, y) => {
+        if (pad) box(s, x, y, w, bodyHeight + pad * 2, colors.panel);
+        let by = y + pad;
+        for (const b of bodyBlocks) {
+          b.draw(s, by);
+          by += b.height;
+        }
+      },
+    });
+  }
   return blocks;
 }
+
+const total = (blocks: Block[]) => blocks.reduce((sum, b) => sum + b.height, 0);
 
 export async function buildPptx(cards: CardContent[], theme: string, title: string): Promise<PptxGenJS> {
   const { default: Pptx } = await import("pptxgenjs");
@@ -169,27 +295,64 @@ export async function buildPptx(cards: CardContent[], theme: string, title: stri
   const style = themeStyle(theme);
   const background = gradientBackground(style);
 
-  for (const card of cards) {
+  for (const [index, card] of cards.entries()) {
     const slide = pptx.addSlide();
-    slide.background = background ? { data: background } : { color: style.bg[0] };
+    const variant = style.variants?.[index % style.variants.length];
+    slide.background = variant ? { color: variant.bg } : background ? { data: background } : { color: style.bg[0] };
 
     const photo = showsImage(card) ? await toDataUrl(imageSrc(card.image.url)) : null;
-    const contentW = photo ? W * 0.58 - PAD_X - 0.53 : W - PAD_X * 2;
+    const fullBleed = Boolean(photo) && (card.layout === "title" || card.layout === "section");
+    const imageLeft = Boolean(photo) && !fullBleed && index % 2 === 1;
 
     if (photo && card.image) {
-      const px = W * 0.58;
-      slide.addImage({ data: photo, x: px, y: 0, w: W - px, h: H, sizing: { type: "cover", w: W - px, h: H }, altText: card.image.alt });
+      const px = fullBleed ? 0 : imageLeft ? 0 : W * 0.56;
+      const pw = fullBleed ? W : W * 0.44;
+      slide.addImage({ data: photo, x: px, y: 0, w: pw, h: H, sizing: { type: "cover", w: pw, h: H }, altText: card.image.alt });
       if (card.image.credit) {
         slide.addText(`Photo: ${card.image.credit}`, {
-          x: px, y: H - 0.4, w: W - px - 0.15, h: 0.3, align: "right", fontFace: SANS, fontSize: 9, color: "FFFFFF",
+          x: px, y: H - 0.4, w: pw - 0.15, h: 0.3, align: "right", fontFace: SANS, fontSize: 9, color: "FFFFFF",
           hyperlink: card.image.creditUrl ? { url: card.image.creditUrl } : undefined, margin: 0,
         });
       }
     }
 
-    const blocks = buildBlocks(card, style, PAD_X, contentW, pptx.ShapeType);
-    const total = blocks.reduce((sum, b) => sum + b.height, 0) - 0.3;
-    let y = Math.max(PAD_Y, (H - total) / 2);
+    const panel = variant?.panel ?? style.panel;
+    const colors: Colors = fullBleed
+      ? { title: style.panelText, text: style.panelText, muted: style.muted, panel }
+      : { title: variant?.title ?? style.title ?? style.text, text: style.panelBody ? style.panelText : style.text, muted: style.muted, panel };
+
+    // Content area
+    let x = PAD_X;
+    let w = W - PAD_X * 2;
+    if (photo && !fullBleed) {
+      w = W * 0.56 - PAD_X - 0.53;
+      x = imageLeft ? W * 0.44 + 0.67 : PAD_X;
+    }
+    const panelPad = 0.5;
+    if (fullBleed) {
+      x = 0.67 + panelPad;
+      w = W * 0.62 - panelPad * 2;
+    }
+    const room = fullBleed ? H - 1.4 - panelPad * 2 : H - PAD_Y * 2;
+
+    // Shrink until it fits, like the on-screen auto-fit.
+    let scale = 1;
+    let blocks = buildBlocks(card, style, colors, x, w, pptx.ShapeType, scale, Boolean(photo), fullBleed);
+    while (total(blocks) > room && scale > 0.5) {
+      scale *= 0.92;
+      blocks = buildBlocks(card, style, colors, x, w, pptx.ShapeType, scale, Boolean(photo), fullBleed);
+    }
+    const height = total(blocks) - 0.25;
+
+    let y: number;
+    if (fullBleed) {
+      const ph = height + panelPad * 2;
+      const py = card.layout === "title" ? H - 0.67 - ph : (H - ph) / 2;
+      slide.addShape(pptx.ShapeType.roundRect, { x: 0.67, y: py, w: W * 0.62, h: ph, fill: { color: panel }, line: { color: panel }, rectRadius: 0.12 });
+      y = py + panelPad;
+    } else {
+      y = Math.max(PAD_Y, (H - height) / 2);
+    }
     for (const block of blocks) {
       block.draw(slide, y);
       y += block.height;

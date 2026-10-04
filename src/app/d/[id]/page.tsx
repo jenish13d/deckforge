@@ -61,7 +61,7 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
       <main className="page">
         <div className={`deck theme-${deck.theme}`}>
           {cards.map((content, i) => (
-            <CardView key={i} content={content} />
+            <CardView key={i} content={content} index={i} />
           ))}
         </div>
         {cards.length === 0 && <p className="muted">This deck is still being written.</p>}

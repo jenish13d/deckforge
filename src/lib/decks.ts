@@ -143,8 +143,11 @@ export async function generateDeckCard(
       index,
       mode,
       extra,
+      previousLayout: deck.cards[index - 1]?.content?.layout,
     });
-    const content = { ...card, image: IMAGE_LAYOUTS.includes(card.layout) ? await findPhoto(imageQuery) : null };
+    // Don't reuse a photo that another card in the deck already shows.
+    const used = new Set(deck.cards.flatMap((c, i) => (i !== index && c.content?.image ? [c.content.image.url] : [])));
+    const content = { ...card, image: IMAGE_LAYOUTS.includes(card.layout) ? await findPhoto(imageQuery, used) : null };
     const row = await db.card.update({
       where: { id: cardId },
       data: { status: "ready", content: JSON.stringify(content) },

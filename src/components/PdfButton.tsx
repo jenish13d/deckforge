@@ -53,6 +53,8 @@ export function PdfButton({
             backgroundColor: "#ffffff",
             // Photos share one path (/api/image?src=…); without this every photo would reuse the first one.
             includeQueryParams: true,
+            // A photo that fails to load becomes a blank area instead of stopping the export.
+            imagePlaceholder: "data:image/gif;base64,R0lGODlhAQABAAAAACw=",
           });
           if (i > 0) pdf.addPage([WIDTH, HEIGHT], "landscape");
           pdf.addImage(image, "JPEG", 0, 0, WIDTH, HEIGHT);
@@ -89,7 +91,7 @@ export function PdfButton({
         <div ref={stage} className={`pdf-stage theme-${theme}`} aria-hidden="true">
           {cards.map((content, i) => (
             <div key={i} className="pdf-page">
-              <CardView content={content} />
+              <CardView content={content} index={i} />
             </div>
           ))}
         </div>

@@ -1,5 +1,6 @@
 import { QUESTIONS } from "@/components/landing/Faq";
 import { PLANS } from "@/lib/plans";
+import { THEMES } from "@/lib/themes";
 import { SITE } from "@/lib/site";
 import { siteUrl } from "@/lib/url";
 
@@ -22,7 +23,7 @@ export function StructuredData() {
       featureList: [
         "Turn a topic or notes into a presentation with AI",
         "Editable outline before slides are written",
-        "Eight themes, seven slide layouts, free stock photos",
+        `${THEMES.length} themes, 8 slide layouts (including tables and big numbers), free stock photos`,
         "Present mode, share links, PDF and PowerPoint download",
         "Works in any language",
       ],

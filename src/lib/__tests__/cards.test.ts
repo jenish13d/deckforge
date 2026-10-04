@@ -4,6 +4,7 @@ import { CardContentSchema, imageSrc, isProxyableImageUrl, normalizeCard, normal
 
 const base: GeneratedCard = {
   layout: "bullets",
+  eyebrow: "",
   icon: "🚀",
   title: "Why now",
   subtitle: "",
@@ -11,6 +12,7 @@ const base: GeneratedCard = {
   stats: [],
   quote: "",
   quoteAuthor: "",
+  table: { columns: [], rows: [] },
   imageQuery: "",
 };
 
@@ -36,6 +38,39 @@ describe("normalizeCard", () => {
 
   it("keeps at most two characters of icon", () => {
     expect(normalizeCard({ ...base, icon: "🚀 rocket" }).icon).toBe("🚀 ");
+  });
+});
+
+describe("labels and tables", () => {
+  it("keeps a short label and reads older cards without one", () => {
+    expect(normalizeCard({ ...base, eyebrow: "  2014 · Brazil " }).eyebrow).toBe("2014 · Brazil");
+    const old = { ...base } as Record<string, unknown>;
+    delete old.eyebrow;
+    delete old.table;
+    delete old.imageQuery;
+    const parsed = parseStored(CardContentSchema, JSON.stringify(old));
+    expect(parsed?.eyebrow).toBe("");
+    expect(parsed?.table).toEqual({ columns: [], rows: [] });
+  });
+
+  it("caps tables and pads short rows to the column count", () => {
+    const card = normalizeCard({
+      ...base,
+      layout: "table",
+      table: {
+        columns: ["A", "B", "C", "D", "E"],
+        rows: [["1", "2"], ["", "", ""], ...Array.from({ length: 9 }, (_, i) => [`r${i}`, "x", "y", "z", "extra"])],
+      },
+    });
+    expect(card.layout).toBe("table");
+    expect(card.table.columns).toEqual(["A", "B", "C", "D"]);
+    expect(card.table.rows[0]).toEqual(["1", "2", "", ""]);
+    expect(card.table.rows).toHaveLength(7);
+    expect(card.table.rows.every((r) => r.length === 4)).toBe(true);
+  });
+
+  it("turns a table card without rows into a list", () => {
+    expect(normalizeCard({ ...base, layout: "table" }).layout).toBe("bullets");
   });
 });
 
@@ -88,7 +123,8 @@ describe("card photos", () => {
 
   it("only shows photos on layouts with room for them", () => {
     expect(showsImage(normalizeCard({ ...base, layout: "bullets", image: photo }))).toBe(true);
-    expect(showsImage(normalizeCard({ ...base, layout: "stats", image: photo }))).toBe(false);
+    expect(showsImage(normalizeCard({ ...base, layout: "stats", image: photo }))).toBe(true);
+    expect(showsImage(normalizeCard({ ...base, layout: "columns", image: photo }))).toBe(false);
     expect(showsImage(normalizeCard(base))).toBe(false);
   });
 

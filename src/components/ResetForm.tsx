@@ -34,11 +34,11 @@ export function ResetForm({ token }: { token: string }) {
       <h1 className="auth-form__title">Choose a new password</h1>
       <label className="field">
         <span className="field__label">New password</span>
-        <PasswordInput autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <PasswordInput aria-label="New password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
       </label>
       <label className="field">
         <span className="field__label">Repeat new password</span>
-        <PasswordInput autoComplete="new-password" minLength={8} required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        <PasswordInput aria-label="Repeat new password" autoComplete="new-password" minLength={8} required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
       </label>
       {error && (
         <p className="error" role="alert">

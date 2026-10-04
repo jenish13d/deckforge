@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Geist } from "next/font/google";
+import { Crimson_Pro, Fraunces, Geist, Marcellus } from "next/font/google";
 
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { getCurrentUser } from "@/lib/auth";
@@ -10,6 +10,9 @@ import "./globals.css";
 
 const sans = Geist({ variable: "--font-sans", subsets: ["latin"] });
 const serif = Fraunces({ variable: "--font-serif", subsets: ["latin"], style: ["normal", "italic"] });
+// Slide fonts for the Milano theme.
+const display = Marcellus({ variable: "--font-display", subsets: ["latin"], weight: "400" });
+const book = Crimson_Pro({ variable: "--font-book", subsets: ["latin"] });
 
 // One look everywhere: the site stays light even when the device is in dark mode.
 export const viewport: Viewport = { colorScheme: "light", themeColor: "#ffffff" };
@@ -33,7 +36,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const user = await getCurrentUser();
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable}`}>
+    <html lang="en" className={`${sans.variable} ${serif.variable} ${display.variable} ${book.variable}`}>
       <body>
         {process.env.DEMO_AI === "1" && (
           <div className="demo-banner no-print" role="note">

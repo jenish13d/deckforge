@@ -46,7 +46,7 @@ export function Presenter({
   return (
     <div ref={root} className={`presenter theme-${theme}`} role="dialog" aria-label="Presentation">
       <div className="presenter__stage" onClick={next}>
-        <CardView content={cards[index]} />
+        <CardView content={cards[index]} index={index} />
       </div>
       <div className="presenter__bar">
         <button type="button" onClick={prev} disabled={index === 0} aria-label="Previous card">←</button>

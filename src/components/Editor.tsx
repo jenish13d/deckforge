@@ -317,7 +317,7 @@ export function Editor({
                 />
               ) : card.content ? (
                 <div className={busy[card.id] ? "is-busy" : undefined}>
-                  <CardView content={card.content} />
+                  <CardView content={card.content} index={i} />
                 </div>
               ) : (
                 <CardPlaceholder

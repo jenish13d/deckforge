@@ -799,23 +799,28 @@ a {
 /* Miniature previews scale purely with their width (no minimum text sizes). */
 .mini-card .card__subtitle,
 .mini-card .card--title .card__subtitle {
-  font-size: 2.2cqi;
+  font-size: calc(2.2cqi * var(--fit, 1));
 }
 
 .mini-card .card--title .card__subtitle {
-  font-size: 2.5cqi;
+  font-size: calc(2.5cqi * var(--fit, 1));
 }
 
 .mini-card .card__item {
-  font-size: 2.05cqi;
+  font-size: calc(2.05cqi * var(--fit, 1));
 }
 
-.mini-card .card__stat-label {
-  font-size: 1.8cqi;
+.mini-card .card__stat-label,
+.mini-card .card__table {
+  font-size: calc(1.8cqi * var(--fit, 1));
 }
 
 .mini-card .card__author {
-  font-size: 1.9cqi;
+  font-size: calc(1.9cqi * var(--fit, 1));
+}
+
+.mini-card .card__eyebrow {
+  font-size: calc(1.5cqi * var(--fit, 1));
 }
 
 .steps {
@@ -1153,10 +1158,13 @@ a {
   --card-bg: #ffffff;
   --card-text: #1d1d22;
   --card-muted: #5d5d66;
-  --card-accent: #4f46e5;
+  --card-accent: #0b3d6b;
   --card-surface: #f3f3f6;
   --card-heading-font: var(--font-sans), system-ui, sans-serif;
   --card-body-font: var(--font-sans), system-ui, sans-serif;
+  --card-on-accent: #ffffff;
+  --card-panel: #ffffff;
+  --card-panel-text: #1d1d22;
 }
 
 .theme-midnight {
@@ -1167,6 +1175,9 @@ a {
   --card-surface: rgba(255, 255, 255, 0.07);
   --card-heading-font: var(--font-sans), system-ui, sans-serif;
   --card-body-font: var(--font-sans), system-ui, sans-serif;
+  --card-on-accent: #10131f;
+  --card-panel: #1a1e3c;
+  --card-panel-text: #f1f2ff;
 }
 
 .theme-ocean {
@@ -1177,6 +1188,9 @@ a {
   --card-surface: rgba(255, 255, 255, 0.6);
   --card-heading-font: var(--font-sans), system-ui, sans-serif;
   --card-body-font: var(--font-sans), system-ui, sans-serif;
+  --card-on-accent: #ffffff;
+  --card-panel: #f2fafd;
+  --card-panel-text: #0d2d3d;
 }
 
 .theme-sunset {
@@ -1187,6 +1201,9 @@ a {
   --card-surface: rgba(255, 255, 255, 0.55);
   --card-heading-font: var(--font-serif), Georgia, serif;
   --card-body-font: var(--font-sans), system-ui, sans-serif;
+  --card-on-accent: #ffffff;
+  --card-panel: #fff6ef;
+  --card-panel-text: #3a1a12;
 }
 
 .theme-forest {
@@ -1197,6 +1214,9 @@ a {
   --card-surface: rgba(255, 255, 255, 0.07);
   --card-heading-font: var(--font-serif), Georgia, serif;
   --card-body-font: var(--font-sans), system-ui, sans-serif;
+  --card-on-accent: #10131f;
+  --card-panel: #1c3326;
+  --card-panel-text: #eef6ef;
 }
 
 .theme-paper {
@@ -1207,6 +1227,9 @@ a {
   --card-surface: #f1ebdd;
   --card-heading-font: var(--font-serif), Georgia, serif;
   --card-body-font: var(--font-serif), Georgia, serif;
+  --card-on-accent: #ffffff;
+  --card-panel: #fbf8f1;
+  --card-panel-text: #2b2620;
 }
 
 .theme-amalfi {
@@ -1217,6 +1240,9 @@ a {
   --card-surface: rgba(255, 255, 255, 0.6);
   --card-heading-font: var(--font-serif), Georgia, serif;
   --card-body-font: var(--font-sans), system-ui, sans-serif;
+  --card-on-accent: #ffffff;
+  --card-panel: #fffbea;
+  --card-panel-text: #12324a;
 }
 
 .theme-toscana {
@@ -1227,9 +1253,129 @@ a {
   --card-surface: rgba(255, 255, 255, 0.08);
   --card-heading-font: var(--font-serif), Georgia, serif;
   --card-body-font: var(--font-sans), system-ui, sans-serif;
+  --card-on-accent: #2a2010;
+  --card-panel: #3b4724;
+  --card-panel-text: #f8f2e4;
 }
 
-/* ---------- Cards ---------- */
+/* Milano: bold navy, mustard and cream slides with text on cream panels, in a classic
+   display serif. Backgrounds rotate from slide to slide (data-variant). */
+.theme-milano {
+  --card-bg: #1f3b8f;
+  --card-title: #f6b81a;
+  --card-text: #1b2a4a;
+  --card-muted: #4a5568;
+  --card-accent: #c8323c;
+  --card-on-accent: #ffffff;
+  --card-surface: rgba(27, 42, 74, 0.06);
+  --card-panel: #fdf6e9;
+  --card-panel-text: #1b2a4a;
+  --card-tag: #1f8a6a;
+  --card-table-head: #1f6b52;
+  --card-heading-font: var(--font-display), Georgia, serif;
+  --card-body-font: var(--font-book), Georgia, serif;
+}
+
+.theme-milano .card[data-variant="1"] {
+  --card-bg: #f2a900;
+  --card-title: #1b2a4a;
+}
+
+.theme-milano .card[data-variant="2"] {
+  --card-bg: #f4ead5;
+  --card-title: #1f3b8f;
+  --card-panel: #fffaf1;
+}
+
+.theme-milano .card--full-bleed {
+  --card-title: #1b2a4a;
+}
+
+.theme-milano .card__title {
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.08;
+  text-transform: uppercase;
+}
+
+.theme-milano .card__icon {
+  display: none;
+}
+
+.theme-milano .card__item-heading,
+.theme-milano .card__stats--hero .card__stat-label,
+.theme-milano .card__table th {
+  font-family: var(--card-body-font);
+  font-weight: 700;
+}
+
+.theme-milano .card__eyebrow {
+  padding: 0.35cqi 1cqi;
+  background: var(--card-tag);
+  color: #fdf6e9;
+  font-family: var(--card-heading-font);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+}
+
+.theme-milano .card__body {
+  padding: calc(3cqi * var(--fit, 1)) calc(3.4cqi * var(--fit, 1));
+  border-radius: 0.3cqi;
+  background: var(--card-panel);
+  color: var(--card-panel-text);
+}
+
+.theme-milano .card--full-bleed .card__body {
+  padding: 0;
+  background: none;
+}
+
+/* Lists of boxes and columns sit straight on the background, each box a panel. */
+.theme-milano .card__body:has(> .card__items--boxed, > .card__items--columns) {
+  padding: 0;
+  background: none;
+}
+
+.theme-milano .card__body:has(> .card__items--boxed, > .card__items--columns) > .card__subtitle {
+  color: var(--card-title);
+}
+
+.theme-milano .card__items--boxed .card__item,
+.theme-milano .card__items--columns .card__item {
+  border-radius: 0.3cqi;
+  background: var(--card-panel);
+}
+
+.theme-milano .card__items--boxed .card__item {
+  border-bottom: 0.4cqi solid var(--card-tag);
+}
+
+.theme-milano .card__items--columns .card__item {
+  border-top: 0;
+}
+
+.theme-milano .card__stat {
+  border-radius: 0.3cqi;
+}
+
+.theme-milano .card__stat-value {
+  font-weight: 400;
+}
+
+.theme-milano .card--title .card__body::after,
+.theme-milano .card--section .card__body::after {
+  height: 0.4cqi;
+}
+
+.theme-milano .card--title:not(.card--with-image),
+.theme-milano .card--section:not(.card--with-image),
+.theme-milano .card--quote:not(.card--with-image) {
+  background: var(--card-bg);
+}
+
+/* ---------- Cards (slides) ----------
+   Sizes are in cqi (1% of the slide width) so a slide looks the same at any size;
+   --fit (set by CardView) shrinks text that would not fit. */
 .deck {
   display: flex;
   flex-direction: column;
@@ -1238,6 +1384,7 @@ a {
 
 .card {
   container-type: inline-size;
+  position: relative;
   display: flex;
   flex-direction: column;
   aspect-ratio: 16 / 9;
@@ -1254,74 +1401,111 @@ a {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2.2cqi;
+  gap: calc(2.4cqi * var(--fit, 1));
   /* Fill the card via flex rather than height: 100%, which WebKit (Safari) resolves a few
      pixels taller than an aspect-ratio box. */
   flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
   padding: 6cqi 7cqi;
 }
 
+.card__head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(1.2cqi * var(--fit, 1));
+}
+
+.card__body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2cqi * var(--fit, 1));
+  min-width: 0;
+}
+
 .card__icon {
-  font-size: 4.5cqi;
+  font-size: calc(4.2cqi * var(--fit, 1));
   line-height: 1;
+}
+
+.card__eyebrow {
+  margin: 0;
+  color: var(--card-accent);
+  font-size: max(calc(1.5cqi * var(--fit, 1)), 10px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.3;
+  text-transform: uppercase;
 }
 
 .card__title {
   margin: 0;
+  color: var(--card-title, var(--card-text));
   font-family: var(--card-heading-font);
-  font-size: 4.4cqi;
-  line-height: 1.12;
+  font-size: calc(4.6cqi * var(--fit, 1));
+  line-height: 1.1;
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .card__subtitle {
   margin: 0;
-  max-width: 80%;
+  max-width: 85%;
   color: var(--card-muted);
-  font-size: max(2.2cqi, 14px);
-  line-height: 1.4;
-}
-
-.card--title .card__inner,
-.card--section .card__inner {
-  align-items: flex-start;
+  font-size: max(calc(2.2cqi * var(--fit, 1)), 12px);
+  line-height: 1.45;
 }
 
 .card--title .card__title {
-  font-size: 6.4cqi;
+  font-size: calc(6.6cqi * var(--fit, 1));
+  line-height: 1.04;
+}
+
+.card--section .card__title {
+  font-size: calc(5.6cqi * var(--fit, 1));
 }
 
 .card--title .card__subtitle {
-  font-size: max(2.5cqi, 15px);
+  max-width: 75%;
+  font-size: max(calc(2.6cqi * var(--fit, 1)), 13px);
 }
 
-.card--title .card__inner::after,
-.card--section .card__inner::after {
+.card--title .card__body::after,
+.card--section .card__body::after {
   content: "";
   width: 10cqi;
   height: 0.6cqi;
+  margin-top: calc(0.6cqi * var(--fit, 1));
   border-radius: 1cqi;
   background: var(--card-accent);
 }
 
-.card--section .card__title {
-  font-size: 5.4cqi;
+/* Text-only covers, dividers and quotes get a soft glow of the theme colour. */
+.card--title:not(.card--with-image),
+.card--section:not(.card--with-image),
+.card--quote:not(.card--with-image) {
+  background:
+    radial-gradient(circle at 92% 10%, color-mix(in srgb, var(--card-accent) 22%, transparent) 0, transparent 34%),
+    radial-gradient(circle at 6% 100%, color-mix(in srgb, var(--card-accent) 12%, transparent) 0, transparent 30%),
+    var(--card-bg);
 }
 
+/* Lists */
 .card__items {
+  display: flex;
+  flex-direction: column;
+  gap: calc(1.6cqi * var(--fit, 1));
   margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 1.6cqi;
 }
 
 .card__item {
   display: flex;
-  gap: 1.6cqi;
-  font-size: max(2.05cqi, 13px);
+  gap: calc(1.6cqi * var(--fit, 1));
+  min-width: 0;
+  font-size: max(calc(2.1cqi * var(--fit, 1)), 12px);
   line-height: 1.4;
 }
 
@@ -1337,72 +1521,96 @@ a {
 
 .card__item-heading {
   display: block;
+  color: var(--card-text);
   font-family: var(--card-heading-font);
-  font-size: 1.1em;
+  font-size: 1.08em;
 }
 
 .card__item-text {
   color: var(--card-muted);
 }
 
+.card__items--boxed .card__item {
+  padding: calc(1.5cqi * var(--fit, 1)) calc(2cqi * var(--fit, 1));
+  border-radius: 1.2cqi;
+  background: var(--card-surface);
+}
+
+.card__items--grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .card__items--columns {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   grid-auto-flow: column;
-  gap: 2cqi;
+  gap: calc(2cqi * var(--fit, 1));
 }
 
 .card__items--columns .card__item {
-  padding: 2.2cqi;
+  padding: calc(2.2cqi * var(--fit, 1));
+  border-top: 0.5cqi solid var(--card-accent);
   border-radius: 1.6cqi;
   background: var(--card-surface);
-  border-top: 0.5cqi solid var(--card-accent);
-}
-
-.card__items--timeline {
-  position: relative;
 }
 
 .card__step {
   display: grid;
   place-items: center;
   flex: none;
-  width: 3.4cqi;
-  height: 3.4cqi;
+  position: relative;
+  z-index: 1;
+  width: calc(3.4cqi * var(--fit, 1));
+  height: calc(3.4cqi * var(--fit, 1));
   border-radius: 50%;
   background: var(--card-accent);
-  color: var(--card-bg, #fff);
+  color: var(--card-on-accent, #fff);
+  font-size: calc(1.6cqi * var(--fit, 1));
   font-weight: 700;
-  font-size: 1.6cqi;
 }
 
-.theme-midnight .card__step,
-.theme-forest .card__step,
-.theme-toscana .card__step {
-  color: #10131f;
+.card__items--boxed .card__step {
+  align-self: center;
 }
 
-.theme-minimal .card__step,
-.theme-ocean .card__step,
-.theme-sunset .card__step,
-.theme-paper .card__step,
-.theme-amalfi .card__step {
-  color: #fff;
+/* A timeline across the slide, joined by a line. */
+.card__items--row {
+  position: relative;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: calc(2.6cqi * var(--fit, 1));
 }
 
+.card__items--row::before {
+  content: "";
+  position: absolute;
+  top: calc(1.6cqi * var(--fit, 1));
+  right: 2cqi;
+  left: 1.7cqi;
+  height: 0.25cqi;
+  background: color-mix(in srgb, var(--card-accent) 35%, transparent);
+}
+
+.card__items--row .card__item {
+  flex-direction: column;
+  gap: calc(1.4cqi * var(--fit, 1));
+}
+
+/* Numbers */
 .card__stats {
   display: grid;
-  grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  gap: 2cqi;
-  margin-top: 1cqi;
+  grid-auto-flow: column;
+  gap: calc(2cqi * var(--fit, 1));
 }
 
 .card__stat {
   display: flex;
   flex-direction: column;
-  gap: 0.6cqi;
-  padding: 2.4cqi;
+  gap: calc(0.6cqi * var(--fit, 1));
+  padding: calc(2.4cqi * var(--fit, 1));
   border-radius: 1.6cqi;
   background: var(--card-surface);
 }
@@ -1410,31 +1618,81 @@ a {
 .card__stat-value {
   color: var(--card-accent);
   font-family: var(--card-heading-font);
-  font-size: 5cqi;
+  font-size: calc(5cqi * var(--fit, 1));
   font-weight: 700;
   line-height: 1;
 }
 
 .card__stat-label {
   color: var(--card-muted);
-  font-size: max(1.8cqi, 12px);
+  font-size: max(calc(1.8cqi * var(--fit, 1)), 11px);
   line-height: 1.35;
 }
 
+/* One big highlight number. */
+.card__stats--hero .card__stat {
+  gap: calc(1.2cqi * var(--fit, 1));
+  padding: 0;
+  background: none;
+}
+
+.card__stats--hero .card__stat-value {
+  font-size: calc(10cqi * var(--fit, 1));
+}
+
+.card__stats--hero .card__stat-label {
+  color: var(--card-text);
+  font-family: var(--card-heading-font);
+  font-size: max(calc(2.6cqi * var(--fit, 1)), 13px);
+  font-weight: 700;
+}
+
+.card--with-image .card__stats:not(.card__stats--hero) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: row;
+}
+
+/* Tables */
+.card__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: max(calc(1.8cqi * var(--fit, 1)), 11px);
+  line-height: 1.35;
+}
+
+.card__table th {
+  padding: calc(1cqi * var(--fit, 1)) calc(1.4cqi * var(--fit, 1));
+  background: var(--card-table-head, var(--card-accent));
+  color: var(--card-on-accent, #fff);
+  font-family: var(--card-heading-font);
+  text-align: left;
+}
+
+.card__table td {
+  padding: calc(0.9cqi * var(--fit, 1)) calc(1.4cqi * var(--fit, 1));
+  border-bottom: 0.15cqi solid color-mix(in srgb, var(--card-text) 14%, transparent);
+  color: var(--card-text);
+}
+
+.card__table tbody tr:nth-child(even) td {
+  background: var(--card-surface);
+}
+
+/* Quotes */
 .card__quote {
   margin: 0;
-  font-family: var(--card-heading-font);
-  font-size: 3.6cqi;
-  line-height: 1.3;
-  border-left: 0.6cqi solid var(--card-accent);
   padding-left: 3cqi;
+  border-left: 0.6cqi solid var(--card-accent);
+  font-family: var(--card-heading-font);
+  font-size: calc(3.6cqi * var(--fit, 1));
+  line-height: 1.3;
 }
 
 .card__author {
   margin: 0;
   padding-left: 3.6cqi;
   color: var(--card-muted);
-  font-size: max(1.9cqi, 13px);
+  font-size: max(calc(1.9cqi * var(--fit, 1)), 12px);
 }
 
 .card--placeholder .card__inner {
@@ -1448,7 +1706,7 @@ a {
 .skeleton {
   display: flex;
   flex-direction: column;
-  gap: 1.4cqi;
+  gap: calc(1.4cqi * var(--fit, 1));
 }
 
 .skeleton span {
@@ -1648,14 +1906,23 @@ a {
 }
 
 .card--with-image .card__inner {
-  flex: 1 1 58%;
-  min-width: 0;
+  flex: 1 1 56%;
   padding-right: 4cqi;
+}
+
+/* Every other card puts its photo on the left. */
+.card--image-left {
+  flex-direction: row-reverse;
+}
+
+.card--image-left .card__inner {
+  padding-right: 7cqi;
+  padding-left: 5cqi;
 }
 
 .card__media {
   position: relative;
-  flex: 0 0 42%;
+  flex: 0 0 44%;
   margin: 0;
   overflow: hidden;
 }
@@ -1671,6 +1938,7 @@ a {
   position: absolute;
   right: 1cqi;
   bottom: 1cqi;
+  z-index: 2;
   padding: 0.3cqi 0.8cqi;
   border-radius: 0.6cqi;
   background: rgba(0, 0, 0, 0.45);
@@ -1683,8 +1951,55 @@ a {
   color: inherit;
 }
 
+/* Covers and dividers with a photo: the photo fills the slide, the text sits on a panel. */
+.card--full-bleed .card__media {
+  position: absolute;
+  inset: 0;
+}
+
+.card--full-bleed .card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 45%, rgba(0, 0, 0, 0.28));
+}
+
+.card--full-bleed .card__inner {
+  position: absolute;
+  bottom: 5cqi;
+  left: 5cqi;
+  z-index: 1;
+  justify-content: flex-start;
+  max-width: 62%;
+  max-height: calc(100% - 10cqi);
+  overflow: hidden;
+  padding: 3.6cqi 4.2cqi;
+  border-radius: 1.2cqi;
+  background: var(--card-panel, #fff);
+  color: var(--card-panel-text, var(--card-text));
+  box-shadow: 0 1cqi 4cqi rgba(0, 0, 0, 0.25);
+  --card-text: var(--card-panel-text);
+}
+
+.card--title.card--full-bleed .card__title {
+  font-size: calc(5.4cqi * var(--fit, 1));
+}
+
+.card--section.card--full-bleed .card__inner {
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+}
+
+/* Phones: slides in the editor and viewer reflow like a document instead of shrinking. */
 @media (max-width: 640px) {
-  .deck .card--with-image {
+  .deck .card {
+    aspect-ratio: auto;
+    min-height: 50vw;
+  }
+
+  .deck .card--with-image,
+  .deck .card--image-left {
     flex-direction: column;
   }
 
@@ -1694,8 +2009,37 @@ a {
     height: 46vw;
   }
 
-  .deck .card--with-image .card__inner {
-    padding-right: 22px;
+  .deck .card--with-image .card__inner,
+  .deck .card--image-left .card__inner {
+    padding: 22px;
+  }
+
+  .deck .card--full-bleed .card__media {
+    position: relative;
+    inset: auto;
+  }
+
+  .deck .card--full-bleed .card__inner {
+    position: relative;
+    inset: auto;
+    max-width: none;
+    max-height: none;
+    margin: -10vw 12px 12px;
+    transform: none;
+  }
+
+  .deck .card__items--row,
+  .deck .card__items--columns {
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .deck .card__items--row::before {
+    display: none;
+  }
+
+  .deck .card__items--grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -3222,5 +3566,12 @@ a.quick-chip {
 
   .search-box {
     flex-basis: 100%;
+  }
+}
+
+/* On phones the editor toolbar wraps onto several rows; let it scroll away instead of covering the slides. */
+@media (max-width: 640px) {
+  .toolbar {
+    position: static;
   }
 }

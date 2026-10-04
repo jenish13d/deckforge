@@ -40,7 +40,7 @@ export function CreateFlow({
   credits,
   greetingName,
   initialPrompt = "",
-  initialTheme = "minimal",
+  initialTheme = "milano",
 }: {
   allowedModes: ModeId[];
   comingSoon?: ModeId[];

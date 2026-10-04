@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { IMAGE_LAYOUTS, LAYOUTS, MAX_ITEMS, imageSrc, type CardContent, type CardImage, type Layout } from "@/lib/cards";
+import { IMAGE_LAYOUTS, LAYOUTS, MAX_ITEMS, MAX_TABLE_COLUMNS, MAX_TABLE_ROWS, imageSrc, type CardContent, type CardImage, type CardTable, type Layout } from "@/lib/cards";
 import { api } from "@/lib/client";
 
 const LAYOUT_NAMES: Record<Layout, string> = {
@@ -13,6 +13,7 @@ const LAYOUT_NAMES: Record<Layout, string> = {
   stats: "Big numbers",
   quote: "Quote",
   timeline: "Timeline / steps",
+  table: "Table",
 };
 
 export function CardEditForm({
@@ -59,6 +60,10 @@ export function CardEditForm({
         </label>
       </div>
 
+      <label className="field">
+        <span className="field__label">Label <span className="muted small">(small text above the title, optional)</span></span>
+        <input className="input" value={c.eyebrow} maxLength={40} placeholder="e.g. 2014 · Brazil" onChange={(e) => set({ eyebrow: e.target.value })} />
+      </label>
       <label className="field">
         <span className="field__label">Title</span>
         <input className="input" value={c.title} maxLength={120} onChange={(e) => set({ title: e.target.value })} />
@@ -160,6 +165,8 @@ export function CardEditForm({
         </>
       )}
 
+      {c.layout === "table" && <TableFields table={c.table} onChange={(table) => set({ table })} />}
+
       {photosEnabled && <PhotoPicker card={c} onChange={(image) => set({ image })} />}
 
       <div className="row row--end">
@@ -167,6 +174,37 @@ export function CardEditForm({
         <button type="submit" className="button button--primary" disabled={saving}>{saving ? "Saving…" : "Save"}</button>
       </div>
     </form>
+  );
+}
+
+/** Table as plain text: one row per line, cells separated by "|". */
+function TableFields({ table, onChange }: { table: CardTable; onChange: (table: CardTable) => void }) {
+  const [header, setHeader] = useState(table.columns.join(" | "));
+  const [body, setBody] = useState(table.rows.map((r) => r.join(" | ")).join("\n"));
+  const split = (line: string) => line.split("|").map((cell) => cell.trim());
+
+  function update(nextHeader: string, nextBody: string) {
+    setHeader(nextHeader);
+    setBody(nextBody);
+    onChange({
+      columns: split(nextHeader).slice(0, MAX_TABLE_COLUMNS),
+      rows: nextBody.split("\n").filter((line) => line.trim()).map(split).slice(0, MAX_TABLE_ROWS),
+    });
+  }
+
+  return (
+    <fieldset className="fieldset">
+      <legend className="field__label">Table</legend>
+      <p className="muted small">Separate cells with a | (vertical bar). Up to {MAX_TABLE_COLUMNS} columns and {MAX_TABLE_ROWS} rows.</p>
+      <label className="field">
+        <span className="field__label">Column names</span>
+        <input className="input" value={header} placeholder="Year | Result | Score" onChange={(e) => update(e.target.value, body)} />
+      </label>
+      <label className="field">
+        <span className="field__label">Rows (one per line)</span>
+        <textarea className="input input--small" rows={5} value={body} placeholder={"2014 | Final | 0-1\n2022 | Champions | 3-3"} onChange={(e) => update(header, e.target.value)} />
+      </label>
+    </fieldset>
   );
 }
 
@@ -197,7 +235,7 @@ function PhotoPicker({ card, onChange }: { card: CardContent; onChange: (image: 
   return (
     <fieldset className="fieldset">
       <legend className="field__label">Photo</legend>
-      {!fits && <p className="muted small">Photos show on the Title, Section divider, Bullet points and Quote layouts.</p>}
+      {!fits && <p className="muted small">Photos show on the Title, Section divider, Bullet points, Big numbers, Timeline and Quote layouts.</p>}
       {card.image && (
         <div className="photo-current">
           {/* eslint-disable-next-line @next/next/no-img-element */}

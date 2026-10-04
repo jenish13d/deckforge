@@ -44,6 +44,7 @@ export function AuthForm({ mode, next = "/", captcha = false }: { mode: "login" 
       <label className="field">
         <span className="field__label">Password</span>
         <PasswordInput
+          aria-label="Password"
           autoComplete={signup ? "new-password" : "current-password"}
           minLength={signup ? 8 : undefined}
           required

@@ -31,11 +31,11 @@ export function ChangePasswordForm() {
       <h2 className="section-title">Change password</h2>
       <label className="field">
         <span className="field__label">Current password</span>
-        <PasswordInput autoComplete="current-password" required value={current} onChange={(e) => setCurrent(e.target.value)} />
+        <PasswordInput aria-label="Current password" autoComplete="current-password" required value={current} onChange={(e) => setCurrent(e.target.value)} />
       </label>
       <label className="field">
         <span className="field__label">New password</span>
-        <PasswordInput autoComplete="new-password" minLength={8} required value={next} onChange={(e) => setNext(e.target.value)} />
+        <PasswordInput aria-label="New password" autoComplete="new-password" minLength={8} required value={next} onChange={(e) => setNext(e.target.value)} />
       </label>
       {error && <p className="error" role="alert">{error}</p>}
       {state === "saved" && <p className="success" role="status">Password changed. Other devices have been signed out.</p>}

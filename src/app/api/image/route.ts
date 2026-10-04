@@ -8,7 +8,9 @@ export async function GET(request: Request) {
   const src = new URL(request.url).searchParams.get("src") ?? "";
   if (!isProxyableImageUrl(src)) return new Response("Not allowed", { status: 400 });
 
-  const upstream = await fetch(src, { headers: IMAGE_FETCH_HEADERS });
+  // A slow photo site must not hang the page or a PDF export.
+  const upstream = await fetch(src, { headers: IMAGE_FETCH_HEADERS, signal: AbortSignal.timeout(15_000) }).catch(() => null);
+  if (!upstream) return new Response("Image unavailable", { status: 504 });
   const type = upstream.headers.get("content-type") ?? "";
   if (!upstream.ok || !type.startsWith("image/")) return new Response("Image unavailable", { status: 502 });
 

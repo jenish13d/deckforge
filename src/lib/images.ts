@@ -28,7 +28,7 @@ interface PexelsPhoto {
 
 async function searchPexels(query: string, perPage: number, key: string): Promise<PhotoResult[]> {
   const url = `https://api.pexels.com/v1/search?${new URLSearchParams({ query, per_page: String(perPage), orientation: "landscape" })}`;
-  const response = await fetch(url, { headers: { Authorization: key }, next: { revalidate: 86400 } });
+  const response = await fetch(url, { headers: { Authorization: key }, next: { revalidate: 86400 }, signal: AbortSignal.timeout(10_000) });
   if (!response.ok) {
     console.error(`Pexels search failed (${response.status}) for "${query}"`);
     return [];
@@ -72,7 +72,7 @@ async function searchOpenverse(query: string, perPage: number): Promise<PhotoRes
     mature: "false",
     page_size: String(perPage),
   })}`;
-  const response = await fetch(url, { headers: { "User-Agent": USER_AGENT }, next: { revalidate: 86400 } });
+  const response = await fetch(url, { headers: { "User-Agent": USER_AGENT }, next: { revalidate: 86400 }, signal: AbortSignal.timeout(10_000) });
   if (!response.ok) {
     console.error(`Openverse search failed (${response.status}) for "${query}"`);
     return [];
@@ -100,10 +100,17 @@ export async function searchPhotos(query: string, perPage = 6): Promise<PhotoRes
 }
 
 /** The best photo for a card, or null when there's none (or photos are off). */
-export async function findPhoto(query: string): Promise<CardImage | null> {
+/** The best photo for a query, skipping any in `exclude` (photos already used in the deck). */
+export async function findPhoto(query: string, exclude: ReadonlySet<string> = new Set()): Promise<CardImage | null> {
   if (!imagesEnabled() || !query.trim()) return null;
   try {
-    const [first] = await searchPhotos(query, 1);
+    // Specific queries ("Lionel Messi Argentina 2006") can find nothing; drop words from the end until something matches.
+    const words = query.trim().split(/\s+/);
+    let first: PhotoResult | undefined;
+    // At most three searches, and never fewer than two words.
+    for (let n = words.length; n >= Math.max(Math.min(2, words.length), words.length - 2) && !first; n--) {
+      first = (await searchPhotos(words.slice(0, n).join(" "), exclude.size ? 6 : 1)).find((p) => !exclude.has(p.url));
+    }
     return first ? { url: first.url, alt: first.alt, credit: first.credit, creditUrl: first.creditUrl } : null;
   } catch (error) {
     console.error("Photo lookup failed", error);

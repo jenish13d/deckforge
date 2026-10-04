@@ -10,9 +10,16 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 
 - **Prompt → outline → deck.** The outline step lets the user fix the structure before anything is written.
 - **Cards appear one by one** (3 at a time); one failure doesn't sink the deck, and reloading resumes unfinished cards.
-- **7 card layouts** (title, section, bullets, columns, big numbers, quote, timeline), picked per card by the AI.
+- **8 card layouts** (title, section, bullets, columns, big numbers, quote, timeline, table), picked per card by
+  the AI; the first card is always a cover, and neighbouring cards are kept from repeating a layout.
 - **Editing:** edit form per card, regenerate with instructions, add, delete, reorder.
-- **8 themes** (including Italian-inspired Amalfi and Toscana), **present mode** and **share links** (view-only).
+- **9 themes**, including Italian-inspired Amalfi and Toscana and **Milano** (the default): bold navy, mustard and
+  cream slides with text on panels and a classic display serif, rotating backgrounds from slide to slide.
+- **Slide design:** labels above titles, big highlight numbers, tables, timelines across the slide, two-column
+  lists, photos alternating left and right, and covers with the photo filling the slide behind a text panel.
+  Text shrinks automatically when it wouldn't fit (on screen, in PDFs and in PowerPoint). On phones, slides
+  in the editor and viewer reflow like a document.
+- **Present mode** and **share links** (view-only).
 - **Downloads:** **PDF** (built in the browser: each card rendered at 1280×720 into a 16:9 page, identical in
   every browser) and **PowerPoint (.pptx)** with native, editable text, shapes and photos in the deck's theme.
 - **Photos:** the AI suggests photo keywords per card and Title, Section, Bullets and Quote cards get a photo

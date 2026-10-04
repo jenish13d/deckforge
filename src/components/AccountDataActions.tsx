@@ -56,7 +56,7 @@ function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
         </p>
         <label className="field">
           <span className="field__label">Type your password to confirm</span>
-          <PasswordInput autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <PasswordInput aria-label="Type your password to confirm" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         {error && <p className="error small" role="alert">{error}</p>}
         <div className="row row--end">
