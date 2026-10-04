@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { DeckGrid } from "@/components/DeckGrid";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getCurrentUser } from "@/lib/auth";
 import { listDecks } from "@/lib/decks";
 
-export const metadata = { title: "My decks · Deckforge" };
+export const metadata = { title: "My decks" };
 
 export default async function DecksPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=/decks");
   const decks = await listDecks(user.id);
 
   return (
@@ -21,22 +23,17 @@ export default async function DecksPage() {
           <Link href="/" className="button button--primary">+ New deck</Link>
         </div>
         {decks.length === 0 ? (
-          <p className="muted">No decks yet. Create your first one.</p>
+          <div className="empty-state">
+            <p className="empty-state__icon" aria-hidden="true">🗂️</p>
+            <h2>No decks yet</h2>
+            <p className="muted">Your decks will appear here. Start from a template or describe your own idea.</p>
+            <Link href="/" className="button button--primary">Create your first deck</Link>
+          </div>
         ) : (
-          <ul className="deck-list">
-            {decks.map((deck) => (
-              <li key={deck.id}>
-                <Link href={`/d/${deck.id}/edit`} className={`deck-tile theme-${deck.theme}`}>
-                  <span className="deck-tile__preview">{deck.title}</span>
-                  <span className="deck-tile__meta">
-                    {deck.cards} cards · edited {deck.updatedAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <DeckGrid decks={decks} />
         )}
       </main>
+      <SiteFooter />
     </>
   );
 }

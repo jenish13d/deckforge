@@ -91,13 +91,28 @@ export async function ownsCard(userId: string, deckId: string, cardId: string): 
   return (await db.card.count({ where: { id: cardId, deckId, deck: { userId } } })) === 1;
 }
 
-export async function listDecks(userId: string) {
+export async function listDecks(userId: string, take?: number) {
   const decks = await db.deck.findMany({
     where: { userId },
     orderBy: { updatedAt: "desc" },
-    select: { id: true, title: true, theme: true, updatedAt: true, _count: { select: { cards: true } } },
+    take,
+    select: {
+      id: true,
+      title: true,
+      theme: true,
+      updatedAt: true,
+      _count: { select: { cards: true } },
+      cards: { orderBy: { position: "asc" }, take: 1, select: { content: true } },
+    },
   });
-  return decks.map((d) => ({ id: d.id, title: d.title, theme: d.theme, updatedAt: d.updatedAt, cards: d._count.cards }));
+  return decks.map((d) => ({
+    id: d.id,
+    title: d.title,
+    theme: d.theme,
+    updatedAt: d.updatedAt,
+    cards: d._count.cards,
+    cover: parseStored(CardContentSchema, d.cards[0]?.content ?? ""),
+  }));
 }
 
 /** Generates (or regenerates) one card and stores the result. */

@@ -10,14 +10,8 @@ import { ThemePicker } from "@/components/ThemePicker";
 import { MAX_CARDS, MIN_CARDS, type Outline } from "@/lib/cards";
 import { api } from "@/lib/client";
 import { DEFAULT_MODE, cardCost, type ModeId } from "@/lib/plans";
+import { TEMPLATES } from "@/lib/templates";
 import type { ThemeId } from "@/lib/themes";
-
-const EXAMPLES = [
-  "Pitch deck for a meal-prep delivery startup in Austin",
-  "Onboarding guide for new remote employees",
-  "Beginner's introduction to personal investing",
-  "Quarterly marketing results and plan for next quarter",
-];
 
 interface EditableCard {
   key: number;
@@ -29,12 +23,22 @@ let nextKey = 0;
 const toEditable = (outline: Outline): EditableCard[] =>
   outline.cards.map((c) => ({ key: nextKey++, title: c.title, points: c.points.join("\n") }));
 
-export function CreateFlow({ allowedModes, credits }: { allowedModes: ModeId[]; credits: number }) {
+export function CreateFlow({
+  allowedModes,
+  credits,
+  initialPrompt = "",
+  initialTheme = "minimal",
+}: {
+  allowedModes: ModeId[];
+  credits: number;
+  initialPrompt?: string;
+  initialTheme?: ThemeId;
+}) {
   const router = useRouter();
   const [mode, setMode] = useState<ModeId>(DEFAULT_MODE);
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState(initialPrompt);
   const [cardCount, setCardCount] = useState(8);
-  const [theme, setTheme] = useState<ThemeId>("minimal");
+  const [theme, setTheme] = useState<ThemeId>(initialTheme);
   const [title, setTitle] = useState("");
   const [cards, setCards] = useState<EditableCard[] | null>(null);
   const [busy, setBusy] = useState<"outline" | "deck" | null>(null);
@@ -80,7 +84,7 @@ export function CreateFlow({ allowedModes, credits }: { allowedModes: ModeId[]; 
     return (
       <form className="panel" onSubmit={makeOutline}>
         <label className="field">
-          <span className="field__label">What do you want to present?</span>
+          <span className="field__label">Your topic</span>
           <textarea
             className="input input--large"
             rows={4}
@@ -92,13 +96,24 @@ export function CreateFlow({ allowedModes, credits }: { allowedModes: ModeId[]; 
           />
         </label>
 
-        <div className="chips">
-          {EXAMPLES.map((example) => (
-            <button key={example} type="button" className="chip" onClick={() => setPrompt(example)}>
-              {example}
+        <div className="chips" aria-label="Start from a template">
+          {TEMPLATES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className="chip"
+              onClick={() => {
+                setPrompt(t.prompt);
+                setTheme(t.theme);
+              }}
+            >
+              {t.icon} {t.name}
             </button>
           ))}
         </div>
+        {/\[[^\]]+\]/.test(prompt) && (
+          <p className="muted small">Replace the parts in [brackets] with your details for the best result.</p>
+        )}
 
         <div className="row">
           <label className="field field--inline">

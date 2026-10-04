@@ -9,7 +9,7 @@ import { getDeck } from "@/lib/decks";
 export async function generateMetadata(props: PageProps<"/d/[id]">): Promise<Metadata> {
   const { id } = await props.params;
   const deck = await getDeck(id);
-  return { title: deck ? `${deck.title} · Deckforge` : "Deck not found" };
+  return { title: deck ? deck.title : "Deck not found" };
 }
 
 export default async function ViewPage(props: PageProps<"/d/[id]">) {

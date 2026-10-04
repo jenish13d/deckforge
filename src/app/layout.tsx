@@ -6,8 +6,13 @@ const sans = Geist({ variable: "--font-sans", subsets: ["latin"] });
 const serif = Fraunces({ variable: "--font-serif", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Deckforge",
-  description: "Turn an idea into a polished presentation with AI.",
+  title: { default: "Deckforge: AI presentation maker", template: "%s · Deckforge" },
+  description: "Describe your idea. Deckforge plans it, writes it and designs it. Then make it yours.",
+  openGraph: {
+    title: "Deckforge: AI presentation maker",
+    description: "Ideas to slides in a minute.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

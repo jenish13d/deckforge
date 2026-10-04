@@ -1,16 +1,17 @@
 import { redirect } from "next/navigation";
 
 import { PlanActions } from "@/components/PlanActions";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getCurrentUser } from "@/lib/auth";
 import { billingConfigured, billingDemoEnabled } from "@/lib/billing";
 import { MODES, PLANS, planOf } from "@/lib/plans";
 
-export const metadata = { title: "Account · Deckforge" };
+export const metadata = { title: "Account" };
 
 export default async function AccountPage(props: PageProps<"/account">) {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=/account");
   const upgraded = (await props.searchParams).upgraded === "1";
   const plan = planOf(user.plan);
   const current = PLANS[plan];
@@ -69,6 +70,7 @@ export default async function AccountPage(props: PageProps<"/account">) {
           hasCustomer={Boolean(user.stripeCustomerId)}
         />
       </main>
+      <SiteFooter />
     </>
   );
 }

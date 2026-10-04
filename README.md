@@ -67,6 +67,12 @@ Sales tax/VAT: with Stripe you are the seller, so enable Stripe Tax or use a mer
 
 Checks: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
 
+## Before launch checklist
+
+- Set `NEXT_PUBLIC_CONTACT_EMAIL` (shown in the footer and legal pages).
+- Have the Privacy policy (`src/app/privacy`) and Terms (`src/app/terms`) reviewed for your country and business.
+- Turn off `DEMO_AI` and `BILLING_DEMO`.
+
 ## Next steps
 
 1. **Host it:** Vercel + Postgres (Neon/Supabase free tier); move rate limits to Redis/Upstash.

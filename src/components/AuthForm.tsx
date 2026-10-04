@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import { api } from "@/lib/client";
 
-export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export function AuthForm({ mode, next = "/" }: { mode: "login" | "signup"; next?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,7 +20,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     setError("");
     try {
       await api(`/api/auth/${mode}`, { body: { email, password } });
-      router.push("/");
+      router.push(next);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -52,11 +52,16 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       <button className="button button--primary" type="submit" disabled={busy}>
         {busy ? "Please wait…" : signup ? "Sign up free" : "Log in"}
       </button>
+      {signup && (
+        <p className="muted small">
+          By signing up you agree to our <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy policy</Link>.
+        </p>
+      )}
       <p className="muted">
         {signup ? (
-          <>Already have an account? <Link href="/login">Log in</Link></>
+          <>Already have an account? <Link href={`/login?next=${encodeURIComponent(next)}`}>Log in</Link></>
         ) : (
-          <>New here? <Link href="/signup">Create a free account</Link></>
+          <>New here? <Link href={`/signup?next=${encodeURIComponent(next)}`}>Create a free account</Link></>
         )}
       </p>
     </form>

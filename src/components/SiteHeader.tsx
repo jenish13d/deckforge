@@ -2,13 +2,14 @@ import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth";
 import { PLANS, planOf } from "@/lib/plans";
+import { Logo } from "./Logo";
 import { LogoutButton } from "./LogoutButton";
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
   return (
     <header className="site-header">
-      <Link href="/" className="site-header__brand">Deckforge</Link>
+      <Link href="/" className="site-header__brand" aria-label="Deckforge home"><Logo /></Link>
       <nav className="site-header__nav">
         {user ? (
           <>
@@ -20,6 +21,8 @@ export async function SiteHeader() {
           </>
         ) : (
           <>
+            <Link href="/#templates" className="hide-mobile">Templates</Link>
+            <Link href="/pricing" className="hide-mobile">Pricing</Link>
             <Link href="/login">Log in</Link>
             <Link href="/signup" className="button button--primary button--small">Sign up free</Link>
           </>
