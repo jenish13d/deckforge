@@ -69,8 +69,12 @@ separate Neon "branch" for testing.)
 
 ## Later steps
 
-- **Real AI:** in Vercel → your project → **Settings → Environment Variables**: add `ANTHROPIC_API_KEY`,
-  set `DEMO_AI` to empty (delete it), then **Deployments → ⋯ → Redeploy**.
+- **Free real AI (Gemini):** get a free key at https://aistudio.google.com → **Get API key**. In Vercel →
+  **Settings → Environment Variables**: add `GEMINI_API_KEY` (Secret), **delete** `DEMO_AI` and
+  `BILLING_DEMO`, then **Deployments → ⋯ → Redeploy**. Quick and Standard now use real AI; Premium shows
+  "coming soon".
+- **Claude (paid, adds Premium):** add `ANTHROPIC_API_KEY` the same way and redeploy. Quick/Standard switch to
+  Claude automatically (or set `AI_PROVIDER=gemini` to keep them on Gemini).
 - **Before taking real payments:** remove `BILLING_DEMO`, add the Stripe variables (see README).
   Note: Vercel's free **Hobby** plan is for non-commercial use. Upgrade the Vercel project to **Pro**
   (about $20/month) before you start charging customers.

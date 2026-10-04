@@ -1,12 +1,13 @@
 import Link from "next/link";
 
 import { MODES, MODE_IDS, PLANS } from "@/lib/plans";
+import { premiumAvailable } from "@/lib/providers";
 
-const FEATURES: { label: string; free: string | boolean; pro: string | boolean }[] = [
+const features = (): { label: string; free: string | boolean; pro: string | boolean }[] => [
   { label: "Credits every month", free: String(PLANS.free.monthlyCredits), pro: PLANS.pro.monthlyCredits.toLocaleString() },
   { label: "About how many cards (Standard)", free: `~${PLANS.free.monthlyCredits / MODES.standard.creditsPerCard}`, pro: `~${PLANS.pro.monthlyCredits / MODES.standard.creditsPerCard}` },
   { label: "⚡ Quick and ✨ Standard modes", free: true, pro: true },
-  { label: "💎 Premium mode", free: false, pro: true },
+  { label: premiumAvailable() ? "💎 Premium mode" : "💎 Premium mode (coming soon)", free: false, pro: true },
   { label: "All themes, editing, present mode", free: true, pro: true },
   { label: "Share links and PDF download", free: true, pro: true },
   { label: "Free AI outlines", free: true, pro: true },
@@ -45,7 +46,7 @@ export function Pricing({ ctaHref = "/signup" }: { ctaHref?: string }) {
           </tr>
         </thead>
         <tbody>
-          {FEATURES.map((f) => (
+          {features().map((f) => (
             <tr key={f.label}>
               <th scope="row">{f.label}</th>
               <td>{cell(f.free)}</td>

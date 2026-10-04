@@ -3,6 +3,7 @@ import { MAX_CARDS } from "@/lib/cards";
 import { createDeck } from "@/lib/decks";
 import { jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { DEFAULT_MODE, canUseMode, isModeId } from "@/lib/plans";
+import { premiumAvailable } from "@/lib/providers";
 import { clientKey, limits } from "@/lib/rate-limit";
 import { isThemeId } from "@/lib/themes";
 
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
   if (!prompt) return jsonError("Missing prompt.", 400);
   if (outline.length === 0) return jsonError("The outline needs at least one card.", 400);
   if (!canUseMode(user.plan, mode)) return jsonError("Upgrade to Pro to use Premium mode.", 403);
+  if (mode === "premium" && !premiumAvailable()) return jsonError("Premium mode is coming soon.", 403);
 
   return Response.json(await createDeck({ userId: user.id, title, prompt, theme, mode, outline }), { status: 201 });
 }

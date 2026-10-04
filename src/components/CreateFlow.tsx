@@ -25,11 +25,13 @@ const toEditable = (outline: Outline): EditableCard[] =>
 
 export function CreateFlow({
   allowedModes,
+  comingSoon = [],
   credits,
   initialPrompt = "",
   initialTheme = "minimal",
 }: {
   allowedModes: ModeId[];
+  comingSoon?: ModeId[];
   credits: number;
   initialPrompt?: string;
   initialTheme?: ThemeId;
@@ -186,8 +188,8 @@ export function CreateFlow({
       <ThemePicker value={theme} onChange={setTheme} />
 
       <h3 className="section-title">Quality</h3>
-      <ModePicker value={mode} onChange={setMode} allowed={allowedModes} />
-      {!allowedModes.includes("premium") && (
+      <ModePicker value={mode} onChange={setMode} allowed={allowedModes} comingSoon={comingSoon} />
+      {!allowedModes.includes("premium") && !comingSoon.includes("premium") && (
         <p className="muted small">
           Premium needs Pro. <Link href="/account">See plans</Link>
         </p>

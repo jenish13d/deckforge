@@ -1,8 +1,10 @@
 import { LegalPage } from "@/components/LegalPage";
+import { textProvider } from "@/lib/providers";
 
 export const metadata = { title: "Privacy policy" };
 
 export default function PrivacyPage() {
+  const usesGemini = textProvider() === "gemini";
   return (
     <LegalPage title="Privacy policy" updated="October 4, 2026">
       <p>This policy explains what Deckforge collects, why, and the choices you have.</p>
@@ -25,7 +27,14 @@ export default function PrivacyPage() {
 
       <h2>Who we share it with</h2>
       <ul>
-        <li><strong>AI provider:</strong> your prompts and outlines are sent to Anthropic to generate deck content.</li>
+        <li>
+          <strong>AI providers:</strong> your prompts and outlines are sent to our AI providers (Anthropic and Google) to
+          generate deck content.
+          {usesGemini && (
+            <> We currently use Google&apos;s Gemini API free tier, under which Google may use submitted content to improve
+            its products. Please don&apos;t enter sensitive or confidential information.</>
+          )}
+        </li>
         <li><strong>Payment provider:</strong> to process subscriptions.</li>
         <li><strong>Hosting and database providers:</strong> to run the service.</li>
       </ul>

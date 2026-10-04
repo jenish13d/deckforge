@@ -198,7 +198,7 @@ export function Editor({
         >
           {MODE_IDS.map((id) => (
             <option key={id} value={id} disabled={!allowedModes.includes(id)}>
-              {MODES[id].icon} {MODES[id].label} ({MODES[id].creditsPerCard}/card){allowedModes.includes(id) ? "" : " · Pro"}
+              {MODES[id].icon} {MODES[id].label} ({MODES[id].creditsPerCard}/card){allowedModes.includes(id) ? "" : " · not available"}
             </option>
           ))}
         </select>

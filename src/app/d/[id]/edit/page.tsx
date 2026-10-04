@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { Editor } from "@/components/Editor";
 import { getCurrentUser } from "@/lib/auth";
 import { getDeck } from "@/lib/decks";
-import { PLANS, planOf } from "@/lib/plans";
+import { availableModes } from "@/lib/providers";
 
 export const metadata: Metadata = { title: "Edit deck", robots: { index: false } };
 
@@ -16,5 +16,5 @@ export default async function EditPage(props: PageProps<"/d/[id]/edit">) {
   // Other people's decks open in the view-only page.
   if (deck.userId !== user.id) redirect(`/d/${id}`);
 
-  return <Editor initial={deck} initialCredits={user.credits} allowedModes={PLANS[planOf(user.plan)].modes} />;
+  return <Editor initial={deck} initialCredits={user.credits} allowedModes={availableModes(user.plan)} />;
 }

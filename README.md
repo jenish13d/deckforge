@@ -14,11 +14,15 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 - **Accounts:** email + password, "My decks", only the owner can edit.
 - **Quality modes and credits:**
 
-  | Mode | Model | Credits per card |
-  | --- | --- | --- |
-  | ⚡ Quick | `claude-haiku-4-5` | 1 |
-  | ✨ Standard (default) | `claude-sonnet-5-5` | 2 |
-  | 💎 Premium (Pro only) | `claude-opus-5-5` | 4 |
+  | Mode | With Claude (`ANTHROPIC_API_KEY`) | With Gemini only (`GEMINI_API_KEY`) | Credits per card |
+  | --- | --- | --- | --- |
+  | ⚡ Quick | `claude-haiku-4-5` | `gemini-flash-lite-latest` | 1 |
+  | ✨ Standard (default) | `claude-sonnet-5-5` | `gemini-flash-latest` | 2 |
+  | 💎 Premium (Pro only) | `claude-opus-5-5` | not available ("coming soon") | 4 |
+
+  Gemini's free tier lets the site run at no cost; its daily request limits are shared by all users
+  and change over time (check them in Google AI Studio). Busy responses are retried, then shown as a
+  friendly "try again in a minute" message, and the card's credits are refunded.
 
   Outlines are free (Standard model, low effort). Failed cards are refunded.
   Credit charges are atomic, so parallel requests can't overspend.
@@ -34,7 +38,7 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 | --- | --- |
 | Pages | `src/app/page.tsx` (home/create), `d/[id]/edit` (editor), `d/[id]` (shared view), `decks`, `account`, `login`, `signup` |
 | API | `src/app/api/{auth,outline,decks,billing}` |
-| AI | `src/lib/ai.ts` (structured outputs, per-mode model), `src/lib/demo-ai.ts` (sample content) |
+| AI | `src/lib/ai.ts` (Claude + routing), `src/lib/gemini.ts` (Gemini), `src/lib/providers.ts` (which provider), `src/lib/demo-ai.ts` (sample content) |
 | Accounts | `src/lib/auth.ts` (session cookies), `src/lib/password.ts` (scrypt) |
 | Credits & plans | `src/lib/credits.ts`, `src/lib/plans.ts` |
 | Payments | `src/lib/billing.ts` |

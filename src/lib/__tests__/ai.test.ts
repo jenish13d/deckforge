@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   GenerationError,
-  OUTLINE_CHOICE,
+  outlineChoice,
   buildParams,
   choiceForMode,
   deckContext,
@@ -105,7 +105,7 @@ describe("modes", () => {
     expect(premium.output_config).toMatchObject({ effort: "high" });
     expect(premium).toMatchObject({ fallbacks: "default", betas: ["server-side-fallback-2026-07-01"] });
 
-    const outlineParams = buildParams({ ...base, ...OUTLINE_CHOICE });
+    const outlineParams = buildParams({ ...base, ...outlineChoice() });
     expect(outlineParams.model).toBe("claude-sonnet-5-5");
     expect(outlineParams.output_config).toMatchObject({ effort: "low" });
   });
@@ -128,5 +128,35 @@ describe("demo mode", () => {
     expect(first.layout).toBe("title");
     expect(first.title).toBe(result.cards[0].title);
     expect(middle.title).toBe(result.cards[2].title);
+  });
+});
+
+describe("providers", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("uses Gemini for Quick/Standard when only a Gemini key is set, and Claude for Premium", () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+    vi.stubEnv("GEMINI_API_KEY", "g-key");
+    vi.stubEnv("AI_PROVIDER", "");
+    expect(choiceForMode("quick")).toEqual({ provider: "gemini", model: "gemini-flash-lite-latest", effort: null });
+    expect(choiceForMode("standard")).toMatchObject({ provider: "gemini", model: "gemini-flash-latest" });
+    expect(choiceForMode("premium")).toMatchObject({ provider: "anthropic", model: "claude-opus-5-5" });
+    expect(outlineChoice()).toMatchObject({ provider: "gemini", effort: "low" });
+  });
+
+  it("prefers Claude when its key is set, unless AI_PROVIDER says otherwise", () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "a-key");
+    vi.stubEnv("GEMINI_API_KEY", "g-key");
+    vi.stubEnv("AI_PROVIDER", "");
+    expect(choiceForMode("standard")).toMatchObject({ provider: "anthropic", model: "claude-sonnet-5-5" });
+    vi.stubEnv("AI_PROVIDER", "gemini");
+    expect(choiceForMode("standard")).toMatchObject({ provider: "gemini" });
+  });
+
+  it("lets GEMINI_*_MODEL override the default models", () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+    vi.stubEnv("GEMINI_API_KEY", "g-key");
+    vi.stubEnv("GEMINI_STANDARD_MODEL", "gemini-custom");
+    expect(choiceForMode("standard").model).toBe("gemini-custom");
   });
 });

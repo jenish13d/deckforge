@@ -6,16 +6,19 @@ export function ModePicker({
   value,
   onChange,
   allowed,
+  comingSoon = [],
 }: {
   value: ModeId;
   onChange: (mode: ModeId) => void;
   allowed: ModeId[];
+  comingSoon?: ModeId[];
 }) {
   return (
     <div className="mode-picker" role="radiogroup" aria-label="Quality mode">
       {MODE_IDS.map((id) => {
         const mode = MODES[id];
-        const locked = !allowed.includes(id);
+        const soon = comingSoon.includes(id);
+        const locked = soon || !allowed.includes(id);
         return (
           <button
             key={id}
@@ -27,7 +30,7 @@ export function ModePicker({
             onClick={() => onChange(id)}
           >
             <span className="mode-option__name">
-              {mode.icon} {mode.label} {locked && <span className="badge">Pro</span>}
+              {mode.icon} {mode.label} {soon ? <span className="badge badge--muted">Soon</span> : locked && <span className="badge">Pro</span>}
             </span>
             <span className="mode-option__desc">{mode.description}</span>
             <span className="mode-option__cost">

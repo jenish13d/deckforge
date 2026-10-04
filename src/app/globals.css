@@ -1614,3 +1614,8 @@ a {
     -webkit-print-color-adjust: exact;
   }
 }
+
+.badge--muted {
+  background: var(--border);
+  color: var(--muted);
+}

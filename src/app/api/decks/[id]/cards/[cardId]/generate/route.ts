@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { generateDeckCard, ownsCard } from "@/lib/decks";
 import { forbidden, jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { DEFAULT_MODE, MODES, canUseMode, cardCost, isModeId } from "@/lib/plans";
+import { premiumAvailable } from "@/lib/providers";
 import { clientKey, limits } from "@/lib/rate-limit";
 
 // AI calls can take a while, especially in Premium mode.
@@ -24,6 +25,10 @@ export async function POST(request: Request, ctx: RouteContext<"/api/decks/[id]/
   const mode = isModeId(body?.mode) ? body.mode : isModeId(deck.mode) ? deck.mode : DEFAULT_MODE;
   if (!canUseMode(user.plan, mode)) {
     return jsonError(`${MODES[mode].label} mode is part of Pro. Upgrade or pick another mode.`, 403);
+  }
+
+  if (mode === "premium" && !premiumAvailable()) {
+    return jsonError("Premium mode is coming soon. Pick Quick or Standard.", 403);
   }
 
   const cost = cardCost(mode);

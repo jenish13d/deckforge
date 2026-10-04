@@ -11,7 +11,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getCurrentUser } from "@/lib/auth";
 import { listDecks } from "@/lib/decks";
-import { PLANS, planOf } from "@/lib/plans";
+import { availableModes, premiumAvailable } from "@/lib/providers";
 import { SITE } from "@/lib/site";
 import { findTemplate } from "@/lib/templates";
 
@@ -32,7 +32,8 @@ export default async function Home(props: PageProps<"/">) {
             <p className="hero__subtitle">Describe it, or start from a template below.</p>
           </header>
           <CreateFlow
-            allowedModes={PLANS[planOf(user.plan)].modes}
+            allowedModes={availableModes(user.plan)}
+            comingSoon={premiumAvailable() ? [] : ["premium"]}
             credits={user.credits}
             initialPrompt={template?.prompt}
             initialTheme={template?.theme}

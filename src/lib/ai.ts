@@ -13,25 +13,34 @@ import {
   type Outline,
 } from "./cards";
 import { callDemo, demoEnabled } from "./demo-ai";
+import { GenerationError } from "./errors";
+import { callGemini } from "./gemini";
 import { MODES, type ModeId } from "./plans";
+import { geminiModel, textProvider, type Provider } from "./providers";
 
-export class GenerationError extends Error {}
+export { GenerationError };
 
 type Effort = "low" | "medium" | "high";
 
-/** Which model and effort a request runs on. */
+/** Which provider, model and effort a request runs on. */
 export interface ModelChoice {
+  provider: Provider;
   model: string;
-  /** null for models that don't take an effort setting (Claude Haiku 4.5). */
+  /** null for models that don't take an effort setting (Claude Haiku 4.5; Gemini Quick skips thinking). */
   effort: Effort | null;
 }
 
 export function choiceForMode(mode: ModeId): ModelChoice {
-  return { model: MODES[mode].model, effort: MODES[mode].effort };
+  if (mode !== "premium" && textProvider() === "gemini") {
+    return { provider: "gemini", model: geminiModel(mode), effort: mode === "quick" ? null : "medium" };
+  }
+  return { provider: "anthropic", model: MODES[mode].model, effort: MODES[mode].effort };
 }
 
 // Outlines are short and free to users: the Standard model at low effort.
-export const OUTLINE_CHOICE: ModelChoice = { model: MODES.standard.model, effort: "low" };
+export function outlineChoice(): ModelChoice {
+  return { ...choiceForMode("standard"), effort: "low" };
+}
 
 export interface ModelRequest<T> extends ModelChoice {
   /** Stable instructions, identical across calls so they can be cached. */
@@ -86,8 +95,11 @@ export const callClaude: CallModel = async (request) => {
   return response.parsed_output;
 };
 
-/** The real model, or sample content when DEMO_AI=1. */
-export const defaultCall: CallModel = (request) => (demoEnabled() ? callDemo(request) : callClaude(request));
+/** Sample content when DEMO_AI=1, otherwise the request's provider. */
+export const defaultCall: CallModel = (request) => {
+  if (demoEnabled()) return callDemo(request);
+  return request.provider === "gemini" ? callGemini(request) : callClaude(request);
+};
 
 const OUTLINE_INSTRUCTIONS = `You plan presentations. Given a topic or brief from a user, write the outline of a clear, well-structured deck.
 
@@ -103,7 +115,7 @@ export async function generateOutline(
   call: CallModel = defaultCall,
 ): Promise<Outline> {
   const outline = await call({
-    ...OUTLINE_CHOICE,
+    ...outlineChoice(),
     instructions: OUTLINE_INSTRUCTIONS,
     user: `Create an outline with exactly ${cardCount} cards for this deck:\n\n<request>\n${prompt}\n</request>`,
     schema: OutlineSchema,
