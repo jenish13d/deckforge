@@ -7,6 +7,9 @@ import { forbidden, jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { DEFAULT_MODE, MODES, canUseMode, cardCost, isModeId } from "@/lib/plans";
 import { clientKey, limits } from "@/lib/rate-limit";
 
+// AI calls can take a while, especially in Premium mode.
+export const maxDuration = 60;
+
 export async function POST(request: Request, ctx: RouteContext<"/api/decks/[id]/cards/[cardId]/generate">) {
   const { id, cardId } = await ctx.params;
   const user = await getCurrentUser();

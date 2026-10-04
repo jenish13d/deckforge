@@ -38,18 +38,20 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 | Accounts | `src/lib/auth.ts` (session cookies), `src/lib/password.ts` (scrypt) |
 | Credits & plans | `src/lib/credits.ts`, `src/lib/plans.ts` |
 | Payments | `src/lib/billing.ts` |
-| Data | Prisma + SQLite (`prisma/schema.prisma`): `User`, `Session`, `Deck`, `Card` |
+| Data | Prisma + PostgreSQL (`prisma/schema.prisma`): `User`, `Session`, `Deck`, `Card` |
 
 ## Run it
 
-Requires Node 20.9+.
+Requires Node 20.9+ and a PostgreSQL database (a free [Neon](https://neon.tech) project works).
 
 ```bash
 npm install
-cp .env.example .env        # demo modes are on by default: no keys needed
-npx prisma migrate dev      # creates the local SQLite database
+cp .env.example .env        # put your database strings in .env; demo modes are on by default
+npx prisma migrate deploy   # creates the tables
 npm run dev                 # http://localhost:3000
 ```
+
+To put it online, follow **[DEPLOY.md](DEPLOY.md)** (Neon + Vercel, step by step).
 
 For real AI, put an [Anthropic API key](https://console.anthropic.com) in `.env` and set `DEMO_AI=""`.
 
@@ -75,7 +77,7 @@ Checks: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
 
 ## Next steps
 
-1. **Host it:** Vercel + Postgres (Neon/Supabase free tier); move rate limits to Redis/Upstash.
+1. Move rate limits to Redis/Upstash (they are per server instance today).
 2. **Password reset and email verification** (needs an email provider such as Resend).
 3. **Images** on cards (stock photos or image generation).
 4. **PPTX export**, custom brand themes, import from document/PDF/URL.

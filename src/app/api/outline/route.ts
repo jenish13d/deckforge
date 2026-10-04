@@ -4,6 +4,9 @@ import { MAX_CARDS, MIN_CARDS } from "@/lib/cards";
 import { jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { clientKey, limits } from "@/lib/rate-limit";
 
+// AI calls can take a while, especially in Premium mode.
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
