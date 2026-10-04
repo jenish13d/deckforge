@@ -1749,14 +1749,21 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   background: #000;
+  animation: fade-in 0.25s var(--ease-out);
+}
+
+.presenter.is-idle {
+  cursor: none;
 }
 
 .presenter__stage {
-  width: min(100vw, calc((100vh - 56px) * 16 / 9));
+  width: min(100vw, calc((100vh - 64px) * 16 / 9));
   /* Mobile Safari: size to the visible area, not the area behind the toolbars. */
-  width: min(100vw, calc((100dvh - 56px) * 16 / 9));
+  width: min(100vw, calc((100dvh - 64px) * 16 / 9));
   cursor: pointer;
+  touch-action: pan-y;
 }
 
 .presenter__stage .card {
@@ -1764,27 +1771,97 @@ a {
   box-shadow: none;
 }
 
+/* Slides glide in from the direction you're moving. */
+.presenter__slide {
+  animation: slide-next 0.42s var(--ease-out) both;
+}
+
+.presenter__slide--prev {
+  animation-name: slide-prev;
+}
+
+@keyframes slide-next {
+  from {
+    opacity: 0;
+    transform: translateX(3%) scale(0.985);
+  }
+}
+
+@keyframes slide-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-3%) scale(0.985);
+  }
+}
+
+.presenter__progress {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.presenter__progress span {
+  display: block;
+  height: 100%;
+  background: #fff;
+  transform-origin: left;
+  transition: transform 0.45s var(--ease-out);
+}
+
 .presenter__bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 56px;
-  color: #ccc;
+  gap: 8px;
+  height: 64px;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  transition: opacity 0.4s var(--ease-out);
+}
+
+.presenter.is-idle .presenter__bar,
+.presenter.is-idle .presenter__progress {
+  opacity: 0;
 }
 
 .presenter__bar button {
-  padding: 6px 12px;
-  border: 1px solid #444;
-  border-radius: 6px;
-  background: #1a1a1a;
-  color: #eee;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
   font: inherit;
   cursor: pointer;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition: background 0.2s var(--ease-out), transform 0.12s var(--ease-out);
+}
+
+.presenter__bar button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.presenter__bar button:active:not(:disabled) {
+  transform: scale(0.94);
 }
 
 .presenter__bar button:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
+  cursor: default;
+}
+
+.presenter__count {
+  min-width: 56px;
+  text-align: center;
 }
 
 /* ---------- Small screens ---------- */
@@ -3573,5 +3650,334 @@ a.quick-chip {
 @media (max-width: 640px) {
   .toolbar {
     position: static;
+  }
+}
+
+
+/* ---------- Feel: one motion language, tactile controls, smooth surfaces ---------- */
+:root {
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --hairline: rgba(15, 28, 46, 0.08);
+  --shadow-sm: 0 1px 2px rgba(15, 28, 46, 0.06);
+  --shadow-md: 0 1px 2px rgba(15, 28, 46, 0.05), 0 6px 16px rgba(15, 28, 46, 0.07);
+  --shadow-lg: 0 2px 4px rgba(15, 28, 46, 0.05), 0 18px 40px rgba(15, 28, 46, 0.12);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+a,
+button,
+summary,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+summary,
+select {
+  touch-action: manipulation;
+}
+
+* {
+  scrollbar-color: color-mix(in srgb, var(--text) 22%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+/* Buttons: soft depth, a gentle press, quick colour changes. */
+.button,
+.icon-button,
+.chip,
+.quick-chip,
+.tab,
+.send-button,
+.share-app,
+.menu__item,
+.feedback__toggle,
+.app-nav a,
+.app-tabs a {
+  transition:
+    background-color 0.18s var(--ease-out),
+    border-color 0.18s var(--ease-out),
+    color 0.18s var(--ease-out),
+    box-shadow 0.18s var(--ease-out),
+    transform 0.12s var(--ease-out),
+    filter 0.18s var(--ease-out);
+}
+
+.button {
+  box-shadow: var(--shadow-sm);
+}
+
+.button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--text) 18%, var(--border));
+}
+
+.button--primary {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 88%, #fff) 0%, var(--primary) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 1px 2px rgba(15, 28, 46, 0.14),
+    0 4px 12px color-mix(in srgb, var(--primary) 24%, transparent);
+}
+
+.button--primary:hover:not(:disabled) {
+  border-color: var(--primary);
+  filter: brightness(1.06);
+}
+
+.button:active:not(:disabled),
+.icon-button:active:not(:disabled),
+.chip:active,
+.quick-chip:active,
+.tab:active,
+.share-app:active,
+.feedback__toggle:active,
+.app-tabs a:active {
+  transform: scale(0.97);
+}
+
+.send-button:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+/* Fields: a soft ring instead of a hard outline. */
+.input,
+.search-box,
+.pill-select {
+  transition: border-color 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out), background-color 0.18s var(--ease-out);
+}
+
+.input:focus,
+.input:focus-visible {
+  border-color: var(--primary);
+  outline: none;
+  background: var(--surface);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 14%, transparent);
+}
+
+.search-box:focus-within {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.prompt-box {
+  transition: border-color 0.2s var(--ease-out), box-shadow 0.25s var(--ease-out);
+}
+
+.prompt-box:focus-within {
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary) 10%, transparent), 0 14px 36px color-mix(in srgb, var(--primary) 14%, transparent);
+}
+
+/* Lifting tiles. */
+.starter,
+.template-tile,
+.deck-tile__cover,
+.share-app {
+  transition: transform 0.25s var(--ease-spring), box-shadow 0.25s var(--ease-out), border-color 0.18s var(--ease-out);
+}
+
+.starter:hover,
+.template-tile:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+.deck-tile:hover .deck-tile__cover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+.deck-tile:active .deck-tile__cover,
+.starter:active,
+.template-tile:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* Glassy headers. */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom-color: var(--hairline);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+}
+
+.toolbar {
+  border-bottom-color: var(--hairline);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+}
+
+/* Pages ease in. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.app-content > *,
+.landing-top,
+.page--auth,
+.page--narrow {
+  animation: rise-in 0.42s var(--ease-out) both;
+}
+
+/* Slides arrive softly when they're written. */
+.editor-card .card,
+.deck > .card {
+  animation: rise-in 0.5s var(--ease-out) both;
+}
+
+.outline__item {
+  animation: rise-in 0.4s var(--ease-out) both;
+  animation-delay: calc(min(var(--i, 0), 10) * 45ms);
+}
+
+.card__media {
+  background: var(--card-surface);
+}
+
+/* Shimmer instead of a blink while a slide is being written. */
+.skeleton span {
+  background: linear-gradient(90deg, var(--card-surface) 25%, color-mix(in srgb, var(--card-text) 10%, var(--card-surface)) 50%, var(--card-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Writing progress in the editor. */
+.writing {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.writing__text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.progress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transform-origin: left;
+  transition: transform 0.6s var(--ease-out);
+}
+
+/* Menus and windows open with a little spring. */
+.menu__panel {
+  transform-origin: top right;
+  animation: pop-in 0.18s var(--ease-out);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+}
+
+.modal[open] {
+  animation: modal-in 0.26s var(--ease-spring);
+}
+
+.modal[open]::backdrop {
+  animation: fade-in 0.2s var(--ease-out);
+}
+
+.modal::backdrop {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.toast {
+  animation: toast-in 0.32s var(--ease-spring);
+}
+
+/* Route changes: a calm spinner, only if loading takes a moment. */
+.route-loading {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+  animation: fade-in 0.2s var(--ease-out) 0.15s both;
+}
+
+.route-loading__spinner {
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid color-mix(in srgb, var(--primary) 18%, transparent);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.presenter__hint {
+  display: none;
+  margin: 0 0 4px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8rem;
+}
+
+@media (orientation: portrait) and (max-width: 640px) {
+  .presenter__hint {
+    display: block;
   }
 }

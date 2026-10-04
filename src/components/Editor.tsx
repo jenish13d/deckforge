@@ -1,6 +1,6 @@
 "use client";
 
-import { CopyPlus, Ellipsis, Lock, Share2, Trash2 } from "lucide-react";
+import { CopyPlus, Ellipsis, LoaderCircle, Lock, Share2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -272,7 +272,16 @@ export function Editor({
       </header>
 
       <main className="page">
-        {writing > 0 && <p className="status" role="status">Writing {writing} card{writing === 1 ? "" : "s"}…</p>}
+        {writing > 0 && (
+          <div className="writing" role="status">
+            <p className="writing__text">
+              <LoaderCircle size={16} className="spin" aria-hidden="true" /> Writing card {deck.cards.length - writing + 1} of {deck.cards.length}…
+            </p>
+            <div className="progress" aria-hidden="true">
+              <span style={{ transform: `scaleX(${(deck.cards.length - writing) / deck.cards.length})` }} />
+            </div>
+          </div>
+        )}
         {bravo && (
           <p className="success bravo" role="status">
             <span><strong>Bravo!</strong> Your deck is ready. Present it, share the link or download it.</span>

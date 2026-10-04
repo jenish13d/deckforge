@@ -237,7 +237,7 @@ export function CreateFlow({
       <p className="muted">Edit the outline: rename cards, change the key points (one per line), add or remove cards.</p>
       <ol className="outline">
         {cards.map((card, i) => (
-          <li key={card.key} className="outline__item">
+          <li key={card.key} className="outline__item" style={{ "--i": i } as React.CSSProperties}>
             <span className="outline__number">{i + 1}</span>
             <div className="outline__fields">
               <input
