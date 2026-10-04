@@ -1,5 +1,7 @@
-import { canEdit, getDeck, reorderCards, updateDeck } from "@/lib/decks";
-import { editToken, jsonError, readJson, str } from "@/lib/http";
+import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { getDeck, ownsDeck, reorderCards, updateDeck } from "@/lib/decks";
+import { forbidden, jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { isThemeId } from "@/lib/themes";
 
 export async function GET(_request: Request, ctx: RouteContext<"/api/decks/[id]">) {
@@ -10,7 +12,9 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/decks/[id]"
 
 export async function PATCH(request: Request, ctx: RouteContext<"/api/decks/[id]">) {
   const { id } = await ctx.params;
-  if (!(await canEdit(id, editToken(request)))) return jsonError("Not allowed to edit this deck.", 403);
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+  if (!(await ownsDeck(user.id, id))) return forbidden();
 
   const body = await readJson(request);
   if (!body) return jsonError("Invalid JSON.", 400);
@@ -29,4 +33,13 @@ export async function PATCH(request: Request, ctx: RouteContext<"/api/decks/[id]
     }
   }
   return Response.json(await getDeck(id));
+}
+
+export async function DELETE(_request: Request, ctx: RouteContext<"/api/decks/[id]">) {
+  const { id } = await ctx.params;
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+  if (!(await ownsDeck(user.id, id))) return forbidden();
+  await db.deck.delete({ where: { id } });
+  return new Response(null, { status: 204 });
 }

@@ -1,19 +1,40 @@
 import { describe, expect, it } from "vitest";
 
-import { hashToken, newEditToken, tokenMatches } from "../edit-token";
+import { hashPassword, validateCredentials, verifyPassword } from "../password";
+import { canUseMode, cardCost } from "../plans";
 import { createRateLimiter } from "../rate-limit";
 
-describe("edit tokens", () => {
-  it("matches only the original token", () => {
-    const { token, hash } = newEditToken();
-    expect(hash).toBe(hashToken(token));
-    expect(tokenMatches(token, hash)).toBe(true);
-    expect(tokenMatches(`${token}x`, hash)).toBe(false);
-    expect(tokenMatches(null, hash)).toBe(false);
+describe("passwords", () => {
+  it("verifies the right password only", async () => {
+    const stored = await hashPassword("correct horse battery");
+    expect(stored.startsWith("scrypt$")).toBe(true);
+    expect(await verifyPassword("correct horse battery", stored)).toBe(true);
+    expect(await verifyPassword("correct horse batterY", stored)).toBe(false);
+    expect(await verifyPassword("x", "garbage")).toBe(false);
   });
 
-  it("generates different tokens", () => {
-    expect(newEditToken().token).not.toBe(newEditToken().token);
+  it("salts each hash", async () => {
+    expect(await hashPassword("same password")).not.toBe(await hashPassword("same password"));
+  });
+
+  it("validates sign-up input", () => {
+    expect(validateCredentials("a@b.co", "longenough")).toBeNull();
+    expect(validateCredentials("not-an-email", "longenough")).toMatch(/email/);
+    expect(validateCredentials("a@b.co", "short")).toMatch(/8 characters/);
+  });
+});
+
+describe("plans", () => {
+  it("locks Premium to Pro", () => {
+    expect(canUseMode("free", "standard")).toBe(true);
+    expect(canUseMode("free", "premium")).toBe(false);
+    expect(canUseMode("pro", "premium")).toBe(true);
+    expect(canUseMode("something-else", "premium")).toBe(false);
+  });
+
+  it("prices cards by mode", () => {
+    expect([cardCost("quick"), cardCost("standard"), cardCost("premium")]).toEqual([1, 2, 4]);
+    expect(cardCost("standard", 8)).toBe(16);
   });
 });
 

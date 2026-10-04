@@ -12,47 +12,70 @@ import {
   type CardContent,
   type Outline,
 } from "./cards";
-
-export const DEFAULT_MODEL = "claude-opus-5-5";
+import { callDemo, demoEnabled } from "./demo-ai";
+import { MODES, type ModeId } from "./plans";
 
 export class GenerationError extends Error {}
 
 type Effort = "low" | "medium" | "high";
 
-export interface ModelRequest<T> {
+/** Which model and effort a request runs on. */
+export interface ModelChoice {
+  model: string;
+  /** null for models that don't take an effort setting (Claude Haiku 4.5). */
+  effort: Effort | null;
+}
+
+export function choiceForMode(mode: ModeId): ModelChoice {
+  return { model: MODES[mode].model, effort: MODES[mode].effort };
+}
+
+// Outlines are short and free to users: the Standard model at low effort.
+export const OUTLINE_CHOICE: ModelChoice = { model: MODES.standard.model, effort: "low" };
+
+export interface ModelRequest<T> extends ModelChoice {
   /** Stable instructions, identical across calls so they can be cached. */
   instructions: string;
   /** Per-deck context shared by every card of a deck (cached too). Optional. */
   context?: string;
   user: string;
   schema: z.ZodType<T>;
-  effort: Effort;
 }
 
 /** One structured call to the model; injectable so tests run without the API. */
 export type CallModel = <T>(request: ModelRequest<T>) => Promise<T>;
 
-let client: Anthropic | null = null;
+// Models that accept the server-side refusal fallback (`fallbacks: "default"`).
+const FALLBACK_MODELS = new Set(["claude-opus-5-5", "claude-sonnet-5-5"]);
 
-export const callClaude: CallModel = async (request) => {
-  client ??= new Anthropic();
-  const system: Anthropic.Beta.Messages.BetaTextBlockParam[] = [
-    { type: "text", text: request.instructions },
-  ];
+/** Builds the Messages API request for a structured call. Pure, so it is unit-tested. */
+export function buildParams<T>(request: ModelRequest<T>) {
+  const system: Anthropic.Beta.Messages.BetaTextBlockParam[] = [{ type: "text", text: request.instructions }];
   if (request.context) system.push({ type: "text", text: request.context });
   // Cache everything up to the last system block: the cards of one deck share it.
   system[system.length - 1].cache_control = { type: "ephemeral" };
 
-  const response = await client.beta.messages.parse({
-    model: process.env.DECK_MODEL || DEFAULT_MODEL,
+  return {
+    model: request.model,
     max_tokens: 16000,
     system,
-    messages: [{ role: "user", content: request.user }],
-    output_config: { effort: request.effort, format: betaZodOutputFormat(request.schema) },
+    messages: [{ role: "user" as const, content: request.user }],
+    output_config: {
+      format: betaZodOutputFormat(request.schema),
+      ...(request.effort ? { effort: request.effort } : {}),
+    },
     // On a safety decline, let the API retry on its recommended fallback model.
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
-  });
+    ...(FALLBACK_MODELS.has(request.model)
+      ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }
+      : {}),
+  };
+}
+
+let client: Anthropic | null = null;
+
+export const callClaude: CallModel = async (request) => {
+  client ??= new Anthropic();
+  const response = await client.beta.messages.parse(buildParams(request));
 
   if (response.stop_reason === "refusal") {
     throw new GenerationError("The model declined this request.");
@@ -62,6 +85,9 @@ export const callClaude: CallModel = async (request) => {
   }
   return response.parsed_output;
 };
+
+/** The real model, or sample content when DEMO_AI=1. */
+export const defaultCall: CallModel = (request) => (demoEnabled() ? callDemo(request) : callClaude(request));
 
 const OUTLINE_INSTRUCTIONS = `You plan presentations. Given a topic or brief from a user, write the outline of a clear, well-structured deck.
 
@@ -74,13 +100,13 @@ const OUTLINE_INSTRUCTIONS = `You plan presentations. Given a topic or brief fro
 export async function generateOutline(
   prompt: string,
   cardCount: number,
-  call: CallModel = callClaude,
+  call: CallModel = defaultCall,
 ): Promise<Outline> {
   const outline = await call({
+    ...OUTLINE_CHOICE,
     instructions: OUTLINE_INSTRUCTIONS,
     user: `Create an outline with exactly ${cardCount} cards for this deck:\n\n<request>\n${prompt}\n</request>`,
     schema: OutlineSchema,
-    effort: "low",
   });
   const normalized = normalizeOutline(outline, cardCount);
   if (normalized.cards.length === 0) throw new GenerationError("The outline came back empty.");
@@ -113,12 +139,13 @@ export function deckContext(deckTitle: string, prompt: string, outline: CardBrie
 }
 
 export async function generateCard(
-  args: { deckTitle: string; prompt: string; outline: CardBrief[]; index: number; extra?: string },
-  call: CallModel = callClaude,
+  args: { deckTitle: string; prompt: string; outline: CardBrief[]; index: number; mode: ModeId; extra?: string },
+  call: CallModel = defaultCall,
 ): Promise<CardContent> {
   const brief = args.outline[args.index];
   const layoutHint = args.index === 0 ? ' This is the first card: use the "title" layout.' : "";
   const card = await call({
+    ...choiceForMode(args.mode),
     instructions: CARD_INSTRUCTIONS,
     context: deckContext(args.deckTitle, args.prompt, args.outline),
     user:
@@ -127,7 +154,6 @@ export async function generateCard(
       layoutHint +
       (args.extra ? `\nAlso: ${args.extra}` : ""),
     schema: GeneratedCardSchema,
-    effort: "medium",
   });
   return normalizeCard(card);
 }

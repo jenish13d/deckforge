@@ -1,10 +1,15 @@
 import { GenerationError, generateOutline } from "@/lib/ai";
+import { getCurrentUser } from "@/lib/auth";
 import { MAX_CARDS, MIN_CARDS } from "@/lib/cards";
-import { jsonError, readJson, str } from "@/lib/http";
+import { jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { clientKey, limits } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
-  if (!limits.outline(clientKey(request))) return jsonError("Too many requests. Try again later.", 429);
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+  if (!limits.outline(user.id) || !limits.outline(clientKey(request))) {
+    return jsonError("Too many requests. Try again later.", 429);
+  }
 
   const body = await readJson(request);
   const prompt = str(body?.prompt, 4000);

@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { Editor } from "@/components/Editor";
+import { getCurrentUser } from "@/lib/auth";
 import { getDeck } from "@/lib/decks";
+import { PLANS, planOf } from "@/lib/plans";
 
 export const metadata: Metadata = { title: "Edit deck · Deckforge", robots: { index: false } };
 
 export default async function EditPage(props: PageProps<"/d/[id]/edit">) {
   const { id } = await props.params;
-  const deck = await getDeck(id);
+  const [user, deck] = await Promise.all([getCurrentUser(), getDeck(id)]);
   if (!deck) notFound();
-  return <Editor initial={deck} />;
+  if (!user) redirect("/login");
+  // Other people's decks open in the view-only page.
+  if (deck.userId !== user.id) redirect(`/d/${id}`);
+
+  return <Editor initial={deck} initialCredits={user.credits} allowedModes={PLANS[planOf(user.plan)].modes} />;
 }

@@ -1,9 +1,12 @@
-import { addCard, canEdit } from "@/lib/decks";
-import { editToken, jsonError, readJson, str } from "@/lib/http";
+import { getCurrentUser } from "@/lib/auth";
+import { addCard, ownsDeck } from "@/lib/decks";
+import { forbidden, jsonError, readJson, str, unauthorized } from "@/lib/http";
 
 export async function POST(request: Request, ctx: RouteContext<"/api/decks/[id]/cards">) {
   const { id } = await ctx.params;
-  if (!(await canEdit(id, editToken(request)))) return jsonError("Not allowed to edit this deck.", 403);
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+  if (!(await ownsDeck(user.id, id))) return forbidden();
 
   const body = await readJson(request);
   const title = str(body?.title, 120);

@@ -13,7 +13,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
-      <body>{children}</body>
+      <body>
+        {process.env.DEMO_AI === "1" && (
+          <div className="demo-banner no-print" role="note">
+            Demo mode: decks use sample text, not real AI. No API costs.
+          </div>
+        )}
+        {children}
+      </body>
     </html>
   );
 }

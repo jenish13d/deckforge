@@ -1,18 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CardEditForm } from "@/components/CardEditForm";
 import { CardPlaceholder, CardView } from "@/components/CardView";
 import { Presenter } from "@/components/Presenter";
 import { emptyCard, type CardContent } from "@/lib/cards";
-import { api, loadToken } from "@/lib/client";
+import { ApiError, api } from "@/lib/client";
 import type { CardView as CardData, DeckView } from "@/lib/decks";
+import { MODES, MODE_IDS, isModeId, type ModeId } from "@/lib/plans";
 import { THEMES, isThemeId } from "@/lib/themes";
 
 const PARALLEL_CARDS = 3;
-const noopSubscribe = () => () => {};
 
 function without<T>(record: Record<string, T>, key: string): Record<string, T> {
   const copy = { ...record };
@@ -20,9 +20,20 @@ function without<T>(record: Record<string, T>, key: string): Record<string, T> {
   return copy;
 }
 
-export function Editor({ initial }: { initial: DeckView }) {
+export function Editor({
+  initial,
+  initialCredits,
+  allowedModes,
+}: {
+  initial: DeckView;
+  initialCredits: number;
+  allowedModes: ModeId[];
+}) {
   const [deck, setDeck] = useState(initial);
-  const token = useSyncExternalStore(noopSubscribe, () => loadToken(initial.id), () => null);
+  const [credits, setCredits] = useState(initialCredits);
+  const [mode, setMode] = useState<ModeId>(allowedModes.includes(initial.mode) ? initial.mode : allowedModes[0]);
+  // Set when the server says we're out of credits, so pending cards stop retrying.
+  const [outOfCredits, setOutOfCredits] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
   const [cardErrors, setCardErrors] = useState<Record<string, string>>({});
@@ -36,18 +47,20 @@ export function Editor({ initial }: { initial: DeckView }) {
     setDeck((d) => ({ ...d, cards: d.cards.map((c) => (c.id === card.id ? card : c)) }));
 
   const generate = useCallback(
-    async (cardId: string, instructions?: string) => {
-      if (!token || inFlight.current.has(cardId)) return;
+    async (cardId: string, instructions?: string, cardMode?: ModeId) => {
+      if (inFlight.current.has(cardId)) return;
       inFlight.current.add(cardId);
       setBusy((b) => ({ ...b, [cardId]: true }));
       setCardErrors((errs) => without(errs, cardId));
       try {
-        const card = await api<CardData>(`/api/decks/${deck.id}/cards/${cardId}/generate`, {
-          body: { instructions },
-          token,
-        });
-        replaceCard(card);
+        const result = await api<{ card: CardData; credits: number }>(
+          `/api/decks/${deck.id}/cards/${cardId}/generate`,
+          { body: { instructions, mode: cardMode } },
+        );
+        replaceCard(result.card);
+        setCredits(result.credits);
       } catch (e) {
+        if (e instanceof ApiError && e.status === 402) setOutOfCredits(true);
         setCardErrors((errs) => ({ ...errs, [cardId]: e instanceof Error ? e.message : String(e) }));
         setDeck((d) => ({
           ...d,
@@ -59,18 +72,18 @@ export function Editor({ initial }: { initial: DeckView }) {
         setTick((t) => t + 1);
       }
     },
-    [deck.id, token],
+    [deck.id],
   );
 
   // Write pending cards a few at a time; resumes after a page reload too.
   useEffect(() => {
-    if (!token) return;
+    if (outOfCredits) return;
     const free = PARALLEL_CARDS - inFlight.current.size;
     deck.cards
       .filter((c) => c.status === "pending" && !inFlight.current.has(c.id))
       .slice(0, Math.max(free, 0))
       .forEach((c) => void generate(c.id));
-  }, [deck.cards, token, generate, tick]);
+  }, [deck.cards, outOfCredits, generate, tick]);
 
   async function run(action: () => Promise<void>) {
     setError("");
@@ -84,7 +97,7 @@ export function Editor({ initial }: { initial: DeckView }) {
 
   const patchDeck = (body: Record<string, unknown>) =>
     run(async () => {
-      await api(`/api/decks/${deck.id}`, { method: "PATCH", body, token });
+      await api(`/api/decks/${deck.id}`, { method: "PATCH", body });
     });
 
   function move(index: number, delta: number) {
@@ -95,7 +108,7 @@ export function Editor({ initial }: { initial: DeckView }) {
     setDeck({ ...deck, cards });
     void run(async () => {
       // The response carries the new positions, which "add card" relies on.
-      setDeck(await api<DeckView>(`/api/decks/${deck.id}`, { method: "PATCH", body: { order: cards.map((c) => c.id) }, token }));
+      setDeck(await api<DeckView>(`/api/decks/${deck.id}`, { method: "PATCH", body: { order: cards.map((c) => c.id) } }));
     });
   }
 
@@ -103,7 +116,7 @@ export function Editor({ initial }: { initial: DeckView }) {
     if (!window.confirm(`Delete "${card.content?.title ?? card.brief.title}"?`)) return;
     setDeck((d) => ({ ...d, cards: d.cards.filter((c) => c.id !== card.id) }));
     void run(async () => {
-      await api(`/api/decks/${deck.id}/cards/${card.id}`, { method: "DELETE", token });
+      await api(`/api/decks/${deck.id}/cards/${card.id}`, { method: "DELETE" });
     });
   }
 
@@ -111,7 +124,7 @@ export function Editor({ initial }: { initial: DeckView }) {
     const title = window.prompt("What should the new card be about?");
     if (!title?.trim()) return;
     void run(async () => {
-      await api(`/api/decks/${deck.id}/cards`, { body: { afterPosition: position, title }, token });
+      await api(`/api/decks/${deck.id}/cards`, { body: { afterPosition: position, title } });
       setDeck(await api<DeckView>(`/api/decks/${deck.id}`));
     });
   }
@@ -119,12 +132,13 @@ export function Editor({ initial }: { initial: DeckView }) {
   function regenerate(card: CardData) {
     const instructions = window.prompt("Anything to change? (optional, e.g. 'shorter', 'use a timeline')", "");
     if (instructions === null) return;
-    void generate(card.id, instructions.trim() || undefined);
+    setOutOfCredits(false);
+    void generate(card.id, instructions.trim() || undefined, mode);
   }
 
   async function saveCard(cardId: string, content: CardContent) {
     try {
-      replaceCard(await api<CardData>(`/api/decks/${deck.id}/cards/${cardId}`, { method: "PATCH", body: { content }, token }));
+      replaceCard(await api<CardData>(`/api/decks/${deck.id}/cards/${cardId}`, { method: "PATCH", body: { content } }));
       setEditing(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -143,17 +157,6 @@ export function Editor({ initial }: { initial: DeckView }) {
 
   const readyCards = deck.cards.flatMap((c) => (c.content ? [c.content] : []));
   const writing = deck.cards.filter((c) => c.status === "pending").length;
-
-  if (!token) {
-    return (
-      <main className="page">
-        <div className="notice">
-          <p>Only the browser that created this deck can edit it.</p>
-          <Link className="button" href={`/d/${deck.id}`}>View the deck</Link>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <>
@@ -186,6 +189,20 @@ export function Editor({ initial }: { initial: DeckView }) {
             <option key={t.id} value={t.id}>{t.name}</option>
           ))}
         </select>
+        <select
+          className="input"
+          aria-label="Quality for regenerated cards"
+          title="Quality used when you regenerate a card"
+          value={mode}
+          onChange={(e) => isModeId(e.target.value) && setMode(e.target.value)}
+        >
+          {MODE_IDS.map((id) => (
+            <option key={id} value={id} disabled={!allowedModes.includes(id)}>
+              {MODES[id].icon} {MODES[id].label} ({MODES[id].creditsPerCard}/card){allowedModes.includes(id) ? "" : " · Pro"}
+            </option>
+          ))}
+        </select>
+        <Link href="/account" className="credits-pill" title="Credits left this month">{credits} credits</Link>
         <button type="button" className="button" onClick={share}>{copied ? "Link copied" : "Share"}</button>
         <Link className="button" href={`/d/${deck.id}`} target="_blank">View / PDF</Link>
         <button
@@ -201,6 +218,12 @@ export function Editor({ initial }: { initial: DeckView }) {
       <main className="page">
         {writing > 0 && <p className="status" role="status">Writing {writing} card{writing === 1 ? "" : "s"}…</p>}
         {error && <p className="error" role="alert">{error}</p>}
+        {outOfCredits && (
+          <p className="banner" role="alert">
+            You&apos;re out of credits, so some cards weren&apos;t written. <Link href="/account">Upgrade to Pro</Link>{" "}
+            or edit those cards by hand.
+          </p>
+        )}
 
         <div className={`deck theme-${deck.theme}`}>
           {deck.cards.map((card, i) => (

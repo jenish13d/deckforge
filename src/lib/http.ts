@@ -1,5 +1,3 @@
-import { EDIT_TOKEN_HEADER } from "./edit-token";
-
 export function jsonError(message: string, status: number): Response {
   return Response.json({ error: message }, { status });
 }
@@ -13,10 +11,9 @@ export async function readJson(request: Request): Promise<Record<string, unknown
   }
 }
 
-export function editToken(request: Request): string | null {
-  return request.headers.get(EDIT_TOKEN_HEADER);
-}
-
 export function str(value: unknown, max: number): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
+
+export const unauthorized = () => jsonError("Please log in.", 401);
+export const forbidden = () => jsonError("You don't have access to this deck.", 403);

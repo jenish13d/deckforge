@@ -10,7 +10,7 @@ import {
   type CardContent,
 } from "./cards";
 import { db } from "./db";
-import { newEditToken, tokenMatches } from "./edit-token";
+import { DEFAULT_MODE, isModeId, type ModeId } from "./plans";
 import type { ThemeId } from "./themes";
 
 const BriefSchema = OutlineSchema.shape.cards.element;
@@ -25,9 +25,11 @@ export interface CardView {
 
 export interface DeckView {
   id: string;
+  userId: string;
   title: string;
   prompt: string;
   theme: string;
+  mode: ModeId;
   cards: CardView[];
 }
 
@@ -49,42 +51,62 @@ export async function getDeck(id: string): Promise<DeckView | null> {
   if (!deck) return null;
   return {
     id: deck.id,
+    userId: deck.userId,
     title: deck.title,
     prompt: deck.prompt,
     theme: deck.theme,
+    mode: isModeId(deck.mode) ? deck.mode : DEFAULT_MODE,
     cards: deck.cards.map(toCardView),
   };
 }
 
 export async function createDeck(input: {
+  userId: string;
   title: string;
   prompt: string;
   theme: ThemeId;
+  mode: ModeId;
   outline: CardBrief[];
-}): Promise<{ id: string; token: string }> {
-  const { token, hash } = newEditToken();
+}): Promise<{ id: string }> {
   const deck = await db.deck.create({
     data: {
+      userId: input.userId,
       title: input.title,
       prompt: input.prompt,
       theme: input.theme,
-      editTokenHash: hash,
+      mode: input.mode,
       cards: {
         create: input.outline.map((brief, position) => ({ position, brief: JSON.stringify(brief) })),
       },
     },
   });
-  return { id: deck.id, token };
+  return { id: deck.id };
 }
 
-/** True when the token may edit this deck; false also when the deck doesn't exist. */
-export async function canEdit(deckId: string, token: string | null): Promise<boolean> {
-  const deck = await db.deck.findUnique({ where: { id: deckId }, select: { editTokenHash: true } });
-  return deck !== null && tokenMatches(token, deck.editTokenHash);
+export async function ownsDeck(userId: string, deckId: string): Promise<boolean> {
+  return (await db.deck.count({ where: { id: deckId, userId } })) === 1;
+}
+
+export async function ownsCard(userId: string, deckId: string, cardId: string): Promise<boolean> {
+  return (await db.card.count({ where: { id: cardId, deckId, deck: { userId } } })) === 1;
+}
+
+export async function listDecks(userId: string) {
+  const decks = await db.deck.findMany({
+    where: { userId },
+    orderBy: { updatedAt: "desc" },
+    select: { id: true, title: true, theme: true, updatedAt: true, _count: { select: { cards: true } } },
+  });
+  return decks.map((d) => ({ id: d.id, title: d.title, theme: d.theme, updatedAt: d.updatedAt, cards: d._count.cards }));
 }
 
 /** Generates (or regenerates) one card and stores the result. */
-export async function generateDeckCard(deckId: string, cardId: string, extra?: string): Promise<CardView> {
+export async function generateDeckCard(
+  deckId: string,
+  cardId: string,
+  mode: ModeId,
+  extra?: string,
+): Promise<CardView> {
   const deck = await getDeck(deckId);
   const index = deck?.cards.findIndex((c) => c.id === cardId) ?? -1;
   if (!deck || index < 0) throw new GenerationError("Card not found.");
@@ -95,6 +117,7 @@ export async function generateDeckCard(deckId: string, cardId: string, extra?: s
       prompt: deck.prompt,
       outline: deck.cards.map((c) => c.brief),
       index,
+      mode,
       extra,
     });
     const row = await db.card.update({

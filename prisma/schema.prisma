@@ -7,16 +7,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  passwordHash         String
+  // "free" | "pro" (see src/lib/plans.ts)
+  plan                 String    @default("free")
+  credits              Int
+  // When the monthly credit allowance is next refilled.
+  creditsResetAt       DateTime
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?
+  createdAt            DateTime  @default(now())
+  sessions             Session[]
+  decks                Deck[]
+}
+
+model Session {
+  // sha256 of the session cookie value; the raw token only lives in the cookie.
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 model Deck {
-  id            String   @id @default(cuid())
-  title         String
-  prompt        String
-  theme         String   @default("minimal")
-  // sha256 of the secret edit token; the token itself only lives in the creator's browser.
-  editTokenHash String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  cards         Card[]
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  prompt    String
+  theme     String   @default("minimal")
+  // "quick" | "standard" | "premium" (see src/lib/plans.ts)
+  mode      String   @default("standard")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cards     Card[]
+
+  @@index([userId, updatedAt])
 }
 
 model Card {

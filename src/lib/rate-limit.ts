@@ -30,6 +30,7 @@ export const limits = {
   outline: createRateLimiter(30, HOUR),
   deck: createRateLimiter(10, HOUR),
   card: createRateLimiter(200, HOUR),
+  auth: createRateLimiter(20, HOUR),
 };
 
 export function clientKey(request: Request): string {
