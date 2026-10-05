@@ -18,6 +18,9 @@ export const CardImageSchema = z.object({
   alt: z.string(),
   credit: z.string(),
   creditUrl: z.string(),
+  /** Pixel size, when known: lets slides show the whole photo instead of cropping a mismatched one. */
+  width: z.number().optional(),
+  height: z.number().optional(),
 });
 export type CardImage = z.infer<typeof CardImageSchema>;
 
@@ -68,6 +71,7 @@ export function isAllowedImageUrl(url: string): boolean {
       u.protocol === "https:" &&
       (u.hostname === "images.pexels.com" ||
         u.hostname === "upload.wikimedia.org" ||
+        u.hostname === "thumb.wikimedia.org" ||
         u.hostname === "staticflickr.com" ||
         u.hostname.endsWith(".staticflickr.com"))
     );
@@ -205,4 +209,21 @@ export function parseStored<T>(schema: z.ZodType<T>, json: string): T | null {
   } catch {
     return null;
   }
+}
+
+/** Width ÷ height of a slide's photo area: the whole 16:9 slide for covers, 44% of it beside text. */
+export const FRAME_ASPECT = { fullBleed: 16 / 9, split: (0.44 * 16) / 9 } as const;
+
+/**
+ * How to fit a photo into its frame without cutting what matters. Cropping the sides of
+ * a wide photo is usually fine; cropping the top and bottom cuts off heads, so a much
+ * taller (or far wider) photo is shown whole, on a blurred copy of itself. Cropped photos
+ * keep the upper part, where faces usually are.
+ */
+export function photoFit(photoAspect: number, frameAspect: number): { mode: "cover" | "contain"; focusY: number } {
+  if (!Number.isFinite(photoAspect) || photoAspect <= 0) return { mode: "cover", focusY: 50 };
+  const taller = photoAspect < frameAspect;
+  const ratio = taller ? frameAspect / photoAspect : photoAspect / frameAspect;
+  if (ratio > (taller ? 1.3 : 2.2)) return { mode: "contain", focusY: 50 };
+  return { mode: "cover", focusY: taller ? 25 : 50 };
 }

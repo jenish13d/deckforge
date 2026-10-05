@@ -87,8 +87,15 @@ separate Neon "branch" for testing.)
   **Settings → Environment Variables**: add `GEMINI_API_KEY` (Secret), **delete** `DEMO_AI` and
   `BILLING_DEMO`, then **Deployments → ⋯ → Redeploy**. Quick and Standard now use real AI; Premium shows
   "coming soon".
-- **Claude (paid, adds Premium):** add `ANTHROPIC_API_KEY` the same way and redeploy. Quick/Standard switch to
-  Claude automatically (or set `AI_PROVIDER=gemini` to keep them on Gemini).
+- **More free AI (recommended):** add any of `GROQ_API_KEY` (https://console.groq.com), `OPENROUTER_API_KEY`
+  (https://openrouter.ai) and `ZAI_API_KEY` (https://z.ai) the same way. They work as a team with Gemini:
+  each job goes to the best one, and when one is busy the next takes over. Groq is needed for visitors from
+  the UK and EU, because Google's terms only allow its paid Gemini API for them.
+- **Research and fact checking:** works with Wikipedia out of the box. Add `TAVILY_API_KEY`
+  (https://tavily.com, free 1,000 searches a month) so decks are also checked against independent websites;
+  then every number on a slide needs two sources that agree.
+- **Claude or OpenAI (paid, adds Premium):** add `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` (with `OPENAI_MODEL`,
+  default `gpt-6-astra`) the same way and redeploy. Paid models then lead the team.
 - **Before taking real payments:** remove `BILLING_DEMO`, add the Stripe variables (see README).
   Note: Vercel's free **Hobby** plan is for non-commercial use. Upgrade the Vercel project to **Pro**
   (about $20/month) before you start charging customers.

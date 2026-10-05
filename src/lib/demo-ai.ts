@@ -89,6 +89,9 @@ export function demoCard(cardTitle: string, _deckTitle: string, index: number, t
 /** CallModel implementation that never calls the API. */
 export const callDemo: CallModel = async <T,>(request: ModelRequest<T>): Promise<T> => {
   await new Promise((r) => setTimeout(r, 300 + Math.random() * 700));
+  // Demo decks skip research and fact checks (the sample text is labelled as illustrative).
+  if (request.role === "research") return { factual: false, searches: [] } as T;
+  if (request.role === "check") return { problems: [] } as T;
   if ((request.schema as unknown) === OutlineSchema) {
     const count = Number(/exactly (\d+) cards/.exec(request.user)?.[1] ?? 6);
     const prompt = /<request>\n([\s\S]*?)\n<\/request>/.exec(request.user)?.[1] ?? "";

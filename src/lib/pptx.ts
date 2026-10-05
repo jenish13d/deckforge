@@ -2,7 +2,7 @@
 
 import type PptxGenJS from "pptxgenjs";
 
-import { imageSrc, showsImage, type CardContent } from "./cards";
+import { imageSrc, photoFit, showsImage, type CardContent } from "./cards";
 import { themeStyle, type ThemeStyle } from "./themes";
 import { SITE } from "@/lib/site";
 
@@ -43,6 +43,54 @@ async function toDataUrl(url: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * The photo already fitted to its frame, like on screen (see photoFit): cropped around
+ * the upper part, or shown whole over a blurred copy. Blur comes from scaling a tiny
+ * copy back up, which every browser does the same way. On covers a whole photo sits
+ * at the right (`alignX`), clear of the text panel.
+ */
+async function framedPhoto(dataUrl: string, frameW: number, frameH: number, alignX = 0.5): Promise<string> {
+  const img = await new Promise<HTMLImageElement | null>((resolve) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => resolve(null);
+    i.src = dataUrl;
+  });
+  if (!img?.naturalWidth) return dataUrl;
+  const canvas = document.createElement("canvas");
+  canvas.width = 1600;
+  canvas.height = Math.round((1600 * frameH) / frameW);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return dataUrl;
+  const pic = img.naturalWidth / img.naturalHeight;
+  const frame = canvas.width / canvas.height;
+  const fit = photoFit(pic, frame);
+  const cover = (target: CanvasRenderingContext2D, w: number, h: number, focusY: number) => {
+    const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+    const dw = img.naturalWidth * scale;
+    const dh = img.naturalHeight * scale;
+    target.drawImage(img, (w - dw) / 2, (h - dh) * (focusY / 100), dw, dh);
+  };
+  if (fit.mode === "cover") {
+    cover(ctx, canvas.width, canvas.height, fit.focusY);
+  } else {
+    const tiny = document.createElement("canvas");
+    tiny.width = 32;
+    tiny.height = Math.max(1, Math.round(32 / frame));
+    const t = tiny.getContext("2d");
+    if (t) cover(t, tiny.width, tiny.height, 50);
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(tiny, 0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const scale = Math.min(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+    const dw = img.naturalWidth * scale;
+    const dh = img.naturalHeight * scale;
+    ctx.drawImage(img, (canvas.width - dw) * alignX, (canvas.height - dh) / 2, dw, dh);
+  }
+  return canvas.toDataURL("image/jpeg", 0.9);
 }
 
 /** Theme backgrounds are gradients; PowerPoint gets them as a picture. */
@@ -103,7 +151,8 @@ function buildBlocks(card: CardContent, style: ThemeStyle, colors: Colors, x: nu
   if (card.layout !== "quote") {
     const size = pt(card.layout === "title" ? (fullBleed ? 5.4 : 6.6) : card.layout === "section" ? 5.6 : 4.6);
     const text = style.upperTitles ? card.title.toUpperCase() : card.title;
-    const th = textHeight(text, size, w, style.upperTitles ? 1.2 : 1.12, style.upperTitles ? 0.7 : 0.5);
+    // Bold serif titles run wide (and wider still where Georgia is replaced), so allow for that.
+    const th = textHeight(text, size, w, style.upperTitles ? 1.2 : 1.12, style.upperTitles ? 0.7 : 0.62);
     add(th, (s, y) => s.addText(text, { x, y, w, h: th, fontFace: heading, fontSize: size, bold: !style.upperTitles, color: colors.title, valign: "top", margin: 0, lineSpacingMultiple: 0.95 }));
   }
 
@@ -307,7 +356,7 @@ export async function buildPptx(cards: CardContent[], theme: string, title: stri
     if (photo && card.image) {
       const px = fullBleed ? 0 : imageLeft ? 0 : W * 0.56;
       const pw = fullBleed ? W : W * 0.44;
-      slide.addImage({ data: photo, x: px, y: 0, w: pw, h: H, sizing: { type: "cover", w: pw, h: H }, altText: card.image.alt });
+      slide.addImage({ data: await framedPhoto(photo, pw, H, fullBleed ? 0.92 : 0.5), x: px, y: 0, w: pw, h: H, altText: card.image.alt });
       if (card.image.credit) {
         slide.addText(`Photo: ${card.image.credit}`, {
           x: px, y: H - 0.4, w: pw - 0.15, h: 0.3, align: "right", fontFace: SANS, fontSize: 9, color: "FFFFFF",

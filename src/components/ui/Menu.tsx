@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { useInViewport } from "./useInViewport";
+
 /** Small dropdown menu; closes on outside click, Esc, or after choosing an item. */
 export function Menu({
   label,
@@ -15,6 +17,8 @@ export function Menu({
 }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const shift = useInViewport(panel, open);
 
   useEffect(() => {
     if (!open) return;
@@ -49,7 +53,7 @@ export function Menu({
         {label.content}
       </button>
       {open && (
-        <div className="menu__panel" role="menu">
+        <div ref={panel} className="menu__panel" role="menu" style={shift ? { translate: `${shift}px 0` } : undefined}>
           {children(() => setOpen(false))}
         </div>
       )}

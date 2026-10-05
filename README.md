@@ -50,13 +50,27 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 - **Feedback:** a "💬 Feedback" button on every page (mood + message, optional email for visitors). Feedback is
   saved, emailed to `NEXT_PUBLIC_CONTACT_EMAIL` when email is set up, and listed on **/admin** with site stats
   (users, decks, cards, Pro users). Admins are `NEXT_PUBLIC_CONTACT_EMAIL` plus `ADMIN_EMAILS`.
+- **AI team** (`src/lib/router.ts`): Gemini, Groq, OpenRouter's free models, Z.ai GLM Flash, and (paid)
+  Claude and OpenAI, each used for the job it does best (research planning, outline, writing, fact checking),
+  with automatic fallback when one is busy. Visitors from the EEA, UK and Switzerland (Vercel's
+  `x-vercel-ip-country`) never go to Gemini's free tier (Google's terms) or to China-hosted models.
+- **Research and fact checking** (`src/lib/research.ts`, `src/lib/factcheck.ts`): for factual topics the
+  outline step plans searches, reads the Wikipedia articles (tables included) and, with `TAVILY_API_KEY`,
+  independent web pages, and saves them (`Research`). Cards are written only from these sources. Then every
+  number on a card must appear in two independent sources (all of Wikipedia counts as one) next to words
+  that say what it counts, quotes must appear word for word, and a second AI lists unsupported claims. A
+  failing card is rewritten once; whatever still can't be confirmed is removed. Non-factual decks (a pitch,
+  a speech) may only use numbers the user gave, with [placeholders] otherwise. Sources are listed under the deck.
+- **Photos of the right subject:** decks with sources take photos from their Wikipedia articles, matched to
+  each card by caption ("Ronaldo playing for Juventus in 2019"), free Commons files only. A photo whose shape
+  doesn't suit its frame is shown whole over a blurred copy instead of being cropped (on screen, PDF, PowerPoint).
 - **Quality modes and credits:**
 
   | Mode | With Claude (`ANTHROPIC_API_KEY`) | With Gemini only (`GEMINI_API_KEY`) | Credits per card |
   | --- | --- | --- | --- |
   | ⚡ Quick | `claude-haiku-4-5` | `gemini-flash-lite-latest` | 1 |
   | ✨ Standard (default) | `claude-sonnet-5-5` | `gemini-flash-lite-latest` with thinking | 2 |
-  | 💎 Premium (Pro only) | `claude-opus-5-5` | not available ("coming soon") | 4 |
+  | 💎 Premium (Pro only) | `claude-opus-5-5` (or OpenAI with `OPENAI_API_KEY`) | not available ("coming soon") | 4 |
 
   Gemini's free tier lets the site run at no cost; its daily request limits are shared by all users
   and change over time (check them in Google AI Studio). On Gemini the editor writes one card at a time;

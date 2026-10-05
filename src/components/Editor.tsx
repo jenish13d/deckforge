@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CardEditForm } from "@/components/CardEditForm";
 import { CardPlaceholder, CardView } from "@/components/CardView";
 import { DownloadMenu } from "@/components/DownloadMenu";
+import { SourcesList } from "@/components/SourcesList";
 import { Presenter } from "@/components/Presenter";
 import { ShareDialog } from "@/components/share/ShareDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -345,6 +346,7 @@ export function Editor({
             <button type="button" className="add-card" onClick={() => addAfter(-1)}>+ Add card</button>
           )}
         </div>
+        <SourcesList sources={deck.sources} />
       </main>
 
       {presenting && <Presenter cards={readyCards} theme={deck.theme} onClose={() => setPresenting(false)} />}

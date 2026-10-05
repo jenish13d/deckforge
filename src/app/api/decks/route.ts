@@ -34,7 +34,8 @@ export async function POST(request: Request) {
   if (!canUseMode(user.plan, mode)) return jsonError("Upgrade to Pro to use Premium mode.", 403);
   if (mode === "premium" && !premiumAvailable()) return jsonError("Premium mode is coming soon.", 403);
 
-  return Response.json(await createDeck({ userId: user.id, title, prompt, theme, mode, outline }), { status: 201 });
+  const researchId = str(body?.researchId, 40) || null;
+  return Response.json(await createDeck({ userId: user.id, title, prompt, theme, mode, outline, researchId }), { status: 201 });
 }
 
 /** Deletes several decks at once: `{ ids: string[] }`. Only the user's own decks are deleted. */

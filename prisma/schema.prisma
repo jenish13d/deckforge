@@ -11,23 +11,24 @@ datasource db {
 }
 
 model User {
-  id                   String    @id @default(cuid())
-  email                String    @unique
+  id                   String          @id @default(cuid())
+  email                String          @unique
   passwordHash         String
   // "free" | "pro" (see src/lib/plans.ts)
-  plan                 String    @default("free")
+  plan                 String          @default("free")
   credits              Int
   // When the monthly credit allowance is next refilled.
   creditsResetAt       DateTime
-  stripeCustomerId     String?   @unique
+  stripeCustomerId     String?         @unique
   stripeSubscriptionId String?
   // When the user asked to upgrade while payments weren't set up yet (the Pro waitlist).
   proWaitlistAt        DateTime?
-  createdAt            DateTime  @default(now())
+  createdAt            DateTime        @default(now())
   sessions             Session[]
   decks                Deck[]
   passwordResets       PasswordReset[]
   feedback             Feedback[]
+  research             Research[]
 }
 
 model PasswordReset {
@@ -54,19 +55,22 @@ model Session {
 }
 
 model Deck {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String
-  prompt    String
-  theme     String   @default("minimal")
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  prompt     String
+  theme      String    @default("minimal")
   // "quick" | "standard" | "premium" (see src/lib/plans.ts)
-  mode      String   @default("standard")
+  mode       String    @default("standard")
   // Whether anyone with the link can view the deck (the owner can always open it).
-  shared    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  cards     Card[]
+  shared     Boolean   @default(true)
+  // The research the deck's facts come from (null for personal or creative decks).
+  researchId String?
+  research   Research? @relation(fields: [researchId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  cards      Card[]
 
   @@index([userId, updatedAt])
 }
@@ -101,4 +105,20 @@ model Feedback {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// Sources found for a deck's topic: Wikipedia articles plus independent web pages.
+// Saved when the outline is made so the deck's cards are written and checked against them.
+model Research {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // JSON list of { title, url, kind: "wikipedia" | "web" }.
+  sources   String
+  // JSON list of { title, text }: the web pages' text (Wikipedia is fetched by title when needed).
+  texts     String
+  createdAt DateTime @default(now())
+  decks     Deck[]
+
+  @@index([userId])
 }

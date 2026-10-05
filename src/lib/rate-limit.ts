@@ -34,6 +34,11 @@ export const limits = {
   feedback: createRateLimiter(10, HOUR),
 };
 
+/** The visitor's country (ISO code) from Vercel's edge, or null when unknown (local runs). */
+export function clientCountry(request: Request): string | null {
+  return request.headers.get("x-vercel-ip-country") || null;
+}
+
 export function clientKey(request: Request): string {
   return request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "local";
 }

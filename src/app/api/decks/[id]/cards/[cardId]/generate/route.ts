@@ -1,5 +1,5 @@
 import { GenerationError } from "@/lib/ai";
-import { GeminiBusyError } from "@/lib/gemini";
+import { AiBusyError } from "@/lib/errors";
 import { getCurrentUser } from "@/lib/auth";
 import { chargeCredits, creditsOf, refundCredits } from "@/lib/credits";
 import { db } from "@/lib/db";
@@ -7,7 +7,7 @@ import { generateDeckCard, ownsCard } from "@/lib/decks";
 import { busyResponse, forbidden, jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { DEFAULT_MODE, MODES, canUseMode, cardCost, isModeId } from "@/lib/plans";
 import { premiumAvailable } from "@/lib/providers";
-import { clientKey, limits } from "@/lib/rate-limit";
+import { clientCountry, clientKey, limits } from "@/lib/rate-limit";
 
 // AI calls can take a while, especially in Premium mode.
 export const maxDuration = 60;
@@ -39,11 +39,11 @@ export async function POST(request: Request, ctx: RouteContext<"/api/decks/[id]/
 
   const extra = str(body?.instructions, 500);
   try {
-    const card = await generateDeckCard(id, cardId, mode, extra || undefined);
+    const card = await generateDeckCard(id, cardId, mode, extra || undefined, clientCountry(request));
     return Response.json({ card, credits: await creditsOf(user.id) });
   } catch (error) {
     await refundCredits(user.id, cost);
-    if (error instanceof GeminiBusyError) return busyResponse(error);
+    if (error instanceof AiBusyError) return busyResponse(error);
     console.error(`Card generation failed (${id}/${cardId})`, error);
     const message = error instanceof GenerationError ? error.message : "Couldn't write this card. Try again.";
     return jsonError(message, 502);

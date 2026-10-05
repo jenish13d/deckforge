@@ -12,6 +12,7 @@ import {
 } from "./cards";
 import { db } from "./db";
 import { findPhoto } from "./images";
+import { NO_RESEARCH, mergeResearch, parseSources, parseTexts, type Research, type Source } from "./research";
 import { DEFAULT_MODE, isModeId, type ModeId } from "./plans";
 import type { ThemeId } from "./themes";
 
@@ -34,6 +35,8 @@ export interface DeckView {
   mode: ModeId;
   /** Anyone with the link can view it. */
   shared: boolean;
+  /** Articles the deck's facts come from ([] for non-factual decks). */
+  sources: Source[];
   cards: CardView[];
 }
 
@@ -50,7 +53,7 @@ function toCardView(row: { id: string; position: number; status: string; brief: 
 export async function getDeck(id: string): Promise<DeckView | null> {
   const deck = await db.deck.findUnique({
     where: { id },
-    include: { cards: { orderBy: { position: "asc" } } },
+    include: { cards: { orderBy: { position: "asc" } }, research: { select: { sources: true } } },
   });
   if (!deck) return null;
   return {
@@ -61,6 +64,7 @@ export async function getDeck(id: string): Promise<DeckView | null> {
     theme: deck.theme,
     mode: isModeId(deck.mode) ? deck.mode : DEFAULT_MODE,
     shared: deck.shared,
+    sources: parseSources(deck.research?.sources),
     cards: deck.cards.map(toCardView),
   };
 }
@@ -72,7 +76,13 @@ export async function createDeck(input: {
   theme: ThemeId;
   mode: ModeId;
   outline: CardBrief[];
+  /** Research saved with the outline (see saveResearch); ignored unless it's this user's. */
+  researchId?: string | null;
 }): Promise<{ id: string }> {
+  const researchId =
+    input.researchId && (await db.research.count({ where: { id: input.researchId, userId: input.userId } })) === 1
+      ? input.researchId
+      : null;
   const deck = await db.deck.create({
     data: {
       userId: input.userId,
@@ -80,6 +90,7 @@ export async function createDeck(input: {
       prompt: input.prompt,
       theme: input.theme,
       mode: input.mode,
+      researchId,
       cards: {
         create: input.outline.map((brief, position) => ({ position, brief: JSON.stringify(brief) })),
       },
@@ -124,19 +135,48 @@ export async function listDecks(userId: string, take?: number) {
   }));
 }
 
+/** Saves an outline's research so the deck made from it is written and checked against it. */
+export async function saveResearch(userId: string, research: Research): Promise<string | null> {
+  if (research.sources.length === 0) return null;
+  const row = await db.research.create({
+    data: { userId, sources: JSON.stringify(research.sources), texts: JSON.stringify(research.webTexts) },
+  });
+  return row.id;
+}
+
+/** Adds pages found while writing a card to the deck's research, so they're listed and reused. */
+async function addResearch(deckId: string, found: Research): Promise<void> {
+  // Read the latest version: other cards may have added pages meanwhile.
+  const deck = await db.deck.findUnique({ where: { id: deckId }, select: { researchId: true } });
+  if (!deck?.researchId) return;
+  const merged = mergeResearch(await deckResearch(deckId), found);
+  await db.research.update({
+    where: { id: deck.researchId },
+    data: { sources: JSON.stringify(merged.sources), texts: JSON.stringify(merged.webTexts) },
+  });
+}
+
+async function deckResearch(deckId: string): Promise<Research> {
+  const row = await db.deck.findUnique({ where: { id: deckId }, select: { research: true } });
+  if (!row?.research) return NO_RESEARCH;
+  return { sources: parseSources(row.research.sources), webTexts: parseTexts(row.research.texts) };
+}
+
 /** Generates (or regenerates) one card and stores the result. */
 export async function generateDeckCard(
   deckId: string,
   cardId: string,
   mode: ModeId,
   extra?: string,
+  region?: string | null,
 ): Promise<CardView> {
   const deck = await getDeck(deckId);
   const index = deck?.cards.findIndex((c) => c.id === cardId) ?? -1;
   if (!deck || index < 0) throw new GenerationError("Card not found.");
+  const research = await deckResearch(deckId);
 
   try {
-    const { card, imageQuery } = await generateCard({
+    const { card, imageQuery, found } = await generateCard({
       deckTitle: deck.title,
       prompt: deck.prompt,
       outline: deck.cards.map((c) => c.brief),
@@ -144,14 +184,17 @@ export async function generateDeckCard(
       mode,
       extra,
       previousLayout: deck.cards[index - 1]?.content?.layout,
+      research,
+      region,
     });
     // Don't reuse a photo that another card in the deck already shows.
     const used = new Set(deck.cards.flatMap((c, i) => (i !== index && c.content?.image ? [c.content.image.url] : [])));
-    const content = { ...card, image: IMAGE_LAYOUTS.includes(card.layout) ? await findPhoto(imageQuery, used) : null };
+    const content = { ...card, image: IMAGE_LAYOUTS.includes(card.layout) ? await findPhoto(imageQuery, used, { sources: research.sources, cover: index === 0 }) : null };
     const row = await db.card.update({
       where: { id: cardId },
       data: { status: "ready", content: JSON.stringify(content) },
     });
+    if (found) await addResearch(deckId, found);
     return toCardView(row);
   } catch (error) {
     // Keep existing content on a failed regenerate; only mark never-generated cards as failed.
@@ -222,6 +265,7 @@ export async function duplicateDeck(userId: string, deckId: string): Promise<{ i
       theme: deck.theme,
       mode: deck.mode,
       shared: deck.shared,
+      researchId: deck.researchId,
       cards: {
         // Cards still being written are copied as failed so the copy never spends credits on its own.
         create: deck.cards.map((c) => ({ position: c.position, brief: c.brief, content: c.content, status: c.content ? "ready" : "failed" })),

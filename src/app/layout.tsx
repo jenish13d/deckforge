@@ -15,7 +15,8 @@ const display = Marcellus({ variable: "--font-display", subsets: ["latin"], weig
 const book = Crimson_Pro({ variable: "--font-book", subsets: ["latin"] });
 
 // One look everywhere: the site stays light even when the device is in dark mode.
-export const viewport: Viewport = { colorScheme: "light", themeColor: "#ffffff" };
+// "only light" stops phone browsers (Chrome, Samsung Internet) from auto-darkening the site.
+export const viewport: Viewport = { colorScheme: "only light", themeColor: "#ffffff" };
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),

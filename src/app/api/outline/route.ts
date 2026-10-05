@@ -1,11 +1,12 @@
-import { GenerationError, generateOutline } from "@/lib/ai";
-import { GeminiBusyError } from "@/lib/gemini";
+import { GenerationError, defaultCall, generateOutline } from "@/lib/ai";
+import { saveResearch } from "@/lib/decks";
+import { AiBusyError } from "@/lib/errors";
 import { getCurrentUser } from "@/lib/auth";
 import { MAX_CARDS, MIN_CARDS } from "@/lib/cards";
 import { busyResponse, jsonError, readJson, str, unauthorized } from "@/lib/http";
-import { clientKey, limits } from "@/lib/rate-limit";
+import { clientCountry, clientKey, limits } from "@/lib/rate-limit";
 
-// AI calls can take a while, especially in Premium mode.
+// Research plus the outline can take a while.
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
@@ -24,9 +25,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    return Response.json(await generateOutline(prompt, cardCount));
+    const { research, ...outline } = await generateOutline(prompt, cardCount, defaultCall, { region: clientCountry(request) });
+    const researchId = await saveResearch(user.id, research);
+    return Response.json({ ...outline, sources: research.sources, researchId });
   } catch (error) {
-    if (error instanceof GeminiBusyError) {
+    if (error instanceof AiBusyError) {
       return busyResponse(
         error.daily ? error : { ...error, message: "The AI is busy right now (free plan limit). Please try again in a minute." },
       );

@@ -38,8 +38,12 @@ describe("generateOutline", () => {
     });
     const result = await generateOutline("Pitch deck for meal prep", 3, call);
     expect(result.cards).toHaveLength(3);
-    expect(requests[0].user).toContain("exactly 3 cards");
-    expect(requests[0].user).toContain("Pitch deck for meal prep");
+    const request = requests.find((r) => r.role === "outline")!;
+    expect(request.user).toContain("exactly 3 cards");
+    expect(request.user).toContain("Pitch deck for meal prep");
+    // A non-factual topic gets no research, and the no-invented-numbers rules.
+    expect(result.research.sources).toEqual([]);
+    expect(request.instructions).toContain("Don't invent statistics");
   });
 
   it("fails when no usable cards come back", async () => {

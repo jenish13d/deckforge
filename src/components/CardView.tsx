@@ -1,8 +1,8 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
-import { imageSrc, showsImage, type CardContent } from "@/lib/cards";
+import { FRAME_ASPECT, imageSrc, photoFit, showsImage, type CardContent, type CardImage } from "@/lib/cards";
 
 /**
  * Shrinks a card's text (via the --fit CSS variable) until it fits the slide, so
@@ -144,18 +144,59 @@ export function CardView({ content, index = 0 }: { content: CardContent; index?:
           </div>
         )}
       </div>
-      {photo && (
-        <figure className="card__media">
-          {/* eslint-disable-next-line @next/next/no-img-element -- served by our image route for exports */}
-          <img src={imageSrc(photo.url)} alt={photo.alt} crossOrigin="anonymous" />
-          {photo.credit && (
-            <figcaption className="card__credit">
-              Photo: {photo.creditUrl ? <a href={photo.creditUrl} target="_blank" rel="noreferrer">{photo.credit}</a> : photo.credit}
-            </figcaption>
-          )}
-        </figure>
-      )}
+      {photo && <Photo photo={photo} fullBleed={fullBleed} />}
     </article>
+  );
+}
+
+/**
+ * A slide photo that never cuts off what matters (see photoFit). The fit is first worked
+ * out from the stored size, then from the real image and frame once they're on screen.
+ */
+function Photo({ photo, fullBleed }: { photo: CardImage; fullBleed: boolean }) {
+  const frame = useRef<HTMLElement>(null);
+  const initial = photo.width && photo.height ? photoFit(photo.width / photo.height, fullBleed ? FRAME_ASPECT.fullBleed : FRAME_ASPECT.split) : null;
+  const [fit, setFit] = useState(initial ?? { mode: "cover" as const, focusY: 50 });
+
+  const measure = useCallback(() => {
+    const figure = frame.current;
+    const img = figure?.querySelector<HTMLImageElement>(".card__photo");
+    if (!figure || !img?.naturalWidth || !figure.clientHeight) return;
+    const next = photoFit(img.naturalWidth / img.naturalHeight, figure.clientWidth / figure.clientHeight);
+    setFit((f) => (f.mode === next.mode && f.focusY === next.focusY ? f : next));
+  }, []);
+
+  useLayoutEffect(() => {
+    const figure = frame.current;
+    if (!figure) return;
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(figure);
+    return () => observer.disconnect();
+  }, [measure, photo.url]);
+
+  const src = imageSrc(photo.url);
+  return (
+    <figure ref={frame} className={`card__media card__media--${fit.mode}`}>
+      {fit.mode === "contain" && (
+        // eslint-disable-next-line @next/next/no-img-element -- blurred fill behind a photo shown whole
+        <img className="card__media-fill" src={src} alt="" aria-hidden="true" crossOrigin="anonymous" />
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element -- served by our image route for exports */}
+      <img
+        className="card__photo"
+        src={src}
+        alt={photo.alt}
+        crossOrigin="anonymous"
+        onLoad={measure}
+        style={fit.mode === "cover" ? { objectPosition: `50% ${fit.focusY}%` } : undefined}
+      />
+      {photo.credit && (
+        <figcaption className="card__credit">
+          Photo: {photo.creditUrl ? <a href={photo.creditUrl} target="_blank" rel="noreferrer">{photo.credit}</a> : photo.credit}
+        </figcaption>
+      )}
+    </figure>
   );
 }
 

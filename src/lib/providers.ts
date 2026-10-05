@@ -1,11 +1,12 @@
 import { demoEnabled } from "./demo-ai";
 import { PLANS, planOf, type ModeId } from "./plans";
 
-// Which AI provider runs Quick/Standard, and whether Premium (Claude Opus) is on.
+// Which AI provider runs Quick/Standard, and whether Premium (a paid top model) is on.
+// The full AI team and its fallbacks are in router.ts.
 //
 // - AI_PROVIDER=anthropic|gemini picks explicitly.
 // - Otherwise: Claude when ANTHROPIC_API_KEY is set, else Gemini when GEMINI_API_KEY is set.
-// - Premium always uses Claude, so it is only available with ANTHROPIC_API_KEY (or in demo mode).
+// - Premium uses paid models only (OpenAI or Claude), so it needs OPENAI_API_KEY or ANTHROPIC_API_KEY (or demo mode).
 
 export type Provider = "anthropic" | "gemini";
 
@@ -25,13 +26,15 @@ export const geminiModel = (mode: "quick" | "standard") =>
     ? process.env.GEMINI_QUICK_MODEL || "gemini-flash-lite-latest"
     : process.env.GEMINI_STANDARD_MODEL || "gemini-flash-lite-latest";
 
-/** How many cards the editor writes at once: one at a time on Gemini's free tier. */
+/** How many cards the editor writes at once: one at a time when only Gemini's free tier is set up. */
 export function parallelCards(): number {
-  return !demoEnabled() && textProvider() === "gemini" ? 1 : 3;
+  if (demoEnabled()) return 3;
+  const others = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GROQ_API_KEY", "OPENROUTER_API_KEY", "ZAI_API_KEY"].some((k) => process.env[k]);
+  return others ? 2 : 1;
 }
 
 export function premiumAvailable(): boolean {
-  return demoEnabled() || Boolean(process.env.ANTHROPIC_API_KEY);
+  return demoEnabled() || Boolean(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY);
 }
 
 /** Modes a plan can use right now, given which providers are configured. */

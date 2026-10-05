@@ -29,7 +29,8 @@
   --art-chip: #e3eaf3;
   --art-shadow: #061a2e;
   --radius: 10px;
-  color-scheme: light;
+  /* "only" opts out of browsers' forced dark mode, so the site looks the same everywhere. */
+  color-scheme: only light;
 }
 
 * {
@@ -2005,6 +2006,8 @@ a {
   flex: 0 0 44%;
   margin: 0;
   overflow: hidden;
+  /* Keeps the photo's own layers (blurred fill, photo) under the slide's text panel. */
+  isolation: isolate;
 }
 
 .card__media img {
@@ -2012,6 +2015,27 @@ a {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* A photo whose shape doesn't suit the frame is shown whole, over a soft blurred copy of itself. */
+.card__media--contain .card__photo {
+  position: relative;
+  z-index: 1;
+  object-fit: contain;
+}
+
+/* On covers the text panel sits bottom-left, so a whole photo goes to the right. */
+.card--full-bleed .card__media--contain .card__photo {
+  object-position: 92% 50%;
+}
+
+.card__media .card__media-fill {
+  position: absolute;
+  inset: -8%;
+  width: 116%;
+  height: 116%;
+  object-fit: cover;
+  filter: blur(18px) saturate(1.1) brightness(0.8);
 }
 
 .card__credit {
@@ -2106,6 +2130,10 @@ a {
     max-height: none;
     margin: -10vw 12px 12px;
     transform: none;
+  }
+
+  .deck .card--full-bleed .card__media--contain .card__photo {
+    object-position: 50% 50%;
   }
 
   /* The panel overlaps the photo's bottom edge, so the credit moves to the top. */
@@ -3993,4 +4021,76 @@ select {
   .presenter__hint {
     display: block;
   }
+}
+
+/* Phones: bigger menu items, easy to tap. (Menus are kept inside the screen by useInViewport.) */
+@media (max-width: 640px) {
+  .menu__panel {
+    min-width: min(240px, calc(100vw - 24px));
+    border-radius: 14px;
+  }
+
+  .menu__panel .menu__item {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+}
+
+
+/* Sources a deck's facts come from. */
+.sources {
+  max-width: 960px;
+  margin: 32px auto 0;
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.sources__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--primary);
+}
+
+.sources__note {
+  margin: 6px 0 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.sources__list {
+  margin: 0;
+  padding-left: 1.3em;
+  display: grid;
+  gap: 6px;
+  font-size: 0.92rem;
+}
+
+.sources__list a {
+  color: var(--text);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.sources__list a:hover {
+  text-decoration: underline;
+}
+
+.sources__site {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.sources--compact {
+  margin: 4px 0 14px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
+}
+
+.sources--compact .sources__list {
+  margin-top: 8px;
 }

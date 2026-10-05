@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CardView } from "@/components/CardView";
+import { SourcesList } from "@/components/SourcesList";
 import { ViewerActions } from "@/components/ViewerActions";
 import { getCurrentUser } from "@/lib/auth";
 import { canView } from "@/lib/access";
@@ -65,6 +66,7 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
           ))}
         </div>
         {cards.length === 0 && <p className="muted">This deck is still being written.</p>}
+        <SourcesList sources={deck.sources} />
         <p className="made-with no-print">
           Made with <Link href="/">{SITE.name}</Link>
           {!user && <> · <Link href="/signup">Make your own free</Link></>}

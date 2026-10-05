@@ -1,11 +1,9 @@
 import { LegalPage } from "@/components/LegalPage";
-import { textProvider } from "@/lib/providers";
 import { SITE } from "@/lib/site";
 
 export const metadata = { title: "Privacy policy" };
 
 export default function PrivacyPage() {
-  const usesGemini = textProvider() === "gemini";
   return (
     <LegalPage title="Privacy policy" updated="October 5, 2026">
       <p>This policy explains what {SITE.name} collects, why, and the choices you have.</p>
@@ -29,12 +27,15 @@ export default function PrivacyPage() {
       <h2>Who we share it with</h2>
       <ul>
         <li>
-          <strong>AI providers:</strong> your prompts and outlines are sent to our AI providers (Anthropic and Google) to
-          generate deck content.
-          {usesGemini && (
-            <> We currently use Google&apos;s Gemini API free tier, under which Google may use submitted content to improve
-            its products. Please don&apos;t enter sensitive or confidential information.</>
-          )}
+          <strong>AI providers:</strong> your prompts and outlines are sent to the AI services that write and check your
+          decks: Anthropic (Claude), Google (Gemini), Groq, OpenRouter and Z.ai (GLM), depending on which are available
+          at the time. Some of them offer free tiers under which they may use submitted content to improve their models,
+          so please don&apos;t enter sensitive or confidential information. If you are in the EU, EEA, UK or Switzerland,
+          your content is not sent to Google&apos;s free tier or to Z.ai.
+        </li>
+        <li>
+          <strong>Research:</strong> for factual topics, search terms based on your topic are sent to Wikipedia and to our
+          web search provider (Tavily) to find sources. The sources are listed with your deck.
         </li>
         <li><strong>Payment provider:</strong> to process subscriptions.</li>
         <li><strong>Hosting and database providers:</strong> to run the service.</li>

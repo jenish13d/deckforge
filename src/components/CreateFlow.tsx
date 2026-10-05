@@ -8,11 +8,13 @@ import { useRef, useState } from "react";
 import { HeroArt } from "@/components/art/HeroArt";
 import { CardView } from "@/components/CardView";
 import { ModePicker } from "@/components/ModePicker";
+import { SourcesList } from "@/components/SourcesList";
 import { TemplateIcon } from "@/components/TemplateIcon";
 import { ThemePicker } from "@/components/ThemePicker";
 import { MAX_CARDS, MIN_CARDS, type Outline } from "@/lib/cards";
 import { api } from "@/lib/client";
 import { DEFAULT_MODE, cardCost, type ModeId } from "@/lib/plans";
+import type { Source } from "@/lib/research";
 import { TEMPLATES, type Template } from "@/lib/templates";
 import type { ThemeId } from "@/lib/themes";
 
@@ -57,6 +59,7 @@ export function CreateFlow({
   const [theme, setTheme] = useState<ThemeId>(initialTheme);
   const [title, setTitle] = useState("");
   const [cards, setCards] = useState<EditableCard[] | null>(null);
+  const [research, setResearch] = useState<{ sources: Source[]; id: string | null }>({ sources: [], id: null });
   const [busy, setBusy] = useState<"outline" | "deck" | null>(null);
   const [error, setError] = useState("");
   const [tab, setTab] = useState<"start" | "templates">("start");
@@ -69,9 +72,10 @@ export function CreateFlow({
     setBusy("outline");
     setError("");
     try {
-      const outline = await api<Outline>("/api/outline", { body: { prompt, cardCount } });
+      const outline = await api<Outline & { sources: Source[]; researchId: string | null }>("/api/outline", { body: { prompt, cardCount } });
       setTitle(outline.title);
       setCards(toEditable(outline));
+      setResearch({ sources: outline.sources ?? [], id: outline.researchId ?? null });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -88,7 +92,7 @@ export function CreateFlow({
         .filter((c) => c.title.trim())
         .map((c) => ({ title: c.title, points: c.points.split("\n").map((p) => p.trim()).filter(Boolean) }));
       const { id } = await api<{ id: string }>("/api/decks", {
-        body: { prompt, title, theme, mode, outline },
+        body: { prompt, title, theme, mode, outline, researchId: research.id },
       });
       router.push(`/d/${id}/edit`);
     } catch (e) {
@@ -234,6 +238,7 @@ export function CreateFlow({
         <input className="input input--large" value={title} maxLength={120} onChange={(e) => setTitle(e.target.value)} />
       </label>
 
+      <SourcesList sources={research.sources} compact />
       <p className="muted">Edit the outline: rename cards, change the key points (one per line), add or remove cards.</p>
       <ol className="outline">
         {cards.map((card, i) => (

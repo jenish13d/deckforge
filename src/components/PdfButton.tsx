@@ -40,6 +40,10 @@ export function PdfButton({
       try {
         const [{ toJpeg }, { jsPDF }] = await Promise.all([import("html-to-image"), import("jspdf")]);
         await document.fonts.ready;
+        // Let photos load and settle how they fit their frames before taking pictures of the slides.
+        const images = Array.from(stage.current!.querySelectorAll<HTMLImageElement>("img"));
+        await Promise.all(images.map((img) => img.decode().catch(() => {})));
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
         const pages = Array.from(stage.current!.querySelectorAll<HTMLElement>(".pdf-page"));
         const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [WIDTH, HEIGHT], hotfixes: ["px_scaling"] });
 

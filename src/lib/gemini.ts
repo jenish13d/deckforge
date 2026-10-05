@@ -2,7 +2,7 @@ import { ApiError, GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 
 import type { ModelRequest } from "./ai";
-import { GenerationError } from "./errors";
+import { AiBusyError, GenerationError } from "./errors";
 
 // Google Gemini provider. Used for Quick/Standard when GEMINI_API_KEY is set and
 // Claude isn't configured (Gemini's free tier lets the app run at no cost).
@@ -29,18 +29,7 @@ export function toGeminiSchema(schema: z.ZodType): unknown {
 }
 
 /** Thrown when Google's free-tier limits are hit; says when it's worth trying again. */
-export class GeminiBusyError extends GenerationError {
-  constructor(
-    readonly retryAfterSeconds: number,
-    readonly daily: boolean,
-  ) {
-    super(
-      daily
-        ? "Today's free AI limit has been reached. Please try again tomorrow."
-        : "The AI is busy right now (free plan limit). Retrying shortly…",
-    );
-  }
-}
+export class GeminiBusyError extends AiBusyError {}
 
 const isBusy = (error: unknown): error is ApiError =>
   error instanceof ApiError && (error.status === 429 || error.status === 503);
@@ -59,7 +48,8 @@ export function busyInfo(error: ApiError): { retryAfterSeconds: number; daily: b
 // which retries the card itself (requests are limited to 60 seconds).
 const MAX_SERVER_WAIT_S = 20;
 
-export async function callGemini<T>(request: ModelRequest<T>): Promise<T> {
+/** `maxServerWait`: how long to wait out a short rate limit before giving up (seconds). */
+export async function callGemini<T>(request: ModelRequest<T>, maxServerWait = MAX_SERVER_WAIT_S): Promise<T> {
   client ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const systemInstruction = request.context ? `${request.instructions}\n\n${request.context}` : request.instructions;
   let waited = 0;
@@ -85,7 +75,7 @@ export async function callGemini<T>(request: ModelRequest<T>): Promise<T> {
     } catch (error) {
       if (isBusy(error)) {
         const { retryAfterSeconds, daily } = busyInfo(error);
-        if (!daily && waited + retryAfterSeconds <= MAX_SERVER_WAIT_S) {
+        if (!daily && waited + retryAfterSeconds <= maxServerWait) {
           await new Promise((r) => setTimeout(r, retryAfterSeconds * 1000));
           waited += retryAfterSeconds;
           continue;
