@@ -14,7 +14,7 @@ export default async function Page(props: PageProps<"/login">) {
   return (
     <>
       <SiteHeader />
-      <main className="page page--auth">
+      <main id="main" className="page page--auth">
         <AuthForm mode="login" next={next} captcha={captchaEnabled()} />
       </main>
     </>

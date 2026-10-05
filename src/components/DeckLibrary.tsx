@@ -132,7 +132,7 @@ export function DeckLibrary({ decks, tools = false }: { decks: DeckSummary[]; to
             <>
               <label className="search-box">
                 <Search size={16} aria-hidden="true" />
-                <input type="search" placeholder="Search decks" aria-label="Search decks" value={query} onChange={(e) => setQuery(e.target.value)} />
+                <input type="search" name="q" autoComplete="off" spellCheck={false} placeholder="Search decks…" aria-label="Search decks" value={query} onChange={(e) => setQuery(e.target.value)} />
               </label>
               <select className="input library-bar__sort" aria-label="Sort decks" value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
                 {(Object.keys(SORTS) as Sort[]).map((s) => (
@@ -163,13 +163,13 @@ export function DeckLibrary({ decks, tools = false }: { decks: DeckSummary[]; to
                   }}
                   aria-label={selecting ? `${isSelected ? "Unselect" : "Select"} ${deck.title}` : undefined}
                 >
-                  <div className={`deck-tile__cover mini-card theme-${deck.theme}`}>
+                  <div className={`deck-tile__cover mini-card theme-${deck.theme}`} aria-hidden="true" inert>
                     {deck.cover ? <CardView content={deck.cover} /> : <span className="deck-tile__preview">{deck.title}</span>}
                   </div>
                   <span className="deck-tile__title">{deck.title}</span>
                   <span className="deck-tile__meta">
                     {!deck.shared && <><Lock size={12} aria-label="Private" /> </>}
-                    {deck.cards} {deck.cards === 1 ? "card" : "cards"} · edited {deck.updatedAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    {deck.cards} {deck.cards === 1 ? "card" : "cards"} · edited {deck.updatedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}
                   </span>
                 </Link>
                 {selecting ? (
@@ -179,11 +179,11 @@ export function DeckLibrary({ decks, tools = false }: { decks: DeckSummary[]; to
                     <Menu label={{ text: `Options for ${deck.title}`, content: <Ellipsis size={18} aria-hidden="true" /> }} buttonClassName="icon-button icon-button--float">
                       {(close) => (
                         <>
-                          <Link className="menu__item" role="menuitem" href={`/d/${deck.id}/edit`}><ExternalLink size={16} aria-hidden="true" /> Open</Link>
-                          <button type="button" className="menu__item" role="menuitem" onClick={() => { close(); setSharing(deck); }}><Share2 size={16} aria-hidden="true" /> Share</button>
-                          <button type="button" className="menu__item" role="menuitem" onClick={() => { close(); setRenaming(deck); }}><Pencil size={16} aria-hidden="true" /> Rename</button>
-                          <button type="button" className="menu__item" role="menuitem" onClick={() => { close(); void duplicate(deck); }}><CopyPlus size={16} aria-hidden="true" /> Duplicate</button>
-                          <button type="button" className="menu__item menu__item--danger" role="menuitem" onClick={() => { close(); setConfirmDelete([deck.id]); }}><Trash2 size={16} aria-hidden="true" /> Delete</button>
+                          <Link className="menu__item" href={`/d/${deck.id}/edit`}><ExternalLink size={16} aria-hidden="true" /> Open</Link>
+                          <button type="button" className="menu__item" onClick={() => { close(); setSharing(deck); }}><Share2 size={16} aria-hidden="true" /> Share</button>
+                          <button type="button" className="menu__item" onClick={() => { close(); setRenaming(deck); }}><Pencil size={16} aria-hidden="true" /> Rename</button>
+                          <button type="button" className="menu__item" onClick={() => { close(); void duplicate(deck); }}><CopyPlus size={16} aria-hidden="true" /> Duplicate</button>
+                          <button type="button" className="menu__item menu__item--danger" onClick={() => { close(); setConfirmDelete([deck.id]); }}><Trash2 size={16} aria-hidden="true" /> Delete</button>
                         </>
                       )}
                     </Menu>

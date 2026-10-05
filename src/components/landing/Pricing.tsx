@@ -14,7 +14,19 @@ const features = (): { label: string; free: string | boolean; pro: string | bool
 ];
 
 const cell = (value: string | boolean) =>
-  value === true ? <span aria-label="Included">✓</span> : value === false ? <span className="muted" aria-label="Not included">—</span> : value;
+  value === true ? (
+    <>
+      <span aria-hidden="true">✓</span>
+      <span className="sr-only">Included</span>
+    </>
+  ) : value === false ? (
+    <>
+      <span className="muted" aria-hidden="true">–</span>
+      <span className="sr-only">Not included</span>
+    </>
+  ) : (
+    value
+  );
 
 export function Pricing({ ctaHref = "/signup", compact = false }: { ctaHref?: string; /** Hide the comparison table (landing page). */ compact?: boolean }) {
   return (

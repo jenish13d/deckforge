@@ -6,7 +6,7 @@ export function LegalPage({ title, updated, children }: { title: string; updated
   return (
     <>
       <SiteHeader />
-      <main className="page page--narrow prose">
+      <main id="main" className="page page--narrow prose">
         <h1>{title}</h1>
         <p className="muted">Last updated {updated}</p>
         {children}

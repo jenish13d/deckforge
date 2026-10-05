@@ -81,14 +81,14 @@ export default async function Home(props: PageProps<"/">) {
     <>
       <SiteHeader />
       <StructuredData />
-      <main>
+      <main id="main">
         <section className="landing-top">
           <HeroArt className="landing-top__art" />
           <p className="eyebrow">AI presentation maker</p>
           <h1 className="landing-top__title">Beautiful slides, <em>in a minute</em></h1>
           <p className="landing-top__subtitle">{SITE.description}</p>
           <TryPrompt />
-          <div className="quick-chips" aria-label="Start from a template">
+          <div className="quick-chips" role="group" aria-label="Start from a template">
             {TEMPLATES.map((t) => (
               <Link key={t.id} href={signupFor(t.id)} className="quick-chip">
                 <TemplateIcon id={t.id} /> {t.name}

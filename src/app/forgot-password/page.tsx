@@ -8,7 +8,7 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <SiteHeader />
-      <main className="page page--auth">
+      <main id="main" className="page page--auth">
         <ForgotForm captcha={captchaEnabled()} />
       </main>
     </>

@@ -10,7 +10,7 @@ export default function NotFound() {
   return (
     <>
       <SiteHeader />
-      <main className="page page--narrow">
+      <main id="main" className="page page--narrow">
         <div className="empty-state">
           <Compass size={44} className="empty-state__icon" aria-hidden="true" />
           <h1 className="page-title">We couldn&apos;t find that page</h1>

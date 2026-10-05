@@ -62,7 +62,7 @@ export async function AppShell({ children, next = "/" }: { children: React.React
           <Link href="/account" className="credits-pill" title="Credits left this month">{user.credits} credits</Link>
           <Link href="/account" className="avatar" aria-label="Account">{initial}</Link>
         </header>
-        <main className="app-content">{children}</main>
+        <main id="main" className="app-content">{children}</main>
       </div>
 
       <AppNav admin={admin} variant="tabs" />

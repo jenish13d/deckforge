@@ -265,7 +265,7 @@ function PhotoPicker({ card, onChange }: { card: CardContent; onChange: (image: 
           {searching ? "Searching…" : "Find photos"}
         </button>
       </div>
-      {error && <p className="error small">{error}</p>}
+      {error && <p className="error small" role="alert">{error}</p>}
       {results && results.length > 0 && (
         <div className="photo-grid">
           {results.map((photo) => (

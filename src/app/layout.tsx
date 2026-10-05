@@ -39,6 +39,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable} ${display.variable} ${book.variable}`}>
       <body>
+        <a href="#main" className="skip-link">Skip to content</a>
         {process.env.DEMO_AI === "1" && (
           <div className="demo-banner no-print" role="note">
             Demo mode: decks use sample text, not real AI. No API costs.

@@ -50,6 +50,9 @@ export function Presenter({
   }, []);
 
   useEffect(() => {
+    // Keyboard and screen-reader focus moves into the slideshow, and back when it closes.
+    const opener = document.activeElement as HTMLElement | null;
+    root.current?.focus();
     root.current?.requestFullscreen?.().catch(() => {});
     const onFullscreenExit = () => {
       if (!document.fullscreenElement) onClose();
@@ -59,11 +62,15 @@ export function Presenter({
       document.removeEventListener("fullscreenchange", onFullscreenExit);
       clearTimeout(idleTimer.current);
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      opener?.focus?.();
     };
   }, [onClose]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      wake();
+      // Space on a focused button would also click it; handle it here only.
+      if (e.key === " ") e.preventDefault();
       if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") next();
       else if (e.key === "ArrowLeft" || e.key === "PageUp") prev();
       else if (e.key === "Home") go(0);
@@ -72,7 +79,7 @@ export function Presenter({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [next, prev, go, last, onClose]);
+  }, [next, prev, go, last, onClose, wake]);
 
   // Load the next slide's photo ahead of time so it appears instantly.
   useEffect(() => {
@@ -87,7 +94,10 @@ export function Presenter({
       ref={root}
       className={`presenter theme-${theme}${idle ? " is-idle" : ""}`}
       role="dialog"
+      aria-modal="true"
       aria-label="Presentation"
+      tabIndex={-1}
+      onFocus={wake}
       onMouseMove={wake}
       onTouchStart={(e) => {
         touchX.current = e.touches[0].clientX;
@@ -122,7 +132,7 @@ export function Presenter({
         <button type="button" onClick={prev} disabled={index === 0} aria-label="Previous slide">
           <ChevronLeft size={20} aria-hidden="true" />
         </button>
-        <span className="presenter__count">{index + 1} / {cards.length}</span>
+        <span className="presenter__count" aria-live="polite">{index + 1} / {cards.length}</span>
         <button type="button" onClick={next} disabled={index === last} aria-label="Next slide">
           <ChevronRight size={20} aria-hidden="true" />
         </button>

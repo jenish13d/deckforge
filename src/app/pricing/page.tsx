@@ -11,7 +11,7 @@ export default async function PricingPage() {
   return (
     <>
       <SiteHeader />
-      <main className="page">
+      <main id="main" className="page">
         <header className="hero hero--compact">
           <h1 className="hero__title hero__title--small">Simple pricing</h1>
           <p className="hero__subtitle">Start free. Upgrade when you present every week.</p>

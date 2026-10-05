@@ -11,6 +11,11 @@ export function useToast(): [React.ReactNode, (message: string) => void] {
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setMessage(""), 2600);
   }, []);
-  const node = message ? <p className="toast" role="status">{message}</p> : null;
+  // The live region stays in the page so screen readers notice when a message appears.
+  const node = (
+    <p className={message ? "toast" : "sr-only"} role="status">
+      {message}
+    </p>
+  );
   return [node, show];
 }

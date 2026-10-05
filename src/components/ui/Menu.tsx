@@ -42,7 +42,6 @@ export function Menu({
         type="button"
         className={buttonClassName}
         aria-label={label.text}
-        aria-haspopup="menu"
         aria-expanded={open}
         onClick={(e) => {
           e.preventDefault();
@@ -53,7 +52,7 @@ export function Menu({
         {label.content}
       </button>
       {open && (
-        <div ref={panel} className="menu__panel" role="menu" style={shift ? { translate: `${shift}px 0` } : undefined}>
+        <div ref={panel} className="menu__panel" style={shift ? { translate: `${shift}px 0` } : undefined}>
           {children(() => setOpen(false))}
         </div>
       )}

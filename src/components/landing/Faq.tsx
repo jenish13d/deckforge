@@ -16,7 +16,7 @@ export const QUESTIONS = [
   },
   {
     q: "Can I edit what the AI writes?",
-    a: "Yes. Edit any card by hand, ask the AI to rewrite a single card with an instruction like \"shorter\" or \"make it a timeline\", reorder, add or delete cards, and switch themes at any time.",
+    a: "Yes. Edit any card by hand, ask the AI to rewrite a single card with an instruction like “shorter” or “make it a timeline”, reorder, add or delete cards, and switch themes at any time.",
   },
   {
     q: "How do I present or share my deck?",

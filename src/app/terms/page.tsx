@@ -32,7 +32,7 @@ export default function TermsPage() {
       <p>You can stop using {SITE.name} at any time. We may suspend accounts that break these terms.</p>
 
       <h2>Disclaimer and liability</h2>
-      <p>{SITE.name} is provided &quot;as is&quot;. To the extent the law allows, we are not liable for indirect or consequential losses, and our total liability is limited to the amount you paid us in the 12 months before the claim. Nothing in these terms limits rights you have under consumer law.</p>
+      <p>{SITE.name} is provided “as is”. To the extent the law allows, we are not liable for indirect or consequential losses, and our total liability is limited to the amount you paid us in the 12 months before the claim. Nothing in these terms limits rights you have under consumer law.</p>
 
       <h2>Changes</h2>
       <p>We may update these terms. If changes are significant, we will let you know before they take effect.</p>

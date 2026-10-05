@@ -4133,3 +4133,55 @@ select {
 .cta-band h2 {
   text-wrap: balance;
 }
+
+/* Keyboard users can jump straight past the navigation. */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-160%);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+main:focus {
+  outline: none;
+}
+
+/* Long user text (emails, titles) wraps instead of pushing past the screen edge. */
+.panel,
+.deck-tile__title {
+  overflow-wrap: anywhere;
+}
+
+.modal {
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 640px) {
+  /* 16px or more stops iPhones zooming into a field when it's tapped. */
+  .input,
+  .input--small,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+
+  /* Card tools are easy to tap. */
+  .editor-card__tools .icon-button,
+  .editor-card__tools .button--small {
+    min-width: 40px;
+    min-height: 40px;
+  }
+}

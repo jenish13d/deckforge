@@ -112,7 +112,8 @@ export function CreateFlow({
 
   function focusPrompt(placeholderText?: string) {
     if (placeholderText) setPlaceholder(placeholderText);
-    promptRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    promptRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
     promptRef.current?.focus({ preventScroll: true });
   }
 
@@ -172,7 +173,7 @@ export function CreateFlow({
         )}
         {error && <p className="error center" role="alert">{error}</p>}
 
-        <div className="quick-chips" aria-label="Start from a template">
+        <div className="quick-chips" role="group" aria-label="Start from a template">
           {TEMPLATES.map((t) => (
             <button key={t.id} type="button" className="quick-chip" onClick={() => applyTemplate(t)}>
               <TemplateIcon id={t.id} /> {t.name}
@@ -214,7 +215,7 @@ export function CreateFlow({
           <div className="template-grid template-grid--app scroll-row" role="tabpanel">
             {TEMPLATES.map((t) => (
               <button key={t.id} type="button" className="template-tile" onClick={() => applyTemplate(t)}>
-                <div className={`template-tile__preview mini-card theme-${t.theme}`}>
+                <div className={`template-tile__preview mini-card theme-${t.theme}`} aria-hidden="true" inert>
                   <CardView content={t.preview} />
                 </div>
                 <strong className="template-tile__name"><TemplateIcon id={t.id} /> {t.name}</strong>
@@ -281,10 +282,10 @@ export function CreateFlow({
         </button>
       )}
 
-      <h3 className="section-title">Theme</h3>
+      <h2 className="section-title">Theme</h2>
       <ThemePicker value={theme} onChange={setTheme} />
 
-      <h3 className="section-title">Quality</h3>
+      <h2 className="section-title">Quality</h2>
       <ModePicker value={mode} onChange={setMode} allowed={allowedModes} comingSoon={comingSoon} />
       {!allowedModes.includes("premium") && !comingSoon.includes("premium") && (
         <p className="muted small">

@@ -44,7 +44,7 @@ export function ForgotForm({ captcha = false }: { captcha?: boolean }) {
       <p className="muted">Enter your email and we&apos;ll send you a link to choose a new one.</p>
       <label className="field">
         <span className="field__label">Email</span>
-        <input className="input" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="input" type="email" name="email" autoComplete="email" spellCheck={false} required value={email} onChange={(e) => setEmail(e.target.value)} />
       </label>
       {captcha && <Captcha onChange={setAltcha} />}
       {error && <p className="error" role="alert">{error}</p>}

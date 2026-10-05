@@ -112,7 +112,7 @@ export function ShareDialog({
         <div className="share-link">
           <input id="share-link" className="input" readOnly value={url} aria-label="Link to this deck" onFocus={(e) => e.currentTarget.select()} />
           <button type="button" className="button button--primary" onClick={copy}>
-            {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />} {copied ? "Copied" : "Copy link"}
+            {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />} <span aria-live="polite">{copied ? "Copied" : "Copy link"}</span>
           </button>
         </div>
 

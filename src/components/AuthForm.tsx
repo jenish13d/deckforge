@@ -39,7 +39,7 @@ export function AuthForm({ mode, next = "/", captcha = false }: { mode: "login" 
       {signup && <p className="muted">Free plan: 60 credits every month, no card needed.</p>}
       <label className="field">
         <span className="field__label">Email</span>
-        <input className="input" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="input" type="email" name="email" autoComplete="email" spellCheck={false} required value={email} onChange={(e) => setEmail(e.target.value)} />
       </label>
       <label className="field">
         <span className="field__label">Password</span>

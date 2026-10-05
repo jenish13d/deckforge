@@ -10,7 +10,7 @@ export default async function ResetPasswordPage(props: PageProps<"/reset-passwor
   return (
     <>
       <SiteHeader />
-      <main className="page page--auth">
+      <main id="main" className="page page--auth">
         {typeof token === "string" && token ? (
           <ResetForm token={token} />
         ) : (

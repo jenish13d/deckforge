@@ -154,7 +154,7 @@ export function Editor({
   }
 
   function remove(card: CardData) {
-    if (!window.confirm(`Delete "${card.content?.title ?? card.brief.title}"?`)) return;
+    if (!window.confirm(`Delete “${card.content?.title ?? card.brief.title}”?`)) return;
     setDeck((d) => ({ ...d, cards: d.cards.filter((c) => c.id !== card.id) }));
     void run(async () => {
       await api(`/api/decks/${deck.id}/cards/${card.id}`, { method: "DELETE" });
@@ -171,7 +171,7 @@ export function Editor({
   }
 
   function regenerate(card: CardData) {
-    const instructions = window.prompt("Anything to change? (optional, e.g. 'shorter', 'use a timeline')", "");
+    const instructions = window.prompt("Anything to change? (optional, e.g. “shorter”, “use a timeline”)", "");
     if (instructions === null) return;
     setOutOfCredits(false);
     void generate(card.id, instructions.trim() || undefined, mode);
@@ -261,10 +261,10 @@ export function Editor({
         <Menu label={{ text: "More options", content: <Ellipsis size={18} aria-hidden="true" /> }} buttonClassName="button button--icon">
           {(close) => (
             <>
-              <button type="button" className="menu__item" role="menuitem" onClick={() => { close(); void duplicateDeck(); }}>
+              <button type="button" className="menu__item" onClick={() => { close(); void duplicateDeck(); }}>
                 <CopyPlus size={16} aria-hidden="true" /> Duplicate deck
               </button>
-              <button type="button" className="menu__item menu__item--danger" role="menuitem" onClick={() => { close(); setConfirmDelete(true); }}>
+              <button type="button" className="menu__item menu__item--danger" onClick={() => { close(); setConfirmDelete(true); }}>
                 <Trash2 size={16} aria-hidden="true" /> Delete deck
               </button>
             </>
@@ -272,7 +272,8 @@ export function Editor({
         </Menu>
       </header>
 
-      <main className="page">
+      <main id="main" className="page">
+        <h1 className="sr-only">{deck.title}</h1>
         {writing > 0 && (
           <div className="writing" role="status">
             <p className="writing__text">
@@ -336,8 +337,8 @@ export function Editor({
                   note={waiting[card.id]}
                 />
               )}
-              {card.content && waiting[card.id] && <p className="status">{waiting[card.id]}</p>}
-              {cardErrors[card.id] && <p className="error">{cardErrors[card.id]}</p>}
+              {card.content && waiting[card.id] && <p className="status" role="status">{waiting[card.id]}</p>}
+              {cardErrors[card.id] && <p className="error" role="alert">{cardErrors[card.id]}</p>}
 
               <button type="button" className="add-card" onClick={() => addAfter(card.position)}>+ Add card</button>
             </section>

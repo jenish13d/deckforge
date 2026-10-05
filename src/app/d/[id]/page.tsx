@@ -38,7 +38,7 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
 
   if (!visible) {
     return (
-      <main className="page page--narrow">
+      <main id="main" className="page page--narrow">
         <div className="empty-state">
           <Lock size={40} className="empty-state__icon" aria-hidden="true" />
           <h1 className="page-title">This deck is private</h1>
@@ -59,7 +59,7 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
         <h1 className="toolbar__heading">{deck.title}</h1>
         <ViewerActions deckId={deck.id} cards={cards} theme={deck.theme} title={deck.title} shared={deck.shared} isOwner={isOwner} />
       </header>
-      <main className="page">
+      <main id="main" className="page">
         <div className={`deck theme-${deck.theme}`}>
           {cards.map((content, i) => (
             <CardView key={i} content={content} index={i} />

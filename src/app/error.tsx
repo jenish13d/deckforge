@@ -10,7 +10,7 @@ export default function Error({ error, retry }: { error: Error & { digest?: stri
   }, [error]);
 
   return (
-    <main className="page page--narrow">
+    <main id="main" className="page page--narrow">
       <div className="empty-state">
         <TriangleAlert size={44} className="empty-state__icon" aria-hidden="true" />
         <h1 className="page-title">Something went wrong</h1>

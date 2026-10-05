@@ -22,7 +22,7 @@ export default async function TemplatesPage() {
   return (
     <>
       <SiteHeader />
-      <main>{content}</main>
+      <main id="main">{content}</main>
       <SiteFooter />
     </>
   );
