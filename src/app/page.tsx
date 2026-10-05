@@ -107,11 +107,11 @@ export default async function Home(props: PageProps<"/">) {
           <section id="how" className="section">
             <h2 className="section-heading center">From idea to deck in three steps</h2>
             <ol className="steps">
-              {STEPS.map(({ icon: Icon, title, text }, i) => (
+              {STEPS.map(({ icon: Icon, title, text }) => (
                 <li key={title} className="step">
                   <span className="step__icon" aria-hidden="true"><Icon size={22} /></span>
                   <span className="step__text">
-                    <strong>{i + 1}. {title}</strong>
+                    <strong>{title}</strong>
                     <span className="muted">{text}</span>
                   </span>
                 </li>

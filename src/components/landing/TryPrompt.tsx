@@ -23,7 +23,7 @@ export function TryPrompt() {
         rows={2}
         maxLength={1000}
         aria-label="What do you want to present?"
-        placeholder="What do you want to present? e.g. a pitch for my bakery"
+        placeholder="What do you want to present? For example, a pitch for my bakery…"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         onKeyDown={(e) => {

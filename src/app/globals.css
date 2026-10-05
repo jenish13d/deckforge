@@ -4094,3 +4094,42 @@ select {
 .sources--compact .sources__list {
   margin-top: 8px;
 }
+
+/* Landing sections without box-in-box cards: open columns over a hairline (DESIGN.md). */
+.steps,
+.feature-grid--three {
+  gap: 36px 40px;
+}
+
+.step,
+.feature-grid--three .feature {
+  padding: 22px 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.feature-grid--three .feature strong,
+.step__text strong {
+  font-size: 1.02rem;
+}
+
+@media (min-width: 861px) {
+  /* Nine themes as an even 3 × 3 grid, no lone card on the last row. */
+  .theme-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 880px;
+    margin-inline: auto;
+  }
+}
+
+/* Headlines break into even lines instead of leaving one word alone. */
+.landing-top__title,
+.create-start__title,
+.section-heading,
+.page-title,
+.cta-band h2 {
+  text-wrap: balance;
+}
