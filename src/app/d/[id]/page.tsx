@@ -3,7 +3,9 @@ import { Lock } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BrandMark } from "@/components/BrandMark";
 import { CardView } from "@/components/CardView";
+import { RevealDeck } from "@/components/RevealDeck";
 import { SourcesList } from "@/components/SourcesList";
 import { ViewerActions } from "@/components/ViewerActions";
 import { getCurrentUser } from "@/lib/auth";
@@ -54,17 +56,19 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
 
   return (
     <>
-      <header className="toolbar no-print">
-        <Link href="/" className="toolbar__brand">{SITE.name}</Link>
-        <h1 className="toolbar__heading">{deck.title}</h1>
+      <header className="toolbar studio-bar no-print">
+        <Link href="/" className="studio-bar__home" aria-label={SITE.name}>
+          <BrandMark size={28} />
+        </Link>
+        <h1 className="toolbar__heading studio-bar__heading">{deck.title}</h1>
         <ViewerActions deckId={deck.id} cards={cards} theme={deck.theme} title={deck.title} shared={deck.shared} isOwner={isOwner} />
       </header>
       <main id="main" className="page">
-        <div className={`deck theme-${deck.theme}`}>
+        <RevealDeck className={`deck theme-${deck.theme}`}>
           {cards.map((content, i) => (
             <CardView key={i} content={content} index={i} />
           ))}
-        </div>
+        </RevealDeck>
         {cards.length === 0 && <p className="muted">This deck is still being written.</p>}
         <SourcesList sources={deck.sources} />
         <p className="made-with no-print">

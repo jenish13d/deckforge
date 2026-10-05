@@ -9,8 +9,11 @@ export function Modal({
   onClose,
   children,
   footer,
+  wide = false,
 }: {
   title: string;
+  /** Room for a grid of previews (theme picker). */
+  wide?: boolean;
   onClose: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
@@ -26,7 +29,7 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className="modal"
+      className={wide ? "modal modal--wide" : "modal"}
       aria-labelledby={titleId}
       onClose={onClose}
       onClick={(e) => {

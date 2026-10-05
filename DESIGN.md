@@ -51,6 +51,9 @@ One accent family (navy + gold). No purple gradients, no neon glows.
 
 - Radius: 8px buttons and inputs, 10-14px cards and menus, 18px+ sheets; pills only for chips.
 - Shadows are soft and tinted navy (`rgba(6, 26, 46, …)`), never pure black.
+- Motion (Emil Kowalski's rules, `emil-design-eng` skill): strong custom curves (`--ease-out`
+  cubic-bezier(0.23, 1, 0.32, 1)), UI animations under 300ms, hover effects only for real pointers
+  (`@media (hover: hover) and (pointer: fine)`), nothing animated on keyboard-driven actions.
 - Motion: `--ease-out` for most, `--ease-spring` for things that pop (menus, dialogs, toasts).
   Animate only `transform` and `opacity`; respect `prefers-reduced-motion`.
 - Pressed buttons scale to about 0.97 for a tactile feel.
@@ -58,6 +61,13 @@ One accent family (navy + gold). No purple gradients, no neon glows.
   is a pinned scroll story (`BuildStory`), tiles lean toward the mouse (`TiltZone`, `.tilt`). Motion runs
   through CSS variables set by `useStageMotion` (no React re-renders); with reduced motion everything
   shows its finished state, still. Pure CSS 3D, no WebGL, so it costs nothing and works in every browser.
+- App (signed in): the editor is a "studio": one-row bar (home mark, title, Theme, Share, Download,
+  Present, More) that keeps to one row on phones by dropping labels; slide thumbnails on the left from
+  1100px; card tools in a quiet pill that wakes on hover; in-app dialogs (never `window.prompt`/`confirm`).
+  Themes are chosen from live previews of the deck's own slide. The outline step keeps "Generate" in a
+  fixed bar on smaller screens.
+- Entrance animations use `animation-fill-mode: backwards`, never `both`: a transform left on an
+  ancestor traps `position: fixed` bars inside it.
 - Facts shown in landing examples must be true (the Colosseum sample matches Wikipedia and Britannica).
 
 ## Slides

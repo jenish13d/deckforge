@@ -18,7 +18,10 @@ export default async function DecksPage() {
     <AppShell next="/decks">
       <div className="page">
         <div className="row row--between page-head">
-          <h1 className="page-title">My decks</h1>
+          <div>
+            <h1 className="page-title">My decks</h1>
+            <p className="muted page-head__sub">{decks.length} {decks.length === 1 ? "deck" : "decks"}</p>
+          </div>
           <Link href="/" className="button button--primary"><Plus size={18} aria-hidden="true" /> New deck</Link>
         </div>
         <DeckLibrary decks={decks} tools />

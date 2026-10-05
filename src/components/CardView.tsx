@@ -35,7 +35,16 @@ function useFitText(content: CardContent) {
  * Renders one slide. `index` (its position in the deck) alternates the photo side
  * and, in themes with several backgrounds, the background colour.
  */
-export function CardView({ content, index = 0 }: { content: CardContent; index?: number }) {
+export function CardView({
+  content,
+  index = 0,
+  preview = false,
+}: {
+  content: CardContent;
+  index?: number;
+  /** Thumbnail inside a link or button: the photo credit is plain text, not a nested link. */
+  preview?: boolean;
+}) {
   const { layout, eyebrow, icon, title, subtitle, items, stats, quote, quoteAuthor, table } = content;
   const photo = showsImage(content) ? content.image : null;
   const ref = useFitText(content);
@@ -144,7 +153,7 @@ export function CardView({ content, index = 0 }: { content: CardContent; index?:
           </div>
         )}
       </div>
-      {photo && <Photo photo={photo} fullBleed={fullBleed} />}
+      {photo && <Photo photo={photo} fullBleed={fullBleed} linkCredit={!preview} />}
     </article>
   );
 }
@@ -153,7 +162,7 @@ export function CardView({ content, index = 0 }: { content: CardContent; index?:
  * A slide photo that never cuts off what matters (see photoFit). The fit is first worked
  * out from the stored size, then from the real image and frame once they're on screen.
  */
-function Photo({ photo, fullBleed }: { photo: CardImage; fullBleed: boolean }) {
+function Photo({ photo, fullBleed, linkCredit }: { photo: CardImage; fullBleed: boolean; linkCredit: boolean }) {
   const frame = useRef<HTMLElement>(null);
   const initial = photo.width && photo.height ? photoFit(photo.width / photo.height, fullBleed ? FRAME_ASPECT.fullBleed : FRAME_ASPECT.split) : null;
   const [fit, setFit] = useState(initial ?? { mode: "cover" as const, focusY: 50 });
@@ -193,7 +202,7 @@ function Photo({ photo, fullBleed }: { photo: CardImage; fullBleed: boolean }) {
       />
       {photo.credit && (
         <figcaption className="card__credit">
-          Photo: {photo.creditUrl ? <a href={photo.creditUrl} target="_blank" rel="noreferrer">{photo.credit}</a> : photo.credit}
+          Photo: {photo.creditUrl && linkCredit ? <a href={photo.creditUrl} target="_blank" rel="noreferrer">{photo.credit}</a> : photo.credit}
         </figcaption>
       )}
     </figure>

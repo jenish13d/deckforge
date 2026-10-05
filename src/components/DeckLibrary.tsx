@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { CardView } from "@/components/CardView";
+import { TiltZone } from "@/components/landing/TiltZone";
 import { ShareDialog } from "@/components/share/ShareDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Menu } from "@/components/ui/Menu";
@@ -148,6 +149,7 @@ export function DeckLibrary({ decks, tools = false }: { decks: DeckSummary[]; to
       {visible.length === 0 ? (
         <p className="muted center">No decks match “{query}”.</p>
       ) : (
+        <TiltZone>
         <ul className="deck-list">
           {visible.map((deck) => {
             const isSelected = selected.has(deck.id);
@@ -163,8 +165,8 @@ export function DeckLibrary({ decks, tools = false }: { decks: DeckSummary[]; to
                   }}
                   aria-label={selecting ? `${isSelected ? "Unselect" : "Select"} ${deck.title}` : undefined}
                 >
-                  <div className={`deck-tile__cover mini-card theme-${deck.theme}`} aria-hidden="true" inert>
-                    {deck.cover ? <CardView content={deck.cover} /> : <span className="deck-tile__preview">{deck.title}</span>}
+                  <div className={`deck-tile__cover tilt mini-card theme-${deck.theme}`} aria-hidden="true" inert>
+                    {deck.cover ? <CardView content={deck.cover} preview /> : <span className="deck-tile__preview">{deck.title}</span>}
                   </div>
                   <span className="deck-tile__title">{deck.title}</span>
                   <span className="deck-tile__meta">
@@ -193,6 +195,7 @@ export function DeckLibrary({ decks, tools = false }: { decks: DeckSummary[]; to
             );
           })}
         </ul>
+        </TiltZone>
       )}
 
       {confirmDelete && (

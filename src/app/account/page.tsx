@@ -30,33 +30,28 @@ export default async function AccountPage(props: PageProps<"/account">) {
           </p>
         )}
 
-        <section className="panel">
-          <div className="row row--between">
-            <div>
-              <p className="muted small">Signed in as</p>
-              <p className="strong">{user.email}</p>
-            </div>
-            <div className="text-right">
-              <p className="muted small">Plan</p>
-              <p className="strong">{current.label}</p>
+        <section className="account-hero">
+          <div className="account-hero__who">
+            <span className="avatar avatar--large" aria-hidden="true">{user.email.charAt(0).toUpperCase()}</span>
+            <div className="account-hero__text">
+              <p className="account-hero__email">{user.email}</p>
+              <p className="account-hero__plan">{current.label} plan</p>
             </div>
           </div>
-          <div className="credit-meter">
-            <div className="row row--between">
-              <span className="strong">{user.credits} credits left</span>
-              <span className="muted small">
-                Refills to {current.monthlyCredits.toLocaleString()} on{" "}
-                {user.creditsResetAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-              </span>
-            </div>
+          <div className="account-hero__credits">
+            <p className="account-hero__number">
+              {user.credits.toLocaleString("en-US")}
+              <span> / {current.monthlyCredits.toLocaleString("en-US")} credits</span>
+            </p>
             <div className="credit-meter__bar" role="presentation">
               <span style={{ width: `${Math.min(100, (user.credits / current.monthlyCredits) * 100)}%` }} />
             </div>
+            <p className="account-hero__note">
+              Refills on {user.creditsResetAt.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}.
+              {" "}A card costs {MODES.quick.creditsPerCard} credit in {MODES.quick.label}, {MODES.standard.creditsPerCard} in{" "}
+              {MODES.standard.label} and {MODES.premium.creditsPerCard} in {MODES.premium.label}. Failed cards are refunded.
+            </p>
           </div>
-          <p className="muted small">
-            A card costs {MODES.quick.creditsPerCard} credit in {MODES.quick.label}, {MODES.standard.creditsPerCard} in{" "}
-            {MODES.standard.label} and {MODES.premium.creditsPerCard} in {MODES.premium.label}. Failed cards are refunded.
-          </p>
         </section>
 
         <section className="pricing__plans">

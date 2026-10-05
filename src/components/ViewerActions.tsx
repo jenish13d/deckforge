@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Share2 } from "lucide-react";
+import { Pencil, Play, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -27,19 +27,21 @@ export function ViewerActions({
   const [presenting, setPresenting] = useState(false);
   const [sharing, setSharing] = useState(false);
   return (
-    <>
+    <div className="studio-bar__actions">
       {isOwner && (
-        <Link href={`/d/${deckId}/edit`} className="button"><Pencil size={16} aria-hidden="true" /> Edit</Link>
+        <Link href={`/d/${deckId}/edit`} className="button" aria-label="Edit">
+          <Pencil size={16} aria-hidden="true" /> <span className="button__label">Edit</span>
+        </Link>
       )}
-      <button type="button" className="button" onClick={() => setSharing(true)}>
-        <Share2 size={16} aria-hidden="true" /> Share
+      <button type="button" className="button" onClick={() => setSharing(true)} aria-label="Share">
+        <Share2 size={16} aria-hidden="true" /> <span className="button__label">Share</span>
       </button>
       <DownloadMenu cards={cards} theme={theme} title={title} />
-      <button type="button" className="button button--primary" onClick={() => setPresenting(true)} disabled={cards.length === 0}>
-        Present
+      <button type="button" className="button button--primary studio-bar__present" onClick={() => setPresenting(true)} disabled={cards.length === 0} aria-label="Present">
+        <Play size={16} aria-hidden="true" /> <span className="button__label">Present</span>
       </button>
       {presenting && <Presenter cards={cards} theme={theme} onClose={() => setPresenting(false)} />}
       {sharing && <ShareDialog deckId={deckId} title={title} shared={shared} canManage={isOwner} onClose={() => setSharing(false)} />}
-    </>
+    </div>
   );
 }

@@ -11,11 +11,11 @@ import { useStageMotion } from "./useStageMotion";
 const SLIDES = ["report", "sales", "talk", "pitch"].map((id) => findTemplate(id)!);
 
 /** Landing hero scene: a fan of real slides that tilts with the mouse and opens up as you scroll. */
-export function HeroStage() {
+export function HeroStage({ compact = false }: { /** Smaller, without the floating labels (create screen). */ compact?: boolean }) {
   const ref = useStageMotion<HTMLDivElement>({ tilt: 7 });
 
   return (
-    <div ref={ref} className="stage" aria-hidden="true" inert>
+    <div ref={ref} className={compact ? "stage stage--compact" : "stage"} aria-hidden="true" inert>
       <div className="stage__floor" />
       <div className="stage__rig">
         <span className="stage__sun" />
@@ -26,12 +26,16 @@ export function HeroStage() {
             </div>
           </div>
         ))}
+        {!compact && (
+          <>
         <span className="stage__chip stage__chip--a">
           <Globe size={15} /> Researched from real sources
         </span>
         <span className="stage__chip stage__chip--b">
           <BadgeCheck size={15} /> Every number checked
         </span>
+          </>
+        )}
       </div>
     </div>
   );

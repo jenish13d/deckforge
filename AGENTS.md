@@ -15,5 +15,7 @@ AI presentation builder (prompt → outline → themed cards). See README.md for
 - AI calls live in `src/lib/ai.ts` behind the `CallModel` type so tests run without the API.
 - Before pushing: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
 - UI work: follow `DESIGN.md` (brand decisions override generic design advice). Project skills in
-  `.claude/skills`: `design-taste-frontend` and `image-to-code` (taste), `web-design-guidelines`
+  `.claude/skills`: `design-taste-frontend` and `image-to-code` (taste), `impeccable` (craft floor and
+  polish pass), `emil-design-eng` (Emil Kowalski's motion and interaction rules), `web-design-guidelines`
   (Vercel's checklist for reviews), `playwright-cli` (drive a real browser to check changes).
+  Figma is connected as an MCP server for design files.

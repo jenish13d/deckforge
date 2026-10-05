@@ -1,12 +1,12 @@
 "use client";
 
-import { ArrowRight, ArrowUp, ChevronDown, ClipboardPaste, Layers, LayoutTemplate, LoaderCircle, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ClipboardPaste, Layers, LayoutTemplate, LoaderCircle, Plus, Sparkles, X, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { HeroArt } from "@/components/art/HeroArt";
 import { CardView } from "@/components/CardView";
+import { HeroStage } from "@/components/landing/HeroStage";
 import { ModePicker } from "@/components/ModePicker";
 import { SourcesList } from "@/components/SourcesList";
 import { TemplateIcon } from "@/components/TemplateIcon";
@@ -31,6 +31,30 @@ const SAMPLES = [
   "Introduction to climate change for 10-year-olds, with examples they can relate to",
   "Quarterly results for a small online shop: sales, best sellers, problems and next steps",
 ];
+
+// What the planner is doing, shown in turn while the outline is made.
+const PLANNING_STEPS = ["Reading your topic…", "Searching trusted sources…", "Checking the facts…", "Planning your cards…"];
+
+/** Skeleton outline with a rotating status line while the AI plans. */
+function Planning() {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setStep((s) => Math.min(s + 1, PLANNING_STEPS.length - 1)), 1800);
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <div className="planning" role="status">
+      <p className="planning__text">
+        <Sparkles size={16} aria-hidden="true" /> <span key={step}>{PLANNING_STEPS[step]}</span>
+      </p>
+      <ol className="planning__rows" aria-hidden="true">
+        {[72, 58, 66, 50].map((w, i) => (
+          <li key={i} style={{ "--i": i, "--w": `${w}%` } as React.CSSProperties}><span /><span /></li>
+        ))}
+      </ol>
+    </div>
+  );
+}
 
 let nextKey = 0;
 const toEditable = (outline: Outline): EditableCard[] =>
@@ -126,7 +150,7 @@ export function CreateFlow({
   if (!cards) {
     return (
       <div className="create-start">
-        <HeroArt className="create-start__art" />
+        <HeroStage compact />
         {greetingName && <p className="create-start__hello">Ciao, {greetingName}!</p>}
         <h1 className="create-start__title">What do you want to <em>present</em>?</h1>
 
@@ -167,7 +191,7 @@ export function CreateFlow({
             </button>
           </div>
         </form>
-        {busy === "outline" && <p className="status center" role="status">Planning your outline…</p>}
+        {busy === "outline" && <Planning />}
         {/\[[^\]]+\]/.test(prompt) && (
           <p className="muted small center">Replace the parts in [brackets] with your details for the best result.</p>
         )}
@@ -216,7 +240,7 @@ export function CreateFlow({
             {TEMPLATES.map((t) => (
               <button key={t.id} type="button" className="template-tile" onClick={() => applyTemplate(t)}>
                 <div className={`template-tile__preview mini-card theme-${t.theme}`} aria-hidden="true" inert>
-                  <CardView content={t.preview} />
+                  <CardView content={t.preview} preview />
                 </div>
                 <strong className="template-tile__name"><TemplateIcon id={t.id} /> {t.name}</strong>
                 <span className="muted small">{t.description}</span>
@@ -228,90 +252,93 @@ export function CreateFlow({
     );
   }
 
+  const usedCards = cards.filter((c) => c.title.trim()).length;
+  const cost = cardCost(mode, usedCards);
+
   return (
-    <div className="panel outline-panel">
-      <div className="row row--between">
-        <h1 className="outline-panel__title">Review your outline</h1>
-        <span className="muted small">Step 2 of 2</span>
+    <div className="outline-step">
+      <div className="outline-step__main">
+        <button type="button" className="back-link" onClick={() => setCards(null)} disabled={busy !== null}>
+          <ArrowLeft size={16} aria-hidden="true" /> Change topic
+        </button>
+        <h1 className="outline-panel__title">Shape your outline</h1>
+        <p className="muted">Rename, reorder or cut cards before anything is written. One key point per line.</p>
+        <label className="field">
+          <span className="field__label">Deck title</span>
+          <input className="input input--large" name="title" autoComplete="off" value={title} maxLength={120} onChange={(e) => setTitle(e.target.value)} />
+        </label>
+        <SourcesList sources={research.sources} compact />
+        <ol className="outline">
+          {cards.map((card, i) => (
+            <li key={card.key} className="outline__item" style={{ "--i": i } as React.CSSProperties}>
+              <span className="outline__number">{i + 1}</span>
+              <div className="outline__fields">
+                <input
+                  className="outline__title"
+                  aria-label={`Card ${i + 1} title`}
+                  placeholder="Card title"
+                  autoComplete="off"
+                  value={card.title}
+                  maxLength={120}
+                  onChange={(e) => update(card.key, { title: e.target.value })}
+                />
+                <textarea
+                  className="outline__points"
+                  aria-label={`Card ${i + 1} key points`}
+                  placeholder="Key points, one per line (optional)"
+                  rows={Math.max(1, card.points.split("\n").length)}
+                  value={card.points}
+                  onChange={(e) => update(card.key, { points: e.target.value })}
+                />
+              </div>
+              <button
+                type="button"
+                className="tool tool--danger outline__remove"
+                aria-label={`Remove card ${i + 1}`}
+                title="Remove card"
+                onClick={() => setCards((list) => list?.filter((c) => c.key !== card.key) ?? null)}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ol>
+        {cards.length < MAX_CARDS && (
+          <button
+            type="button"
+            className="outline__add"
+            onClick={() => setCards((list) => [...(list ?? []), { key: nextKey++, title: "", points: "" }])}
+          >
+            <Plus size={16} aria-hidden="true" /> Add card
+          </button>
+        )}
       </div>
-      <label className="field">
-        <span className="field__label">Deck title</span>
-        <input className="input input--large" value={title} maxLength={120} onChange={(e) => setTitle(e.target.value)} />
-      </label>
 
-      <SourcesList sources={research.sources} compact />
-      <p className="muted">Edit the outline: rename cards, change the key points (one per line), add or remove cards.</p>
-      <ol className="outline">
-        {cards.map((card, i) => (
-          <li key={card.key} className="outline__item" style={{ "--i": i } as React.CSSProperties}>
-            <span className="outline__number">{i + 1}</span>
-            <div className="outline__fields">
-              <input
-                className="input"
-                aria-label={`Card ${i + 1} title`}
-                value={card.title}
-                maxLength={120}
-                onChange={(e) => update(card.key, { title: e.target.value })}
-              />
-              <textarea
-                className="input input--small"
-                aria-label={`Card ${i + 1} key points`}
-                rows={2}
-                value={card.points}
-                onChange={(e) => update(card.key, { points: e.target.value })}
-              />
-            </div>
-            <button
-              type="button"
-              className="icon-button"
-              aria-label={`Remove card ${i + 1}`}
-              onClick={() => setCards((list) => list?.filter((c) => c.key !== card.key) ?? null)}
-            >
-              ×
-            </button>
-          </li>
-        ))}
-      </ol>
-      {cards.length < MAX_CARDS && (
-        <button
-          type="button"
-          className="button"
-          onClick={() => setCards((list) => [...(list ?? []), { key: nextKey++, title: "", points: "" }])}
-        >
-          + Add card
-        </button>
-      )}
+      <aside className="outline-step__side" aria-label="Look and quality">
+        <h2 className="section-title">Theme</h2>
+        <ThemePicker value={theme} onChange={setTheme} title={title} />
 
-      <h2 className="section-title">Theme</h2>
-      <ThemePicker value={theme} onChange={setTheme} />
-
-      <h2 className="section-title">Quality</h2>
-      <ModePicker value={mode} onChange={setMode} allowed={allowedModes} comingSoon={comingSoon} />
-      {!allowedModes.includes("premium") && !comingSoon.includes("premium") && (
-        <p className="muted small">
-          Premium needs Pro. <Link href="/account#upgrade">See plans</Link>
-        </p>
-      )}
-      <CostLine cost={cardCost(mode, cards.filter((c) => c.title.trim()).length)} credits={credits} />
-
-      <div className="row row--end">
-        <button type="button" className="button" onClick={() => setCards(null)} disabled={busy !== null}>
-          Back
-        </button>
-        <button
-          type="button"
-          className="button button--primary"
-          onClick={makeDeck}
-          disabled={
-            busy !== null ||
-            !cards.some((c) => c.title.trim()) ||
-            cardCost(mode, cards.filter((c) => c.title.trim()).length) > credits
-          }
-        >
-          {busy === "deck" ? "Creating…" : "Generate deck"}
-        </button>
-      </div>
-      {error && <p className="error" role="alert">{error}</p>}
+        <h2 className="section-title">Quality</h2>
+        <ModePicker value={mode} onChange={setMode} allowed={allowedModes} comingSoon={comingSoon} />
+        {!allowedModes.includes("premium") && !comingSoon.includes("premium") && (
+          <p className="muted small">
+            Premium needs Pro. <Link href="/account#upgrade">See plans</Link>
+          </p>
+        )}
+        <div className="outline-step__go">
+          <CostLine cost={cost} credits={credits} />
+          <button
+            type="button"
+            className="button button--primary button--large"
+            onClick={makeDeck}
+            disabled={busy !== null || usedCards === 0 || cost > credits}
+          >
+            {busy === "deck" ? <LoaderCircle size={18} className="spin" aria-hidden="true" /> : <Sparkles size={18} aria-hidden="true" />}
+            {busy === "deck" ? "Creating…" : `Generate ${usedCards} cards`}
+          </button>
+        </div>
+        {error && <p className="error" role="alert">{error}</p>}
+      </aside>
     </div>
   );
 }
