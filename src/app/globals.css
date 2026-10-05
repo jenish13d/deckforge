@@ -2105,6 +2105,12 @@ a {
     transform: none;
   }
 
+  /* The panel overlaps the photo's bottom edge, so the credit moves to the top. */
+  .deck .card--full-bleed .card__credit {
+    top: 1cqi;
+    bottom: auto;
+  }
+
   .deck .card__items--row,
   .deck .card__items--columns {
     grid-auto-flow: row;
