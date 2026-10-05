@@ -2,6 +2,8 @@ import { CardView } from "@/components/CardView";
 import type { CardContent } from "@/lib/cards";
 import { THEMES } from "@/lib/themes";
 
+import { TiltZone } from "./TiltZone";
+
 const SAMPLE: CardContent = {
   layout: "bullets",
   eyebrow: "",
@@ -20,15 +22,15 @@ const SAMPLE: CardContent = {
 
 export function ThemeShowcase() {
   return (
-    <div className="theme-grid scroll-row">
+    <TiltZone className="theme-grid scroll-row">
       {THEMES.map((t) => (
-        <figure key={t.id} className="theme-grid__item">
+        <figure key={t.id} className="theme-grid__item tilt">
           <div className={`mini-card theme-${t.id}`} aria-hidden="true" inert>
             <CardView content={SAMPLE} />
           </div>
           <figcaption>{t.name}</figcaption>
         </figure>
       ))}
-    </div>
+    </TiltZone>
   );
 }

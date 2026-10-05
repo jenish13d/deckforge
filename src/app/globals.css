@@ -4185,3 +4185,750 @@ main:focus {
     min-height: 40px;
   }
 }
+
+/* ---------- Landing in 3D ---------- */
+
+/* Hero: copy on the left, a fan of real slides floating on the right (stacked on phones). */
+.hero3d {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding: 8px max(16px, (100% - 1240px) / 2) 0;
+  overflow-x: clip;
+}
+
+/* Soft Riviera light: sea blue on the right, a warm gold sunset low down. */
+.hero3d::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    radial-gradient(38% 46% at 74% 38%, rgba(31, 111, 168, 0.16), transparent 70%),
+    radial-gradient(26% 34% at 86% 74%, rgba(212, 175, 55, 0.2), transparent 70%),
+    radial-gradient(36% 44% at 12% 8%, rgba(11, 61, 107, 0.07), transparent 70%);
+  pointer-events: none;
+}
+
+.hero3d__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  text-align: center;
+  animation: rise-in 0.5s var(--ease-out) both;
+}
+
+.hero3d__copy .prompt-box--landing {
+  width: 100%;
+}
+
+.stage {
+  --rx: 0deg;
+  --ry: 0deg;
+  --p: 0;
+  position: relative;
+  order: -1;
+  height: 250px;
+  perspective: 1300px;
+  perspective-origin: 50% 35%;
+  animation: fade-in 0.9s var(--ease-out) 0.1s both;
+}
+
+.stage__rig {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(calc(8deg + var(--rx))) rotateY(calc(-14deg + var(--ry)));
+}
+
+/* A faint grid floor that the slides float above, fading into the page. */
+.stage__floor {
+  position: absolute;
+  right: -40%;
+  bottom: -6%;
+  left: -40%;
+  height: 72%;
+  background-image:
+    linear-gradient(rgba(11, 61, 107, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 61, 107, 0.09) 1px, transparent 1px);
+  background-size: 44px 44px;
+  transform: rotateX(74deg);
+  transform-origin: 50% 100%;
+  -webkit-mask-image: radial-gradient(ellipse 55% 70% at 50% 100%, #000 25%, transparent 72%);
+  mask-image: radial-gradient(ellipse 55% 70% at 50% 100%, #000 25%, transparent 72%);
+  pointer-events: none;
+}
+
+.stage__sun {
+  position: absolute;
+  top: 6%;
+  left: 64%;
+  width: 22%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 34%, #fff1bf, #f2c64d 45%, #d4a12a 75%);
+  box-shadow: 0 0 70px 18px rgba(242, 177, 52, 0.28);
+  transform: translateZ(-360px);
+}
+
+.stage__slot {
+  --x: 0%;
+  --y: 0%;
+  --z: 0px;
+  --rz: 0deg;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 62%;
+  transform-style: preserve-3d;
+  /* As the page scrolls (--p from 0 to 1) the fan opens up and comes towards you. */
+  transform: translate(-50%, -50%)
+    translate3d(
+      calc(var(--x) * (1 + var(--p) * 0.7)),
+      calc(var(--y) * (1 + var(--p) * 0.5) - var(--p) * 30%),
+      calc(var(--z) * (1 + var(--p) * 1.4) + var(--p) * 80px)
+    )
+    rotateZ(calc(var(--rz) * (1 + var(--p))));
+}
+
+.stage__slot:nth-child(2) { --x: -36%; --y: -44%; --z: -260px; --rz: -6deg; }
+.stage__slot:nth-child(3) { --x: 30%; --y: -30%; --z: -150px; --rz: 5deg; }
+.stage__slot:nth-child(4) { --x: -28%; --y: 34%; --z: -60px; --rz: -3deg; }
+.stage__slot:nth-child(5) { --x: 10%; --y: 10%; --z: 70px; }
+
+.stage__slide {
+  animation: stage-float 8s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -2.1s);
+}
+
+.stage__slide .card,
+.story__slide .card {
+  border-radius: 12px;
+  box-shadow:
+    0 2px 6px rgba(6, 26, 46, 0.1),
+    0 28px 56px -18px rgba(6, 26, 46, 0.36);
+}
+
+.stage__chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  /* Solid, not frosted: backdrop blur inside a 3D scene glitches in Safari. */
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 30px -10px rgba(6, 26, 46, 0.3);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transform: translateZ(calc(160px + var(--p) * 140px));
+}
+
+.stage__chip svg {
+  color: var(--accent);
+}
+
+.stage__chip--a {
+  top: 12%;
+  left: 4%;
+}
+
+.stage__chip--b {
+  right: 0;
+  bottom: 8%;
+}
+
+@keyframes stage-float {
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@media (max-width: 640px) {
+  .stage__chip {
+    transform: translateZ(calc(90px + var(--p) * 80px));
+  }
+}
+
+@media (min-width: 641px) {
+  .hero3d {
+    padding-top: 24px;
+  }
+
+  .stage {
+    height: clamp(320px, 52vw, 440px);
+  }
+
+  .stage__slot {
+    width: min(420px, 56%);
+  }
+
+  .stage__chip {
+    font-size: 0.85rem;
+    padding: 8px 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero3d {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    align-items: center;
+    gap: 16px;
+    min-height: min(720px, calc(100dvh - 61px));
+    padding: 24px max(24px, (100% - 1240px) / 2) 0;
+  }
+
+  .hero3d__copy {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .hero3d__copy .landing-top__title {
+    font-size: clamp(3rem, 5.2vw, 4.4rem);
+  }
+
+  .hero3d .quick-chips {
+    justify-content: flex-start;
+  }
+
+  .stage {
+    order: 0;
+    height: 560px;
+  }
+
+  .stage__slot {
+    width: 70%;
+  }
+}
+
+/* Scroll story: the prompt types, sources arrive, the outline forms, slides assemble. */
+.story {
+  --p: 1;
+  --rx: 0deg;
+  --ry: 0deg;
+  position: relative;
+  margin-top: 72px;
+  scroll-margin-top: 61px;
+}
+
+.story[data-live] {
+  height: 340vh;
+}
+
+.story__pin {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 20px;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.story[data-live] .story__pin {
+  position: sticky;
+  top: 61px;
+  height: calc(100svh - 61px);
+  overflow: clip;
+}
+
+.story__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.story__copy .section-heading {
+  margin: 0;
+}
+
+.story__steps {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.story__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  opacity: 0.45;
+  transition: opacity 0.35s var(--ease-out), background-color 0.35s var(--ease-out);
+}
+
+.story__step-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  transition: background-color 0.35s var(--ease-out), color 0.35s var(--ease-out);
+}
+
+.story__step-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.story__step-text span {
+  color: var(--muted);
+}
+
+.story[data-step="0"] .story__step:nth-child(1),
+.story[data-step="1"] .story__step:nth-child(2),
+.story[data-step="2"] .story__step:nth-child(3),
+.story[data-step="3"] .story__step:nth-child(4) {
+  opacity: 1;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.story[data-step="0"] .story__step:nth-child(1) .story__step-icon,
+.story[data-step="1"] .story__step:nth-child(2) .story__step-icon,
+.story[data-step="2"] .story__step:nth-child(3) .story__step-icon,
+.story[data-step="3"] .story__step:nth-child(4) .story__step-icon {
+  background: var(--primary);
+  color: var(--primary-text);
+}
+
+/* Without the scroll effect (reduced motion), every step reads at full strength. */
+.story:not([data-live]) .story__step {
+  opacity: 1;
+}
+
+.story__scene {
+  /* Each phase's own 0 → 1 progress, worked out from the section's --p. */
+  --t-type: clamp(0, calc((var(--p) - 0.03) / 0.18), 1);
+  --t-src: clamp(0, calc((var(--p) - 0.25) / 0.2), 1);
+  --t-out: clamp(0, calc((var(--p) - 0.5) / 0.12), 1);
+  --t-deck: clamp(0, calc((var(--p) - 0.66) / 0.22), 1);
+  position: relative;
+  height: 330px;
+  perspective: 1300px;
+}
+
+.story__prompt {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(480px, 100%);
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--text);
+  font-size: 0.95rem;
+  transform: translateX(-50%);
+}
+
+.story__prompt > svg {
+  flex: none;
+  color: var(--accent);
+}
+
+.story__typed {
+  position: relative;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.story__typed > span {
+  display: inline-block;
+  clip-path: inset(0 calc((1 - var(--t-type)) * 100%) 0 0);
+}
+
+/* The text cursor rides the end of the typed text, then blinks. */
+.story__typed::after {
+  content: "";
+  position: absolute;
+  top: 10%;
+  left: calc(var(--t-type) * 100%);
+  width: 2px;
+  height: 80%;
+  border-radius: 1px;
+  background: var(--primary);
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.story__sources,
+.story__outline {
+  position: absolute;
+  top: 74px;
+  left: 50%;
+  display: grid;
+  gap: 8px;
+  width: min(420px, 100%);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateX(-50%);
+}
+
+.story__sources {
+  opacity: calc(1 - var(--t-out) * 2.5);
+  transform: translateX(-50%) translateY(calc(var(--t-out) * -16px)) scale(calc(1 - var(--t-out) * 0.04));
+}
+
+.story__source,
+.story__verdict,
+.story__outline-row {
+  --e: clamp(0, calc(var(--t-src) * 4 - var(--k, 3)), 1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  font-size: 0.9rem;
+  opacity: var(--e);
+  transform: translateY(calc((1 - var(--e)) * 18px));
+}
+
+.story__favicon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 700;
+}
+
+.story__source-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.story__source-text strong {
+  color: var(--text);
+}
+
+.story__tick {
+  flex: none;
+  color: #1f7a4d;
+  opacity: clamp(0, calc((var(--t-src) - 0.75) * 6), 1);
+}
+
+.story__verdict {
+  justify-self: center;
+  border-color: transparent;
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 600;
+}
+
+.story__verdict svg {
+  color: var(--gold);
+}
+
+.story__outline {
+  opacity: clamp(0, calc(1 - var(--t-deck) * 2), 1);
+}
+
+.story__outline-row {
+  --e: clamp(0, calc((var(--t-out) - 0.4) * 5 - var(--k)), 1);
+  font-weight: 600;
+}
+
+.story__outline-row b {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.8rem;
+}
+
+.story__deck {
+  position: absolute;
+  inset: 70px 0 0;
+  transform-style: preserve-3d;
+  transform: rotateX(calc(6deg + var(--rx))) rotateY(var(--ry));
+}
+
+.story__slot {
+  --e: clamp(0, calc(var(--t-deck) * 2.2 - var(--k) * 0.6), 1);
+  --x: 0%;
+  --y: 0%;
+  --z: 0px;
+  --rz: 0deg;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 64%;
+  opacity: var(--e);
+  /* Each slide flies up from below and settles into the fan. */
+  transform: translate(-50%, -50%)
+    translate3d(var(--x), calc(var(--y) + (1 - var(--e)) * 220px), calc(var(--z) - (1 - var(--e)) * 360px))
+    rotateX(calc((1 - var(--e)) * 50deg))
+    rotateZ(calc(var(--rz) * var(--e)));
+}
+
+.story__slot:nth-child(1) { --x: -36%; --y: -12%; --z: -90px; --rz: -5deg; }
+.story__slot:nth-child(2) { --y: 8%; --z: 40px; }
+.story__slot:nth-child(3) { --x: 36%; --y: -12%; --z: -90px; --rz: 5deg; }
+
+.story__slot:nth-child(2) {
+  z-index: 1;
+}
+
+@media (max-width: 640px) {
+  .story__step {
+    padding: 6px 8px;
+  }
+
+  .story__step-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* On phones only the current step keeps its description, so the scene fits. */
+  .story[data-live] .story__step-text span {
+    display: none;
+  }
+
+  .story[data-step="0"] .story__step:nth-child(1) .story__step-text span,
+  .story[data-step="1"] .story__step:nth-child(2) .story__step-text span,
+  .story[data-step="2"] .story__step:nth-child(3) .story__step-text span,
+  .story[data-step="3"] .story__step:nth-child(4) .story__step-text span {
+    display: block;
+    font-size: 0.85rem;
+  }
+
+  .story__steps {
+    gap: 2px;
+  }
+
+  .story__scene {
+    height: 300px;
+  }
+
+  .story__prompt {
+    font-size: 0.88rem;
+  }
+
+  .story__slot {
+    width: 72%;
+  }
+
+  .story__source,
+  .story__verdict,
+  .story__outline-row {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .story__pin {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: center;
+    gap: 40px;
+    padding: 0 24px;
+  }
+
+  .story__scene {
+    height: 520px;
+  }
+
+  .story__slot {
+    width: 66%;
+  }
+
+  .story__deck {
+    inset: 90px 0 0;
+  }
+
+  .story__sources,
+  .story__outline {
+    top: 96px;
+  }
+}
+
+/* Features as a bento grid; the two biggest promises get the big tiles. */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.bento__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.bento__tile > span:not(.feature__icon) {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.bento__tile--facts {
+  grid-column: span 2;
+  grid-row: span 2;
+  border-color: transparent;
+  background:
+    radial-gradient(60% 60% at 90% 0%, rgba(212, 175, 55, 0.22), transparent 70%),
+    linear-gradient(160deg, var(--brand-b), var(--brand-a) 55%);
+  color: #fff;
+}
+
+.bento__tile--facts strong {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.bento__tile.bento__tile--facts > span:not(.feature__icon) {
+  max-width: 44ch;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 1rem;
+}
+
+.bento__tile--facts .feature__icon {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--gold);
+}
+
+.bento__tile--photo {
+  grid-column: span 2;
+}
+
+.fact-list {
+  display: grid;
+  gap: 8px;
+  margin: auto 0 0;
+  padding: 16px 0 0;
+  list-style: none;
+}
+
+.fact-list__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.fact-list__row svg {
+  flex: none;
+  color: var(--gold);
+}
+
+.fact-list__row b {
+  min-width: 5.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fact-list__row span {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.88rem;
+}
+
+.fact-list__row--cut b {
+  opacity: 0.7;
+  text-decoration: line-through;
+}
+
+.fact-list__row--cut svg {
+  color: #ffb4a8;
+}
+
+@media (max-width: 860px) {
+  .bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .bento__tile--facts {
+    grid-row: auto;
+  }
+
+  .bento__tile {
+    padding: 14px;
+  }
+
+  .bento__tile > span:not(.feature__icon) {
+    font-size: 0.82rem;
+  }
+}
+
+/* Tiles lean toward the mouse with a soft glare (see TiltZone). */
+.tilt {
+  position: relative;
+}
+
+.tilt[data-tilting] {
+  transform: perspective(900px) rotateX(calc(var(--ty, 0) * -5deg)) rotateY(calc(var(--tx, 0) * 6deg)) translateY(-3px);
+  transition: transform 0.1s linear, box-shadow 0.25s var(--ease-out);
+}
+
+.tilt:not(figure)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at calc((var(--tx, 0) + 1) * 50%) calc((var(--ty, 0) + 1) * 50%), rgba(255, 255, 255, 0.32), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-out);
+  pointer-events: none;
+}
+
+.tilt[data-tilting]::after {
+  opacity: 1;
+}
+
+.theme-grid__item[data-tilting] .card {
+  box-shadow: var(--shadow-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage__slide,
+  .story__typed::after {
+    animation: none;
+  }
+}

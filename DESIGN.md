@@ -54,6 +54,11 @@ One accent family (navy + gold). No purple gradients, no neon glows.
 - Motion: `--ease-out` for most, `--ease-spring` for things that pop (menus, dialogs, toasts).
   Animate only `transform` and `opacity`; respect `prefers-reduced-motion`.
 - Pressed buttons scale to about 0.97 for a tactile feel.
+- Landing 3D (`src/components/landing/`): the hero is a fan of real slides (`HeroStage`), "How it works"
+  is a pinned scroll story (`BuildStory`), tiles lean toward the mouse (`TiltZone`, `.tilt`). Motion runs
+  through CSS variables set by `useStageMotion` (no React re-renders); with reduced motion everything
+  shows its finished state, still. Pure CSS 3D, no WebGL, so it costs nothing and works in every browser.
+- Facts shown in landing examples must be true (the Colosseum sample matches Wikipedia and Britannica).
 
 ## Slides
 

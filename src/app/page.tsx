@@ -1,14 +1,16 @@
-import { Download, Languages, LayoutPanelTop, Link2, ListChecks, PenLine, Presentation, Shapes, WandSparkles, type LucideIcon } from "lucide-react";
+import { BadgeCheck, Download, ImageIcon, Languages, LayoutPanelTop, Link2, Shapes, WandSparkles, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
 import { AppShell } from "@/components/app/AppShell";
-import { HeroArt } from "@/components/art/HeroArt";
 import { CreateFlow } from "@/components/CreateFlow";
 import { DeckLibrary } from "@/components/DeckLibrary";
+import { BuildStory } from "@/components/landing/BuildStory";
 import { Faq } from "@/components/landing/Faq";
+import { HeroStage } from "@/components/landing/HeroStage";
 import { Pricing } from "@/components/landing/Pricing";
 import { TemplateGallery } from "@/components/landing/TemplateGallery";
 import { ThemeShowcase } from "@/components/landing/ThemeShowcase";
+import { TiltZone } from "@/components/landing/TiltZone";
 import { TryPrompt } from "@/components/landing/TryPrompt";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -27,10 +29,11 @@ interface Point {
   text: string;
 }
 
-const STEPS: Point[] = [
-  { icon: PenLine, title: "Describe it", text: "Type a topic, paste notes, or pick a template." },
-  { icon: ListChecks, title: "Shape the outline", text: "Review the plan. Rename, reorder, add or cut cards." },
-  { icon: Presentation, title: "Get your deck", text: "Cards are written and designed for you. Edit, present, share." },
+// The two promises other AI slide makers don't make get the big tiles.
+const CHECKED = [
+  { value: "189 m", where: "Wikipedia · Britannica", ok: true },
+  { value: "AD 80", where: "Wikipedia · Britannica", ok: true },
+  { value: "100–300", where: "No source, removed", ok: false },
 ];
 
 const FEATURES: Point[] = [
@@ -82,19 +85,21 @@ export default async function Home(props: PageProps<"/">) {
       <SiteHeader />
       <StructuredData />
       <main id="main">
-        <section className="landing-top">
-          <HeroArt className="landing-top__art" />
-          <p className="eyebrow">AI presentation maker</p>
-          <h1 className="landing-top__title">Beautiful slides, <em>in a minute</em></h1>
-          <p className="landing-top__subtitle">{SITE.description}</p>
-          <TryPrompt />
-          <div className="quick-chips" role="group" aria-label="Start from a template">
-            {TEMPLATES.map((t) => (
-              <Link key={t.id} href={signupFor(t.id)} className="quick-chip">
-                <TemplateIcon id={t.id} /> {t.name}
-              </Link>
-            ))}
+        <section className="hero3d">
+          <div className="hero3d__copy">
+            <p className="eyebrow">AI presentation maker</p>
+            <h1 className="landing-top__title">Beautiful slides, <em>in a minute</em></h1>
+            <p className="landing-top__subtitle">{SITE.description}</p>
+            <TryPrompt />
+            <div className="quick-chips" role="group" aria-label="Start from a template">
+              {TEMPLATES.map((t) => (
+                <Link key={t.id} href={signupFor(t.id)} className="quick-chip">
+                  <TemplateIcon id={t.id} /> {t.name}
+                </Link>
+              ))}
+            </div>
           </div>
+          <HeroStage />
         </section>
 
         <div className="page">
@@ -103,22 +108,11 @@ export default async function Home(props: PageProps<"/">) {
             <p className="muted center">Real cards made by {SITE.name}. Pick one to start.</p>
             <TemplateGallery hrefFor={signupFor} scroll />
           </section>
+        </div>
 
-          <section id="how" className="section">
-            <h2 className="section-heading center">From idea to deck in three steps</h2>
-            <ol className="steps">
-              {STEPS.map(({ icon: Icon, title, text }) => (
-                <li key={title} className="step">
-                  <span className="step__icon" aria-hidden="true"><Icon size={22} /></span>
-                  <span className="step__text">
-                    <strong>{title}</strong>
-                    <span className="muted">{text}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </section>
+        <BuildStory />
 
+        <div className="page">
           <section id="themes" className="section">
             <h2 className="section-heading center">{THEMES.length} themes, one click</h2>
             <p className="muted center">Switch the look of every card at once, any time.</p>
@@ -127,15 +121,34 @@ export default async function Home(props: PageProps<"/">) {
 
           <section className="section">
             <h2 className="section-heading center">Everything you need to present</h2>
-            <div className="feature-grid feature-grid--three">
+            <TiltZone className="bento">
+              <article className="bento__tile bento__tile--facts tilt">
+                <span className="feature__icon" aria-hidden="true"><BadgeCheck size={20} /></span>
+                <strong>Every number checked</strong>
+                <span>Facts come from real sources. A number goes on a slide only when the sources back it up, and the sources are listed under your deck.</span>
+                <ul className="fact-list" aria-label="Example checks">
+                  {CHECKED.map((c) => (
+                    <li key={c.value} className={c.ok ? "fact-list__row" : "fact-list__row fact-list__row--cut"}>
+                      {c.ok ? <BadgeCheck size={16} aria-label="Checked" /> : <X size={16} aria-label="Removed" />}
+                      <b>{c.value}</b>
+                      <span>{c.where}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+              <article className="bento__tile bento__tile--photo tilt">
+                <span className="feature__icon" aria-hidden="true"><ImageIcon size={20} /></span>
+                <strong>The right photo, never cut</strong>
+                <span>Free-licence photos matched to the right person or place, shown whole.</span>
+              </article>
               {FEATURES.map(({ icon: Icon, title, text }) => (
-                <div key={title} className="feature">
+                <article key={title} className="bento__tile tilt">
                   <span className="feature__icon" aria-hidden="true"><Icon size={20} /></span>
                   <strong>{title}</strong>
                   <span>{text}</span>
-                </div>
+                </article>
               ))}
-            </div>
+            </TiltZone>
           </section>
 
           <section id="pricing" className="section">
