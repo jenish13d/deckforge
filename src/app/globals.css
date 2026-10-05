@@ -15,9 +15,12 @@
   --gold: #d4af37;
   --brand-a: #082c4e;
   --brand-b: #1f6fa8;
-  --logo-back: #d4af37;
-  --logo-front: #0b3d6b;
-  --logo-dot: #1f6fa8;
+  --logo-sky: #0b3d6b;
+  --logo-sun: #d4af37;
+  --logo-sea: #1f6fa8;
+  --logo-foam: #fbf6ec;
+  --logo-wave: #8fc1e6;
+  --logo-accent: #b08a26;
   --art-bar-a: #5d86b1;
   --art-bar-b: #cfdced;
   --art-glow-a: #cfe0f1;
@@ -3191,6 +3194,10 @@ a.quick-chip {
 
 .logo {
   font-size: 1.2rem;
+}
+
+.logo__accent {
+  color: var(--logo-accent);
 }
 
 .bravo {

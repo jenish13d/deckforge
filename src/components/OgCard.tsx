@@ -1,4 +1,5 @@
 import { SITE } from "@/lib/site";
+import { BrandMark, MARK_COLORS } from "./BrandMark";
 
 // Shared layout for link-preview images (rendered by next/og, so inline styles only).
 
@@ -19,13 +20,11 @@ export function OgCard({ eyebrow, title, footer }: { eyebrow: string; title: str
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-        <svg width="56" height="56" viewBox="0 0 32 32">
-          <rect x="2" y="8" width="21" height="15" rx="4" fill="#d4af37" />
-          <rect x="8" y="12" width="22" height="16" rx="4" fill="#ffffff" />
-          <path d="M13.5 18h11M13.5 22h7" stroke="#0b3d6b" strokeWidth="2.2" strokeLinecap="round" />
-          <circle cx="26" cy="6.5" r="4" fill="#6aa8e0" />
-        </svg>
-        <span style={{ fontSize: 40, fontWeight: 700 }}>{SITE.name}</span>
+        <BrandMark size={60} colors={MARK_COLORS.dark} />
+        <span style={{ display: "flex", fontSize: 40, fontWeight: 700 }}>
+          {SITE.name.slice(0, -3)}
+          <span style={{ color: "#d4af37" }}>{SITE.name.slice(-3)}</span>
+        </span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <span style={{ fontSize: 28, color: "#d4af37", letterSpacing: 3, textTransform: "uppercase" }}>{eyebrow}</span>
