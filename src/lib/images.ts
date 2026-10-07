@@ -56,6 +56,29 @@ interface OpenverseImage {
   height: number | null;
 }
 
+/** Credits and titles from photo sites can arrive HTML-escaped ("Sam &amp; Emer"). */
+export function decodeEntities(text: string): string {
+  return text
+    .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&");
+}
+
+/**
+ * The same photo at another size is still the same photo: Wikimedia thumbnails
+ * ("…/thumb/a/ab/File.jpg/1280px-File.jpg") and originals share the file name.
+ */
+export function photoKey(url: string): string {
+  const path = url.split("?")[0];
+  const m = /\/commons\/(?:thumb\/)?[0-9a-f]\/[0-9a-f]{2}\/([^/]+)/.exec(path);
+  return m ? decodeURIComponent(m[1]).toLowerCase() : path.toLowerCase();
+}
+
 const LICENSE_LABELS: Record<string, string> = { by: "CC BY", cc0: "CC0", pdm: "Public domain" };
 
 /** Wikimedia originals can be huge; ask for a 1280px-wide version instead. */
@@ -87,8 +110,8 @@ async function searchOpenverse(query: string, perPage: number): Promise<PhotoRes
     return {
       url: wikimediaSized(r.url, r.width),
       thumb: r.thumbnail,
-      alt: r.title || query,
-      credit: r.creator ? `${r.creator} (${license})` : license,
+      alt: decodeEntities(r.title || query),
+      credit: r.creator ? `${decodeEntities(r.creator)} (${license})` : license,
       creditUrl: r.foreign_landing_url,
       ...(r.width && r.height ? { width: r.width, height: r.height } : {}),
     };
@@ -131,7 +154,7 @@ interface FileInfo {
   creditUrl: string;
 }
 
-const stripTags = (html: string) => html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+const stripTags = (html: string) => decodeEntities(html.replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
 
 /** URL, size and credit of free Commons files (non-free and local files are left out). */
 async function fileInfo(files: string[]): Promise<Map<string, FileInfo>> {
@@ -208,21 +231,25 @@ export async function findWikiPhoto(
   const want = stems(query);
   // Words in nearly every caption (the subject's name) don't help tell photos apart.
   const everywhere = new Set([...want].filter((w) => media.filter((m) => stems(`${m.caption} ${m.file}`).has(w)).length > media.length / 2));
+  const used = new Set([...exclude].map(photoKey));
   const ranked = media
     .map((m, i) => {
       const have = stems(`${m.caption} ${m.file.replace(/[_.]/g, " ")}`);
       let score = 0;
       for (const w of want) if (have.has(w)) score += everywhere.has(w) ? 0.2 : 1;
       if (m.lead) score += cover ? 5 : -0.5;
+      // A caption that never names the subject is probably about someone or something else.
+      if (everywhere.size && m.caption && ![...everywhere].some((w) => have.has(w))) score -= 3;
       return { ...m, score, i };
     })
+    .filter((m) => m.score > -2 && !used.has(photoKey(m.file.replace(/^File:/, ""))))
     .sort((a, b) => b.score - a.score || a.i - b.i)
-    .slice(0, 8);
+    .slice(0, 30);
   const infos = await fileInfo(ranked.map((m) => m.file));
   for (const m of ranked) {
     const info = infos.get(m.file);
-    if (!info || exclude.has(info.url) || info.width < 700 || info.height < 450) continue;
-    return { url: info.url, alt: m.caption || query, credit: info.credit, creditUrl: info.creditUrl, width: info.width, height: info.height };
+    if (!info || used.has(photoKey(info.url)) || info.width < 700 || info.height < 450) continue;
+    return { url: info.url, alt: stripTags(m.caption) || query, credit: info.credit, creditUrl: info.creditUrl, width: info.width, height: info.height };
   }
   return null;
 }
@@ -244,13 +271,20 @@ export async function findPhoto(
     });
     if (photo) return photo;
   }
+  // A deck about a real subject (its main Wikipedia article) only takes outside photos whose
+  // title names that subject; otherwise a search for "Ronaldo Chelsea" can return a Chelsea player.
+  const subject = options.sources?.find((s) => s.kind === "wikipedia")?.title;
+  // The subject's last name is enough ("Ronaldo"); full names are often shortened in photo titles.
+  const surname = subject ? [...stems(subject.replace(/\(.*?\)/g, ""))].pop() : undefined;
+  const used = new Set([...exclude].map(photoKey));
+  const fits = (p: PhotoResult) => !used.has(photoKey(p.url)) && (!surname || stems(`${p.alt} ${p.creditUrl}`).has(surname));
   try {
     // Specific queries ("Lionel Messi Argentina 2006") can find nothing; drop words from the end until something matches.
     const words = query.trim().split(/\s+/);
     let first: PhotoResult | undefined;
     // At most three searches, and never fewer than two words.
     for (let n = words.length; n >= Math.max(Math.min(2, words.length), words.length - 2) && !first; n--) {
-      first = (await searchPhotos(words.slice(0, n).join(" "), exclude.size ? 6 : 1)).find((p) => !exclude.has(p.url));
+      first = (await searchPhotos(words.slice(0, n).join(" "), exclude.size || surname ? 10 : 1)).find(fits);
     }
     if (!first) return null;
     const { url, alt, credit, creditUrl, width, height } = first;

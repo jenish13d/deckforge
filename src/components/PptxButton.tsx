@@ -8,11 +8,13 @@ export function PptxButton({
   cards,
   theme,
   title,
+  badge = false,
   className = "button",
 }: {
   cards: CardContent[];
   theme: string;
   title: string;
+  badge?: boolean;
   className?: string;
 }) {
   const [state, setState] = useState<"idle" | "working" | "error">("idle");
@@ -25,7 +27,7 @@ export function PptxButton({
         setState("working");
         try {
           const { downloadPptx } = await import("@/lib/pptx");
-          await downloadPptx(cards, theme, title);
+          await downloadPptx(cards, theme, title, { badge });
           setState("idle");
         } catch (error) {
           console.error("PowerPoint export failed", error);

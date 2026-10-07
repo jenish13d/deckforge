@@ -55,6 +55,20 @@ describe("number checks", () => {
     expect(verifyCard(q, texts, "")[0].field).toBe("quote");
   });
 
+  it("only accepts a quote the sources show the person saying", () => {
+    const lead =
+      "Cristiano Ronaldo dos Santos Aveiro is a Portuguese professional footballer who plays as a forward for and captains the Saudi Pro League club Al-Nassr.";
+    const said = 'After the final, Ronaldo told reporters: "Your love makes me stronger and I will never stop fighting for this shirt."';
+    const src: SourceText[] = [{ title: "Cristiano Ronaldo", text: `${lead} ${said}`, group: "wikipedia" }];
+    // An encyclopedia sentence is not something Ronaldo said.
+    const fake = card({ layout: "quote", quote: lead, quoteAuthor: "Cristiano Ronaldo" });
+    expect(verifyCard(fake, src, "")[0].detail).toContain("not something");
+    const real = card({ layout: "quote", quote: "Your love makes me stronger and I will never stop fighting for this shirt.", quoteAuthor: "Cristiano Ronaldo" });
+    expect(verifyCard(real, src, "")).toEqual([]);
+    // The right words with the wrong person are rejected too.
+    expect(verifyCard({ ...real, quoteAuthor: "Lionel Messi" }, src, "")[0].field).toBe("quote");
+  });
+
   it("drops what can't be confirmed and falls back to a simpler layout", () => {
     const c = card({ stats: [{ value: "900+", label: "goals" }], subtitle: "A record 900 goals." });
     const stripped = stripUnverified(c, verifyCard(c, texts, ""), "Real Madrid");

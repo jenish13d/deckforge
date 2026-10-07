@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Deck" ADD COLUMN     "badge" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "credits" TEXT NOT NULL DEFAULT 'slide',
+ADD COLUMN     "endSlide" BOOLEAN NOT NULL DEFAULT false;

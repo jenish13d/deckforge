@@ -28,6 +28,8 @@ export function createRateLimiter(limit: number, windowMs: number, now: () => nu
 const HOUR = 60 * 60 * 1000;
 export const limits = {
   outline: createRateLimiter(30, HOUR),
+  setup: createRateLimiter(60, HOUR),
+  assist: createRateLimiter(60, HOUR),
   deck: createRateLimiter(10, HOUR),
   card: createRateLimiter(200, HOUR),
   auth: createRateLimiter(20, HOUR),

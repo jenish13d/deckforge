@@ -2,7 +2,17 @@
 
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
-import { FRAME_ASPECT, imageSrc, photoFit, showsImage, type CardContent, type CardImage } from "@/lib/cards";
+import { SITE } from "@/lib/site";
+import { FRAME_ASPECT, imageSrc, photoFit, plainTitle, showsImage, titleParts, type CardContent, type CardImage } from "@/lib/cards";
+
+/** A title with its *highlighted* words in the accent colour. */
+function Title({ text }: { text: string }) {
+  return (
+    <>
+      {titleParts(text).map((part, i) => (part.highlight ? <em key={i} className="card__hl">{part.text}</em> : part.text))}
+    </>
+  );
+}
 
 /**
  * Shrinks a card's text (via the --fit CSS variable) until it fits the slide, so
@@ -39,9 +49,12 @@ export function CardView({
   content,
   index = 0,
   preview = false,
+  badge = false,
 }: {
   content: CardContent;
   index?: number;
+  /** Show the small "Made with Slidezza" badge in the corner. */
+  badge?: boolean;
   /** Thumbnail inside a link or button: the photo credit is plain text, not a nested link. */
   preview?: boolean;
 }) {
@@ -56,6 +69,7 @@ export function CardView({
     photo && "card--with-image",
     fullBleed && "card--full-bleed",
     photo && !fullBleed && index % 2 === 1 && "card--image-left",
+    badge && "card--badged",
   ]
     .filter(Boolean)
     .join(" ");
@@ -89,16 +103,16 @@ export function CardView({
         <header className="card__head">
           {icon && <div className="card__icon" aria-hidden="true">{icon}</div>}
           {eyebrow && <p className="card__eyebrow">{eyebrow}</p>}
-          {layout !== "quote" && <h2 className="card__title">{title}</h2>}
+          {layout !== "quote" && <h2 className="card__title"><Title text={title} /></h2>}
         </header>
 
         {hasBody && (
           <div className="card__body">
             {layout === "quote" ? (
               <>
-                <blockquote className="card__quote">“{quote || title}”</blockquote>
+                <blockquote className="card__quote">“{quote || plainTitle(title)}”</blockquote>
                 {quoteAuthor && <p className="card__author">— {quoteAuthor}</p>}
-                {quote && title && <p className="card__subtitle">{title}</p>}
+                {quote && title && <p className="card__subtitle">{plainTitle(title)}</p>}
               </>
             ) : (
               !heroStat && subtitleEl
@@ -154,6 +168,14 @@ export function CardView({
         )}
       </div>
       {photo && <Photo photo={photo} fullBleed={fullBleed} linkCredit={!preview} />}
+      {badge &&
+        (preview ? (
+          <span className="card__badge">Made with <b>{SITE.name}</b></span>
+        ) : (
+          <a className="card__badge" href="/" target="_blank" rel="noopener">
+            Made with <b>{SITE.name}</b>
+          </a>
+        ))}
     </article>
   );
 }
@@ -209,12 +231,24 @@ function Photo({ photo, fullBleed, linkCredit }: { photo: CardImage; fullBleed: 
   );
 }
 
-export function CardPlaceholder({ title, failed, note }: { title: string; failed?: boolean; note?: string }) {
+export function CardPlaceholder({
+  title,
+  failed,
+  note,
+  active = true,
+}: {
+  title: string;
+  failed?: boolean;
+  note?: string;
+  /** Being written right now (false: waiting for its turn). */
+  active?: boolean;
+}) {
+  const status = failed ? "This card couldn't be written. Try regenerating it." : note || (active ? "Writing and checking the facts…" : "Waiting for its turn…");
   return (
-    <article className={`card card--placeholder${failed ? " card--failed" : ""}`}>
+    <article className={`card card--placeholder${failed ? " card--failed" : active ? " card--writing" : ""}`}>
       <div className="card__inner">
-        <h2 className="card__title">{title}</h2>
-        <p className="card__subtitle">{failed ? "This card couldn't be written. Try regenerating it." : note || "Writing…"}</p>
+        <h2 className="card__title">{plainTitle(title)}</h2>
+        <p className="card__subtitle">{status}</p>
         {!failed && (
           <div className="skeleton" aria-hidden="true">
             <span />

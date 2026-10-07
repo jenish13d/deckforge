@@ -3,9 +3,11 @@
 import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ClipboardPaste, Layers, LayoutTemplate, LoaderCircle, Plus, Sparkles, X, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { CardView } from "@/components/CardView";
+import { PlanningStage } from "@/components/create/PlanningStage";
+import { SetupStep } from "@/components/create/SetupStep";
 import { HeroStage } from "@/components/landing/HeroStage";
 import { ModePicker } from "@/components/ModePicker";
 import { SourcesList } from "@/components/SourcesList";
@@ -31,30 +33,6 @@ const SAMPLES = [
   "Introduction to climate change for 10-year-olds, with examples they can relate to",
   "Quarterly results for a small online shop: sales, best sellers, problems and next steps",
 ];
-
-// What the planner is doing, shown in turn while the outline is made.
-const PLANNING_STEPS = ["Reading your topic…", "Searching trusted sources…", "Checking the facts…", "Planning your cards…"];
-
-/** Skeleton outline with a rotating status line while the AI plans. */
-function Planning() {
-  const [step, setStep] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => setStep((s) => Math.min(s + 1, PLANNING_STEPS.length - 1)), 1800);
-    return () => clearInterval(timer);
-  }, []);
-  return (
-    <div className="planning" role="status">
-      <p className="planning__text">
-        <Sparkles size={16} aria-hidden="true" /> <span key={step}>{PLANNING_STEPS[step]}</span>
-      </p>
-      <ol className="planning__rows" aria-hidden="true">
-        {[72, 58, 66, 50].map((w, i) => (
-          <li key={i} style={{ "--i": i, "--w": `${w}%` } as React.CSSProperties}><span /><span /></li>
-        ))}
-      </ol>
-    </div>
-  );
-}
 
 let nextKey = 0;
 const toEditable = (outline: Outline): EditableCard[] =>
@@ -87,16 +65,28 @@ export function CreateFlow({
   const [busy, setBusy] = useState<"outline" | "deck" | null>(null);
   const [error, setError] = useState("");
   const [tab, setTab] = useState<"start" | "templates">("start");
+  const [stage, setStage] = useState<"start" | "setup">("start");
+  // The topic plus the chosen audience and focus: what the outline and every card are written from.
+  const [brief, setBrief] = useState("");
   const [placeholder, setPlaceholder] = useState("Describe your topic, audience and goal…");
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const sampleIndex = useRef(-1);
 
-  async function makeOutline(event: React.FormEvent) {
+  function startSetup(event: React.FormEvent) {
     event.preventDefault();
+    if (!prompt.trim()) return;
+    setError("");
+    setStage("setup");
+    window.scrollTo({ top: 0 });
+  }
+
+  async function makeOutline(audience: string, angle: string) {
+    const full = `${prompt.trim()}\n\nAudience: ${audience}\nFocus: ${angle}`;
+    setBrief(full);
     setBusy("outline");
     setError("");
     try {
-      const outline = await api<Outline & { sources: Source[]; researchId: string | null }>("/api/outline", { body: { prompt, cardCount } });
+      const outline = await api<Outline & { sources: Source[]; researchId: string | null }>("/api/outline", { body: { prompt: full, cardCount } });
       setTitle(outline.title);
       setCards(toEditable(outline));
       setResearch({ sources: outline.sources ?? [], id: outline.researchId ?? null });
@@ -116,7 +106,7 @@ export function CreateFlow({
         .filter((c) => c.title.trim())
         .map((c) => ({ title: c.title, points: c.points.split("\n").map((p) => p.trim()).filter(Boolean) }));
       const { id } = await api<{ id: string }>("/api/decks", {
-        body: { prompt, title, theme, mode, outline, researchId: research.id },
+        body: { prompt: brief || prompt, title, theme, mode, outline, researchId: research.id },
       });
       router.push(`/d/${id}/edit`);
     } catch (e) {
@@ -147,6 +137,23 @@ export function CreateFlow({
     focusPrompt();
   }
 
+  if (!cards && busy === "outline") return <PlanningStage topic={prompt.trim()} cardCount={cardCount} />;
+
+  if (!cards && stage === "setup") {
+    return (
+      <>
+        <SetupStep
+          topic={prompt.trim()}
+          cardCount={cardCount}
+          onCardCount={setCardCount}
+          onBack={() => setStage("start")}
+          onContinue={(audience, angle) => void makeOutline(audience, angle)}
+        />
+        {error && <p className="error center" role="alert">{error}</p>}
+      </>
+    );
+  }
+
   if (!cards) {
     return (
       <div className="create-start">
@@ -154,7 +161,7 @@ export function CreateFlow({
         {greetingName && <p className="create-start__hello">Ciao, {greetingName}!</p>}
         <h1 className="create-start__title">What do you want to <em>present</em>?</h1>
 
-        <form className="prompt-box" onSubmit={makeOutline}>
+        <form className="prompt-box" onSubmit={startSetup}>
           <textarea
             ref={promptRef}
             className="prompt-box__input"
@@ -183,15 +190,14 @@ export function CreateFlow({
             <button
               className="send-button"
               type="submit"
-              aria-label="Generate outline"
-              title="Generate outline"
+              aria-label="Continue"
+              title="Continue"
               disabled={busy !== null || !prompt.trim()}
             >
               {busy === "outline" ? <LoaderCircle size={20} className="spin" aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
             </button>
           </div>
         </form>
-        {busy === "outline" && <Planning />}
         {/\[[^\]]+\]/.test(prompt) && (
           <p className="muted small center">Replace the parts in [brackets] with your details for the best result.</p>
         )}
@@ -258,7 +264,7 @@ export function CreateFlow({
   return (
     <div className="outline-step">
       <div className="outline-step__main">
-        <button type="button" className="back-link" onClick={() => setCards(null)} disabled={busy !== null}>
+        <button type="button" className="back-link" onClick={() => { setCards(null); setStage("start"); }} disabled={busy !== null}>
           <ArrowLeft size={16} aria-hidden="true" /> Change topic
         </button>
         <h1 className="outline-panel__title">Shape your outline</h1>

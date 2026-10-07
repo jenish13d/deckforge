@@ -102,6 +102,23 @@ export function quoteInSource(quote: string, source: string): boolean {
   return found / windows >= 0.6;
 }
 
+/**
+ * Whether the sources show this as something the author actually said: the words must sit
+ * inside quotation marks in a source, with the author's name close by. Ordinary prose
+ * (like an encyclopedia's first sentence) is not a quote, even when it is word for word.
+ */
+export function quoteAttributed(quote: string, author: string, source: string): boolean {
+  const name = author.trim().split(/\s+/).filter((w) => w.length > 2).pop()?.toLowerCase();
+  if (!name) return false;
+  const spans = /[“"«„]([^“”"«»„]{12,800})[”"»“]/g;
+  for (let m = spans.exec(source); m; m = spans.exec(source)) {
+    if (!quoteInSource(quote, m[1])) continue;
+    const around = source.slice(Math.max(0, m.index - 400), m.index + m[0].length + 400).toLowerCase();
+    if (around.includes(name)) return true;
+  }
+  return false;
+}
+
 interface Field {
   field: string;
   text: string;
@@ -160,8 +177,15 @@ export function verifyCard(card: CardContent, texts: SourceText[], allowed: stri
     }
   }
   const all = texts.map((t) => t.text).join("\n");
-  if (card.layout === "quote" && card.quote && !quoteInSource(card.quote, `${all}\n${allowed}`)) {
-    problems.push({ field: "quote", detail: `The quote "${card.quote.slice(0, 120)}" isn't in the sources` });
+  if (card.layout === "quote" && card.quote && !quoteInSource(card.quote, allowed)) {
+    if (!quoteInSource(card.quote, all)) {
+      problems.push({ field: "quote", detail: `The quote "${card.quote.slice(0, 120)}" isn't in the sources` });
+    } else if (!quoteAttributed(card.quote, card.quoteAuthor, all)) {
+      problems.push({
+        field: "quote",
+        detail: `"${card.quote.slice(0, 120)}" is the sources' own wording, not something ${card.quoteAuthor || "anyone"} said; don't present it as a quote`,
+      });
+    }
   }
   return problems;
 }

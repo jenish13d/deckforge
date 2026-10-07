@@ -1,5 +1,5 @@
 import type { CallModel, ModelRequest } from "./ai";
-import { OutlineSchema, type GeneratedCard, type Outline } from "./cards";
+import { AssistSchema, OutlineSchema, SetupSchema, type GeneratedCard, type Outline } from "./cards";
 
 // Stand-in for the model when DEMO_AI=1: realistic-looking sample content so
 // the whole app can be tried and shown without an API key or any cost.
@@ -92,6 +92,20 @@ export const callDemo: CallModel = async <T,>(request: ModelRequest<T>): Promise
   // Demo decks skip research and fact checks (the sample text is labelled as illustrative).
   if (request.role === "research") return { factual: false, searches: [] } as T;
   if (request.role === "check") return { problems: [] } as T;
+  if ((request.schema as unknown) === AssistSchema) {
+    const message = /<request>\n([\s\S]*?)\n<\/request>/.exec(request.user)?.[1] ?? "";
+    const count = (request.context?.match(/^\d+\. /gm) ?? []).length;
+    return {
+      reply: "Demo mode: here's the change I'd make. Apply it to see it in your deck.",
+      actions: [{ type: "add", slide: count, title: message.slice(0, 80) || "A new slide", instruction: "", theme: "" }],
+    } as T;
+  }
+  if ((request.schema as unknown) === SetupSchema) {
+    return {
+      audiences: ["Students: a clear overview", "Colleagues: the key facts fast", "Clients: why it matters to them"],
+      angles: ["The big picture and main facts", "The story from start to today", "Lessons and what to do next"],
+    } as T;
+  }
   if ((request.schema as unknown) === OutlineSchema) {
     const count = Number(/exactly (\d+) cards/.exec(request.user)?.[1] ?? 6);
     const prompt = /<request>\n([\s\S]*?)\n<\/request>/.exec(request.user)?.[1] ?? "";

@@ -5553,70 +5553,6 @@ main:focus {
   }
 }
 
-/* Planning: a skeleton outline and what the AI is doing right now. */
-.planning {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: min(560px, 100%);
-}
-
-.planning__text {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 0;
-  color: var(--primary);
-  font-weight: 600;
-}
-
-.planning__text span {
-  animation: rise-in 0.3s var(--ease-out) both;
-}
-
-.planning__text svg {
-  color: var(--accent);
-}
-
-.planning__rows {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.planning__rows li {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-  animation: rise-in 0.4s var(--ease-out) both;
-  animation-delay: calc(var(--i) * 120ms);
-}
-
-.planning__rows span {
-  height: 10px;
-  border-radius: 5px;
-  background: linear-gradient(90deg, var(--primary-soft) 25%, color-mix(in srgb, var(--primary) 18%, var(--surface)) 50%, var(--primary-soft) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s linear infinite;
-}
-
-.planning__rows span:first-child {
-  width: var(--w);
-  height: 12px;
-}
-
-.planning__rows span:last-child {
-  width: calc(var(--w) - 18%);
-  opacity: 0.6;
-}
-
 /* Outline step: the outline on the left, look and quality on the right. */
 .create-page:has(.outline-step) {
   max-width: 1180px;
@@ -6116,4 +6052,605 @@ main:focus {
   body:has(.outline-step__go) .feedback {
     bottom: calc(150px + env(safe-area-inset-bottom));
   }
+}
+
+/* Highlighted title words ("The numbers *say it first*") take the theme's accent colour. */
+.card__hl {
+  color: var(--card-accent);
+  font-style: inherit;
+}
+
+/* ---------- Setup choices (between the topic and the outline) ---------- */
+.setup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(720px, 100%);
+  margin: 0 auto;
+  animation: rise-in 0.35s var(--ease-out) backwards;
+}
+
+.setup__topic {
+  margin: 4px 0 -8px;
+  color: var(--accent);
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+.setup__title {
+  margin: 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.setup__lead {
+  margin: -10px 0 4px;
+}
+
+.setup-q {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.setup-q__title {
+  float: left;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 0;
+  font-weight: 600;
+}
+
+.setup-q__options {
+  display: grid;
+  clear: both;
+  gap: 6px;
+}
+
+.setup-q__options--row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.setup-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.16s var(--ease-out), border-color 0.16s var(--ease-out), transform 0.12s var(--ease-out);
+  animation: rise-in 0.3s var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+
+.setup-option:hover {
+  background: var(--primary-soft);
+}
+
+.setup-option:active {
+  transform: scale(0.98);
+}
+
+.setup-option[aria-checked="true"] {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.setup-option__n {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.setup-option[aria-checked="true"] .setup-option__n {
+  background: var(--primary);
+  color: var(--primary-text);
+}
+
+.setup-option--custom {
+  color: var(--muted);
+  cursor: text;
+}
+
+.setup-option--custom.is-on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.setup-option__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  caret-color: var(--primary);
+}
+
+.setup-option__input:focus {
+  outline: none;
+}
+
+.setup-option--custom:focus-within {
+  border-color: var(--primary);
+}
+
+.setup-option--length {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.setup-option--length span {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.setup-q__skeleton {
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--bg) 25%, var(--primary-soft) 50%, var(--bg) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  animation-delay: calc(var(--i) * 120ms);
+}
+
+.setup__go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: center;
+  min-width: 240px;
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .setup-q {
+    padding: 14px;
+  }
+
+  .setup-q__options--row {
+    gap: 6px;
+  }
+
+  .setup-option--length {
+    padding: 10px;
+  }
+
+  .setup__go {
+    width: 100%;
+  }
+}
+
+/* ---------- Planning: drifting colour, slides assembling in 3D, live steps ---------- */
+.planning-stage {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  min-height: min(640px, calc(100dvh - 120px));
+  padding: 24px 0 40px;
+  overflow: hidden;
+  border-radius: 24px;
+}
+
+.planning-stage__glow {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  filter: blur(40px);
+  opacity: 0.9;
+}
+
+.planning-stage__glow span {
+  position: absolute;
+  width: 46%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation: glow-drift 9s ease-in-out infinite alternate;
+}
+
+.planning-stage__glow span:nth-child(1) {
+  top: 0;
+  left: 8%;
+  background: rgba(31, 111, 168, 0.32);
+}
+
+.planning-stage__glow span:nth-child(2) {
+  top: 10%;
+  right: 6%;
+  background: rgba(212, 175, 55, 0.3);
+  animation-delay: -3s;
+  animation-duration: 11s;
+}
+
+.planning-stage__glow span:nth-child(3) {
+  bottom: -10%;
+  left: 30%;
+  background: rgba(11, 61, 107, 0.22);
+  animation-delay: -6s;
+  animation-duration: 13s;
+}
+
+@keyframes glow-drift {
+  to {
+    transform: translate3d(12%, 10%, 0) scale(1.15);
+  }
+}
+
+.planning-stage__scene {
+  position: relative;
+  width: min(520px, 92%);
+  height: 230px;
+  perspective: 1100px;
+}
+
+.ghost-slide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  grid-template-rows: auto auto 1fr;
+  column-gap: 7%;
+  row-gap: 8px;
+  width: 62%;
+  aspect-ratio: 16 / 9;
+  padding: 5%;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 24px 50px -18px rgba(6, 26, 46, 0.35);
+  transform: translate(-50%, -50%) translate3d(calc((var(--i) - 1) * 34%), calc((var(--i) - 1) * -8%), calc(var(--i) * 60px - 120px))
+    rotateY(calc((1 - var(--i)) * 14deg)) rotateZ(calc((var(--i) - 1) * 4deg));
+  animation: ghost-bob 4.5s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -1.5s);
+}
+
+.ghost-slide:nth-child(2) {
+  z-index: 1;
+}
+
+@keyframes ghost-bob {
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+.ghost-slide span {
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--primary-soft) 25%, color-mix(in srgb, var(--gold) 35%, var(--surface)) 50%, var(--primary-soft) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s linear infinite;
+}
+
+.ghost-slide__title {
+  grid-column: 1;
+  height: 16px;
+}
+
+.ghost-slide__line {
+  grid-column: 1;
+  height: 8px;
+}
+
+.ghost-slide__line--short {
+  width: 70%;
+  align-self: start;
+}
+
+.ghost-slide__media {
+  grid-column: 2;
+  grid-row: 1 / 4;
+  border-radius: 8px !important;
+}
+
+.planning-stage__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(440px, 92%);
+  padding: 20px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 20px 44px -20px rgba(6, 26, 46, 0.35);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  backdrop-filter: saturate(160%) blur(12px);
+}
+
+.planning-stage__topic {
+  margin: 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.planning-steps {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.planning-steps__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  transition: color 0.3s var(--ease-out), opacity 0.3s var(--ease-out);
+}
+
+.planning-steps__item.is-next {
+  opacity: 0.45;
+}
+
+.planning-steps__item.is-now {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.planning-steps__item.is-done {
+  color: var(--text);
+}
+
+.planning-steps__mark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+}
+
+.planning-steps__item.is-now .planning-steps__mark {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.planning-steps__item.is-done .planning-steps__mark {
+  border-color: #1f7a4d;
+  background: #1f7a4d;
+  color: #fff;
+  animation: pop-in 0.25s var(--ease-out);
+}
+
+.planning-stage__note {
+  margin: 2px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planning-stage__glow span,
+  .ghost-slide,
+  .ghost-slide span {
+    animation: none;
+  }
+}
+
+/* ---------- Writing: living placeholders, slides that land softly ---------- */
+.card--writing {
+  isolation: isolate;
+}
+
+/* A slow sheen of the theme's colours sweeps across a slide while it's written. */
+.card--writing::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, color-mix(in srgb, var(--card-accent) 18%, transparent) 45%, rgba(255, 255, 255, 0.22) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: sheen 2.2s var(--ease-in-out) infinite;
+  pointer-events: none;
+}
+
+@keyframes sheen {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.card--writing .card__title {
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+.editor-card .card:not(.card--placeholder) {
+  animation: card-land 0.6s var(--ease-out) backwards;
+}
+
+@keyframes card-land {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: perspective(1200px) translateY(14px) rotateX(7deg) scale(0.985);
+  }
+}
+
+.writing__text span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.writing__sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card--writing::after,
+  .card--writing .card__title {
+    animation: none;
+  }
+
+  .editor-card .card:not(.card--placeholder) {
+    animation: fade-in 0.2s ease-out backwards;
+  }
+}
+
+/* "Made with Slidezza" in the corner of every slide (Free decks; Pro can turn it off). */
+.card__badge {
+  position: absolute;
+  right: 1.4cqi;
+  bottom: 1.4cqi;
+  z-index: 3;
+  padding: 0.5cqi 1.2cqi;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(8, 44, 78, 0.82);
+  color: #fff;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: max(1.05cqi, 8px);
+  font-weight: 500;
+  line-height: 1.3;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.card__badge b {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+a.card__badge:hover {
+  background: rgba(8, 44, 78, 0.95);
+}
+
+/* The photo credit moves up so the two never overlap. */
+.card--badged .card__credit {
+  bottom: 4.6cqi;
+}
+
+/* ---------- Deck settings ---------- */
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hairline);
+  cursor: pointer;
+}
+
+.settings__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings__text a {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+}
+
+.settings__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.settings__legend {
+  padding: 0;
+  font-weight: 600;
+}
+
+.settings__help {
+  margin: 0;
+}
+
+.settings__choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.16s var(--ease-out), background-color 0.16s var(--ease-out);
+}
+
+.settings__choice:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.settings__choice input {
+  margin-top: 3px;
+  accent-color: var(--primary);
+}
+
+.settings__choice span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Slides the deck adds by itself (credits, "Made with"), shown under the deck. */
+.auto-slides {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--border);
+}
+
+.auto-slides__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
 }

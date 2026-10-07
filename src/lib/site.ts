@@ -4,6 +4,8 @@ export const SITE = {
   description: "Describe your idea. We plan it, write it and design it, with a little Italian style. Then make it yours.",
   /** Shown in the footer and legal pages. Set NEXT_PUBLIC_CONTACT_EMAIL before launch. */
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "",
+  /** Shown on the "Made with" closing slide. Set NEXT_PUBLIC_SITE_DOMAIN when a custom domain is live. */
+  domain: process.env.NEXT_PUBLIC_SITE_DOMAIN || "slidezza.vercel.app",
 };
 
 /** Only allow same-site paths as post-login redirects. */

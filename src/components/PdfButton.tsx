@@ -21,11 +21,13 @@ export function PdfButton({
   cards,
   theme,
   title,
+  badge = false,
   className = "button",
 }: {
   cards: CardContent[];
   theme: string;
   title: string;
+  badge?: boolean;
   className?: string;
 }) {
   const [state, setState] = useState<"idle" | "rendering" | "error">("idle");
@@ -95,7 +97,7 @@ export function PdfButton({
         <div ref={stage} className={`pdf-stage theme-${theme}`} aria-hidden="true">
           {cards.map((content, i) => (
             <div key={i} className="pdf-page">
-              <CardView content={content} index={i} />
+              <CardView content={content} index={i} badge={badge} preview />
             </div>
           ))}
         </div>

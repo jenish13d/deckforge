@@ -127,7 +127,7 @@ export function normalizeCard(raw: CardInput): CardContent {
     layout: known === "table" && table.rows.length === 0 ? "bullets" : known,
     eyebrow: clip((raw.eyebrow ?? "").trim(), 40),
     icon: [...raw.icon.trim()].slice(0, 2).join(""),
-    title: clip(raw.title.trim(), 120),
+    title: tidyHighlight(clip(raw.title.trim(), 120)),
     subtitle: clip(raw.subtitle.trim(), 240),
     items: raw.items
       .slice(0, MAX_ITEMS)
@@ -141,6 +141,28 @@ export function normalizeCard(raw: CardInput): CardContent {
     image,
   };
 }
+
+// Titles can highlight their key words, written as "The numbers *say it first*":
+// the starred words show in the theme's accent colour.
+
+/** Keeps one well-formed *highlight* and drops any other stray asterisks. */
+export function tidyHighlight(title: string): string {
+  const m = /\*([^*]+)\*/.exec(title);
+  const plain = (t: string) => t.replace(/\*/g, "");
+  if (!m || !m[1].trim()) return plain(title).replace(/\s+/g, " ").trim();
+  return `${plain(title.slice(0, m.index))}*${m[1].trim()}*${plain(title.slice(m.index + m[0].length))}`.replace(/\s+/g, " ").trim();
+}
+
+/** The title split into plain and highlighted parts. */
+export function titleParts(title: string): { text: string; highlight: boolean }[] {
+  return title
+    .split(/(\*[^*]+\*)/)
+    .filter(Boolean)
+    .map((part) => (part.startsWith("*") && part.endsWith("*") && part.length > 2 ? { text: part.slice(1, -1), highlight: true } : { text: part, highlight: false }));
+}
+
+/** The title without highlight marks, for plain-text uses. */
+export const plainTitle = (title: string) => title.replace(/\*/g, "");
 
 function isSafeLink(url: string): boolean {
   try {
@@ -183,6 +205,31 @@ export function normalizeOutline(raw: Outline, maxCards: number): Outline {
       })),
   };
 }
+
+/** Topic-specific choices offered before the outline: who the deck is for and its angle. */
+export const SetupSchema = z.object({
+  audiences: z.array(z.string()),
+  angles: z.array(z.string()),
+});
+
+/** What the editor's assistant proposes: a reply plus changes the user can apply. */
+export const AssistSchema = z.object({
+  reply: z.string(),
+  actions: z.array(
+    z.object({
+      type: z.enum(["add", "rewrite", "theme"]),
+      /** add: insert after this slide number (0 = at the start). rewrite: the slide to rewrite. */
+      slide: z.number(),
+      /** add: the new slide's title. */
+      title: z.string(),
+      /** rewrite: what to change. */
+      instruction: z.string(),
+      /** theme: the theme id. */
+      theme: z.string(),
+    }),
+  ),
+});
+export type Assist = z.infer<typeof AssistSchema>;
 
 export function emptyCard(title: string): CardContent {
   return {

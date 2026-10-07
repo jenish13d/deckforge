@@ -9,11 +9,13 @@ import {
   parseStored,
   type CardBrief,
   type CardContent,
+  type CardImage,
 } from "./cards";
 import { db } from "./db";
-import { findPhoto } from "./images";
+import { findPhoto, photoKey } from "./images";
 import { NO_RESEARCH, mergeResearch, parseSources, parseTexts, type Research, type Source } from "./research";
-import { DEFAULT_MODE, isModeId, type ModeId } from "./plans";
+import { DEFAULT_MODE, isModeId, planOf, type ModeId } from "./plans";
+import { isCreditsPlace, type CreditsPlace, type DeckLook } from "./slides";
 import type { ThemeId } from "./themes";
 
 const BriefSchema = OutlineSchema.shape.cards.element;
@@ -37,6 +39,8 @@ export interface DeckView {
   shared: boolean;
   /** Articles the deck's facts come from ([] for non-factual decks). */
   sources: Source[];
+  /** Badge, closing slide and photo credits (the badge is always on for Free accounts). */
+  look: DeckLook;
   cards: CardView[];
 }
 
@@ -53,7 +57,7 @@ function toCardView(row: { id: string; position: number; status: string; brief: 
 export async function getDeck(id: string): Promise<DeckView | null> {
   const deck = await db.deck.findUnique({
     where: { id },
-    include: { cards: { orderBy: { position: "asc" } }, research: { select: { sources: true } } },
+    include: { cards: { orderBy: { position: "asc" } }, research: { select: { sources: true } }, user: { select: { plan: true } } },
   });
   if (!deck) return null;
   return {
@@ -65,6 +69,11 @@ export async function getDeck(id: string): Promise<DeckView | null> {
     mode: isModeId(deck.mode) ? deck.mode : DEFAULT_MODE,
     shared: deck.shared,
     sources: parseSources(deck.research?.sources),
+    look: {
+      badge: deck.badge || !canRemoveBadge(deck.user.plan),
+      endSlide: deck.endSlide,
+      credits: isCreditsPlace(deck.credits) ? deck.credits : "slide",
+    },
     cards: deck.cards.map(toCardView),
   };
 }
@@ -163,6 +172,45 @@ async function deckResearch(deckId: string): Promise<Research> {
 }
 
 /** Generates (or regenerates) one card and stores the result. */
+// Photos being picked right now, per deck: cards are written in parallel, so two of them
+// could otherwise choose the same photo before either is saved.
+const reserved = new Map<string, Set<string>>();
+
+/** Photo URLs that other cards of the deck show now (read fresh: other cards may have just saved). */
+async function photosInUse(deckId: string, cardId: string): Promise<Set<string>> {
+  const rows = await db.card.findMany({ where: { deckId, NOT: { id: cardId } }, select: { content: true } });
+  const urls = rows.flatMap((r) => {
+    const image = parseStored(CardContentSchema, r.content)?.image;
+    return image ? [image.url] : [];
+  });
+  return new Set([...urls, ...(reserved.get(deckId) ?? [])]);
+}
+
+/** Finds a photo no other card of the deck uses, checking again after the search in case one was saved meanwhile. */
+async function uniquePhoto(
+  deckId: string,
+  cardId: string,
+  find: (used: ReadonlySet<string>) => Promise<CardImage | null>,
+): Promise<CardImage | null> {
+  let used = await photosInUse(deckId, cardId);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const photo = await find(used);
+    if (!photo) return null;
+    const now = await photosInUse(deckId, cardId);
+    const clash = [...now].some((url) => photoKey(url) === photoKey(photo.url));
+    if (!clash) {
+      const set = reserved.get(deckId) ?? new Set<string>();
+      set.add(photo.url);
+      reserved.set(deckId, set);
+      // The reservation only has to outlive the save that follows.
+      setTimeout(() => set.delete(photo.url), 60_000).unref?.();
+      return photo;
+    }
+    used = new Set([...now, photo.url]);
+  }
+  return null;
+}
+
 export async function generateDeckCard(
   deckId: string,
   cardId: string,
@@ -187,9 +235,10 @@ export async function generateDeckCard(
       research,
       region,
     });
-    // Don't reuse a photo that another card in the deck already shows.
-    const used = new Set(deck.cards.flatMap((c, i) => (i !== index && c.content?.image ? [c.content.image.url] : [])));
-    const content = { ...card, image: IMAGE_LAYOUTS.includes(card.layout) ? await findPhoto(imageQuery, used, { sources: research.sources, cover: index === 0 }) : null };
+    const image = IMAGE_LAYOUTS.includes(card.layout)
+      ? await uniquePhoto(deckId, cardId, (used) => findPhoto(imageQuery, used, { sources: research.sources, cover: index === 0 }))
+      : null;
+    const content = { ...card, image };
     const row = await db.card.update({
       where: { id: cardId },
       data: { status: "ready", content: JSON.stringify(content) },
@@ -248,7 +297,13 @@ export async function reorderCards(deckId: string, cardIds: string[]): Promise<v
   );
 }
 
-export async function updateDeck(deckId: string, data: { title?: string; theme?: ThemeId; shared?: boolean }): Promise<void> {
+/** Only paid plans can take the "Made with" badge off their slides. */
+export const canRemoveBadge = (plan: string) => planOf(plan) !== "free";
+
+export async function updateDeck(
+  deckId: string,
+  data: { title?: string; theme?: ThemeId; shared?: boolean; badge?: boolean; endSlide?: boolean; credits?: CreditsPlace },
+): Promise<void> {
   await db.deck.update({ where: { id: deckId }, data });
 }
 
@@ -265,6 +320,9 @@ export async function duplicateDeck(userId: string, deckId: string): Promise<{ i
       theme: deck.theme,
       mode: deck.mode,
       shared: deck.shared,
+      badge: deck.badge,
+      endSlide: deck.endSlide,
+      credits: deck.credits,
       researchId: deck.researchId,
       cards: {
         // Cards still being written are copied as failed so the copy never spends credits on its own.

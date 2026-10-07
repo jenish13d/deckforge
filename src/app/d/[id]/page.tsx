@@ -11,6 +11,7 @@ import { ViewerActions } from "@/components/ViewerActions";
 import { getCurrentUser } from "@/lib/auth";
 import { canView } from "@/lib/access";
 import { getDeck } from "@/lib/decks";
+import { deckSlides } from "@/lib/slides";
 import { SITE } from "@/lib/site";
 
 async function load(id: string) {
@@ -51,7 +52,10 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
     );
   }
 
-  const cards = deck.cards.flatMap((c) => (c.content ? [c.content] : []));
+  const cards = deckSlides(
+    deck.cards.flatMap((c) => (c.content ? [c.content] : [])),
+    deck.look,
+  );
   const isOwner = user?.id === deck.userId;
 
   return (
@@ -61,12 +65,12 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
           <BrandMark size={28} />
         </Link>
         <h1 className="toolbar__heading studio-bar__heading">{deck.title}</h1>
-        <ViewerActions deckId={deck.id} cards={cards} theme={deck.theme} title={deck.title} shared={deck.shared} isOwner={isOwner} />
+        <ViewerActions deckId={deck.id} cards={cards} theme={deck.theme} title={deck.title} shared={deck.shared} isOwner={isOwner} badge={deck.look.badge} />
       </header>
       <main id="main" className="page">
         <RevealDeck className={`deck theme-${deck.theme}`}>
           {cards.map((content, i) => (
-            <CardView key={i} content={content} index={i} />
+            <CardView key={i} content={content} index={i} badge={deck.look.badge} />
           ))}
         </RevealDeck>
         {cards.length === 0 && <p className="muted">This deck is still being written.</p>}

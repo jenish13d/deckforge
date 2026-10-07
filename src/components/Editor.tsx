@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, CopyPlus, Ellipsis, Eye, LoaderCircle, Lock, PartyPopper, Pencil, Play, Plus, Share2, Trash2, WandSparkles, X } from "lucide-react";
+import { ArrowDown, ArrowUp, CopyPlus, Settings2, Ellipsis, Eye, LoaderCircle, Lock, PartyPopper, Pencil, Play, Plus, Share2, Trash2, WandSparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -9,6 +9,7 @@ import { CardEditForm } from "@/components/CardEditForm";
 import { CardPlaceholder, CardView } from "@/components/CardView";
 import { BrandMark } from "@/components/BrandMark";
 import { DownloadMenu } from "@/components/DownloadMenu";
+import { DeckSettingsDialog } from "@/components/editor/DeckSettingsDialog";
 import { SlideRail } from "@/components/editor/SlideRail";
 import { ThemeDialog } from "@/components/editor/ThemeDialog";
 import { ModePicker } from "@/components/ModePicker";
@@ -19,17 +20,23 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Menu } from "@/components/ui/Menu";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { useToast } from "@/components/ui/Toast";
-import { emptyCard, type CardContent } from "@/lib/cards";
+import { emptyCard, plainTitle, type CardContent } from "@/lib/cards";
 import { ApiError, api } from "@/lib/client";
 import type { CardView as CardData, DeckView } from "@/lib/decks";
 import { MODES, type ModeId } from "@/lib/plans";
+import { deckSlides, type DeckLook } from "@/lib/slides";
 import { THEMES, type ThemeId } from "@/lib/themes";
 
 // How many times a card waits out the AI's per-minute limit before giving up.
 const MAX_BUSY_RETRIES = 8;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-type Dialog = { kind: "add"; position: number } | { kind: "regenerate"; card: CardData } | { kind: "delete"; card: CardData } | { kind: "theme" };
+type Dialog =
+  | { kind: "add"; position: number }
+  | { kind: "regenerate"; card: CardData }
+  | { kind: "delete"; card: CardData }
+  | { kind: "theme" }
+  | { kind: "settings" };
 
 function without<T>(record: Record<string, T>, key: string): Record<string, T> {
   const copy = { ...record };
@@ -43,6 +50,7 @@ export function Editor({
   allowedModes,
   parallel = 3,
   photosEnabled = false,
+  canRemoveBadge = false,
 }: {
   initial: DeckView;
   initialCredits: number;
@@ -50,6 +58,8 @@ export function Editor({
   /** Cards written at once (1 on the free Gemini tier, which allows few requests per minute). */
   parallel?: number;
   photosEnabled?: boolean;
+  /** Paid plans can take the "Made with" badge off. */
+  canRemoveBadge?: boolean;
 }) {
   const [deck, setDeck] = useState(initial);
   const [credits, setCredits] = useState(initialCredits);
@@ -179,6 +189,11 @@ export function Editor({
     void generate(card.id, instructions || undefined, mode);
   }
 
+  function changeLook(patch: Partial<DeckLook>) {
+    setDeck((d) => ({ ...d, look: { ...d.look, ...patch } }));
+    void patchDeck(patch);
+  }
+
   function changeTheme(theme: ThemeId) {
     setDeck((d) => ({ ...d, theme }));
     void patchDeck({ theme });
@@ -204,7 +219,11 @@ export function Editor({
   }
 
   const readyCards = deck.cards.flatMap((c) => (c.content ? [c.content] : []));
+  // What viewers, the slideshow and downloads get: credits moved and the closing slide added as set.
+  const slides = deckSlides(readyCards, deck.look);
+  const extraSlides = slides.slice(readyCards.length);
   const writing = deck.cards.filter((c) => c.status === "pending").length;
+  const nowWriting = deck.cards.findIndex((c) => c.status === "pending" && busy[c.id]);
   const themeName = THEMES.find((t) => t.id === deck.theme)?.name ?? "Theme";
   const bravo = startedWriting && !bravoClosed && deck.cards.length > 0 && deck.cards.every((c) => c.status === "ready");
 
@@ -239,7 +258,7 @@ export function Editor({
             {deck.shared ? <Share2 size={16} aria-hidden="true" /> : <Lock size={16} aria-hidden="true" />}
             <span className="button__label">Share</span>
           </button>
-          <DownloadMenu cards={readyCards} theme={deck.theme} title={deck.title} />
+          <DownloadMenu cards={slides} theme={deck.theme} title={deck.title} badge={deck.look.badge} />
           <button
             type="button"
             className="button button--primary studio-bar__present"
@@ -252,6 +271,9 @@ export function Editor({
           <Menu label={{ text: "More options", content: <Ellipsis size={18} aria-hidden="true" /> }} buttonClassName="button button--icon">
             {(close) => (
               <>
+                <button type="button" className="menu__item" onClick={() => { close(); setDialog({ kind: "settings" }); }}>
+                  <Settings2 size={16} aria-hidden="true" /> Deck settings
+                </button>
                 <Link className="menu__item" href={`/d/${deck.id}`} target="_blank" onClick={close}>
                   <Eye size={16} aria-hidden="true" /> View as audience
                 </Link>
@@ -274,7 +296,19 @@ export function Editor({
         {writing > 0 && (
           <div className="writing writing--float" role="status">
             <p className="writing__text">
-              <LoaderCircle size={16} className="spin" aria-hidden="true" /> Writing card {deck.cards.length - writing + 1} of {deck.cards.length}…
+              <LoaderCircle size={16} className="spin" aria-hidden="true" />
+              <span>
+                {nowWriting >= 0 ? (
+                  <>
+                    Writing slide {nowWriting + 1}: <strong>{plainTitle(deck.cards[nowWriting].brief.title)}</strong>
+                  </>
+                ) : (
+                  `Writing card ${deck.cards.length - writing + 1} of ${deck.cards.length}…`
+                )}
+              </span>
+            </p>
+            <p className="writing__sub">
+              {deck.cards.length - writing} of {deck.cards.length} ready · facts checked against the sources
             </p>
             <div className="progress" aria-hidden="true">
               <span style={{ transform: `scaleX(${(deck.cards.length - writing) / deck.cards.length})` }} />
@@ -342,13 +376,14 @@ export function Editor({
                 />
               ) : card.content ? (
                 <div className={busy[card.id] ? "is-busy" : undefined}>
-                  <CardView content={card.content} index={i} />
+                  <CardView content={deck.look.credits === "end" ? slides[readyCards.indexOf(card.content)] ?? card.content : card.content} index={i} badge={deck.look.badge} />
                 </div>
               ) : (
                 <CardPlaceholder
                   title={card.brief.title}
                   failed={card.status === "failed" && !busy[card.id]}
                   note={waiting[card.id]}
+                  active={Boolean(busy[card.id])}
                 />
               )}
               {card.content && waiting[card.id] && <p className="status" role="status">{waiting[card.id]}</p>}
@@ -369,10 +404,26 @@ export function Editor({
             </div>
           )}
         </div>
+        {extraSlides.length > 0 && (
+          <section className="auto-slides" aria-label="Slides added automatically">
+            <p className="auto-slides__label">
+              <Settings2 size={14} aria-hidden="true" /> Added automatically ·{" "}
+              <button type="button" className="link-button" onClick={() => setDialog({ kind: "settings" })}>Deck settings</button>
+            </p>
+            <div className={`deck theme-${deck.theme}`}>
+              {extraSlides.map((content, i) => (
+                <CardView key={i} content={content} index={readyCards.length + i} badge={deck.look.badge} />
+              ))}
+            </div>
+          </section>
+        )}
         <SourcesList sources={deck.sources} />
       </main>
       </div>
 
+      {dialog?.kind === "settings" && (
+        <DeckSettingsDialog look={deck.look} canRemoveBadge={canRemoveBadge} onChange={changeLook} onClose={() => setDialog(null)} />
+      )}
       {dialog?.kind === "theme" && (
         <ThemeDialog
           value={deck.theme}
@@ -408,7 +459,7 @@ export function Editor({
       {dialog?.kind === "delete" && (
         <ConfirmDialog
           title="Delete this slide?"
-          message={`“${dialog.card.content?.title ?? dialog.card.brief.title}” will be removed from the deck.`}
+          message={`“${plainTitle(dialog.card.content?.title ?? dialog.card.brief.title)}” will be removed from the deck.`}
           confirmLabel="Delete"
           danger
           onConfirm={() => remove(dialog.card)}
@@ -416,7 +467,7 @@ export function Editor({
         />
       )}
 
-      {presenting && <Presenter cards={readyCards} theme={deck.theme} onClose={() => setPresenting(false)} />}
+      {presenting && <Presenter cards={slides} theme={deck.theme} badge={deck.look.badge} onClose={() => setPresenting(false)} />}
       {sharing && (
         <ShareDialog
           deckId={deck.id}

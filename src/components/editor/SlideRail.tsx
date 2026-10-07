@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { CardView } from "@/components/CardView";
+import { plainTitle } from "@/lib/cards";
 import type { CardView as CardData } from "@/lib/decks";
 
 /** Slide thumbnails beside the editor (laptops): shows where you are and jumps to a slide. */
@@ -34,7 +35,7 @@ export function SlideRail({ cards, theme }: { cards: CardData[]; theme: string }
     <nav className="slide-rail" aria-label="Slides">
       <ol className={`slide-rail__list theme-${theme}`}>
         {cards.map((card, i) => {
-          const title = card.content?.title ?? card.brief.title;
+          const title = plainTitle(card.content?.title ?? card.brief.title);
           return (
             <li key={card.id}>
               <button

@@ -2,7 +2,7 @@
 
 import type PptxGenJS from "pptxgenjs";
 
-import { imageSrc, photoFit, showsImage, type CardContent } from "./cards";
+import { imageSrc, photoFit, plainTitle, showsImage, titleParts, type CardContent } from "./cards";
 import { themeStyle, type ThemeStyle } from "./themes";
 import { SITE } from "@/lib/site";
 
@@ -150,10 +150,13 @@ function buildBlocks(card: CardContent, style: ThemeStyle, colors: Colors, x: nu
   }
   if (card.layout !== "quote") {
     const size = pt(card.layout === "title" ? (fullBleed ? 5.4 : 6.6) : card.layout === "section" ? 5.6 : 4.6);
-    const text = style.upperTitles ? card.title.toUpperCase() : card.title;
+    const upper = (t: string) => (style.upperTitles ? t.toUpperCase() : t);
+    const text = upper(plainTitle(card.title));
+    // Highlighted words keep the slide's accent colour, as on screen.
+    const runs = titleParts(card.title).map((part) => ({ text: upper(part.text), options: part.highlight ? { color: style.accent } : {} }));
     // Bold serif titles run wide (and wider still where Georgia is replaced), so allow for that.
     const th = textHeight(text, size, w, style.upperTitles ? 1.2 : 1.12, style.upperTitles ? 0.7 : 0.62);
-    add(th, (s, y) => s.addText(text, { x, y, w, h: th, fontFace: heading, fontSize: size, bold: !style.upperTitles, color: colors.title, valign: "top", margin: 0, lineSpacingMultiple: 0.95 }));
+    add(th, (s, y) => s.addText(runs, { x, y, w, h: th, fontFace: heading, fontSize: size, bold: !style.upperTitles, color: colors.title, valign: "top", margin: 0, lineSpacingMultiple: 0.95 }));
   }
 
   // --- Body
@@ -170,14 +173,14 @@ function buildBlocks(card: CardContent, style: ThemeStyle, colors: Colors, x: nu
   };
 
   if (card.layout === "quote") {
-    const quote = `“${card.quote || card.title}”`;
+    const quote = `“${card.quote || plainTitle(card.title)}”`;
     const qh = textHeight(quote, pt(3.6), bw - 0.5, 1.3);
     addBody(qh, (s, y) => {
       s.addShape(shapes.rect, { x: bx, y, w: 0.08, h: qh, fill: { color: style.accent }, line: { color: style.accent } });
       s.addText(quote, { x: bx + 0.4, y, w: bw - 0.4, h: qh, fontFace: heading, fontSize: pt(3.6), color: colors.text, valign: "top", margin: 0, lineSpacingMultiple: 1.1 });
     });
     if (card.quoteAuthor) addBody(0.4, (s, y) => s.addText(`— ${card.quoteAuthor}`, { x: bx + 0.48, y, w: bw, h: 0.4, fontFace: body, fontSize: pt(1.9), color: colors.muted, margin: 0 }));
-    if (card.quote && card.title) addBody(0.4, (s, y) => s.addText(card.title, { x: bx, y, w: bw, h: 0.4, fontFace: body, fontSize: pt(2.2), color: colors.muted, margin: 0 }));
+    if (card.quote && card.title) addBody(0.4, (s, y) => s.addText(plainTitle(card.title), { x: bx, y, w: bw, h: 0.4, fontFace: body, fontSize: pt(2.2), color: colors.muted, margin: 0 }));
   } else if (card.subtitle && !hero) {
     subtitle(card.layout === "title" ? 2.6 : 2.2);
   }
@@ -334,7 +337,7 @@ function buildBlocks(card: CardContent, style: ThemeStyle, colors: Colors, x: nu
 
 const total = (blocks: Block[]) => blocks.reduce((sum, b) => sum + b.height, 0);
 
-export async function buildPptx(cards: CardContent[], theme: string, title: string): Promise<PptxGenJS> {
+export async function buildPptx(cards: CardContent[], theme: string, title: string, options: { badge?: boolean } = {}): Promise<PptxGenJS> {
   const { default: Pptx } = await import("pptxgenjs");
   const pptx = new Pptx();
   pptx.layout = "LAYOUT_WIDE";
@@ -359,7 +362,7 @@ export async function buildPptx(cards: CardContent[], theme: string, title: stri
       slide.addImage({ data: await framedPhoto(photo, pw, H, fullBleed ? 0.92 : 0.5), x: px, y: 0, w: pw, h: H, altText: card.image.alt });
       if (card.image.credit) {
         slide.addText(`Photo: ${card.image.credit}`, {
-          x: px, y: H - 0.4, w: pw - 0.15, h: 0.3, align: "right", fontFace: SANS, fontSize: 9, color: "FFFFFF",
+          x: px, y: H - (options.badge ? 0.82 : 0.4), w: pw - 0.15, h: 0.3, align: "right", fontFace: SANS, fontSize: 9, color: "FFFFFF",
           hyperlink: card.image.creditUrl ? { url: card.image.creditUrl } : undefined, margin: 0,
         });
       }
@@ -406,12 +409,29 @@ export async function buildPptx(cards: CardContent[], theme: string, title: stri
       block.draw(slide, y);
       y += block.height;
     }
+    if (options.badge) addBadge(slide, pptx.ShapeType);
   }
   return pptx;
 }
 
-export async function downloadPptx(cards: CardContent[], theme: string, title: string): Promise<void> {
-  const pptx = await buildPptx(cards, theme, title);
+/** "Made with Slidezza" in the bottom-right corner, linking to the site. */
+function addBadge(slide: PptxGenJS.Slide, shapes: typeof PptxGenJS.prototype.ShapeType) {
+  const w = 1.9;
+  const h = 0.32;
+  const x = W - w - 0.18;
+  const y = H - h - 0.18;
+  slide.addShape(shapes.roundRect, { x, y, w, h, fill: { color: "082C4E", transparency: 15 }, line: { color: "FFFFFF", transparency: 65 }, rectRadius: 0.16 });
+  slide.addText(
+    [
+      { text: "Made with ", options: { color: "FFFFFF" } },
+      { text: SITE.name, options: { color: "D4AF37", bold: true } },
+    ],
+    { x, y, w, h, align: "center", valign: "middle", fontFace: SANS, fontSize: 9, margin: 0, hyperlink: { url: window.location.origin } },
+  );
+}
+
+export async function downloadPptx(cards: CardContent[], theme: string, title: string, options: { badge?: boolean } = {}): Promise<void> {
+  const pptx = await buildPptx(cards, theme, title, options);
   const safe = title.replace(/[^\p{L}\p{N} _-]+/gu, "").trim().slice(0, 80) || "deck";
   await pptx.writeFile({ fileName: `${safe}.pptx` });
 }

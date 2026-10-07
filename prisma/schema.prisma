@@ -65,6 +65,12 @@ model Deck {
   mode       String    @default("standard")
   // Whether anyone with the link can view the deck (the owner can always open it).
   shared     Boolean   @default(true)
+  // "Made with Slidezza" badge on the slides (only Pro decks can turn it off).
+  badge      Boolean   @default(true)
+  // A closing "Made with Slidezza" slide after the last card.
+  endSlide   Boolean   @default(false)
+  // Where photo credits go: "slide" (on each photo) or "end" (a credits slide at the end).
+  credits    String    @default("slide")
   // The research the deck's facts come from (null for personal or creative decks).
   researchId String?
   research   Research? @relation(fields: [researchId], references: [id], onDelete: SetNull)

@@ -12,7 +12,7 @@ import {
   type CallModel,
   type ModelRequest,
 } from "../ai";
-import { OutlineSchema } from "../cards";
+import { OutlineSchema, tidyHighlight, titleParts } from "../cards";
 import { callDemo } from "../demo-ai";
 
 function fakeModel(output: unknown) {
@@ -111,6 +111,23 @@ describe("deck variety", () => {
     expect(result.card.layout).toBe("columns");
   });
 
+  it("asks once more when a content card comes back as a bare title", async () => {
+    const thin = { ...card, layout: "section", items: [] };
+    const { call, requests } = fakeModel(thin);
+    const result = await generateCard({ deckTitle: "d", prompt: "p", outline, index: 1, mode: "quick", factCheck: false }, call);
+    expect(requests).toHaveLength(2);
+    expect(requests[1].user).toContain("almost nothing on it");
+    // Still thin after the second try: keep it rather than loop.
+    expect(result.card.layout).toBe("section");
+  });
+
+  it("keeps one *highlight* in titles and strips stray asterisks", () => {
+    expect(tidyHighlight("The numbers *say it first*")).toBe("The numbers *say it first*");
+    expect(tidyHighlight("*Five* Ballons *d'Or*")).toBe("*Five* Ballons d'Or");
+    expect(tidyHighlight("Stray * star")).toBe("Stray star");
+    expect(titleParts("A *b* c")).toEqual([{ text: "A ", highlight: false }, { text: "b", highlight: true }, { text: " c", highlight: false }]);
+  });
+
   it("leaves layouts alone when they differ or can't be swapped", () => {
     const base = { ...card, layout: "bullets" as const, eyebrow: "", image: null };
     expect(varyLayout(base, "stats").layout).toBe("bullets");
@@ -123,8 +140,9 @@ describe("deck variety", () => {
 
 describe("modes", () => {
   it("runs each card on the model of its mode", async () => {
+    const items = [{ heading: "a", text: "one" }, { heading: "b", text: "two" }, { heading: "c", text: "three" }];
     const { call, requests } = fakeModel({
-      layout: "bullets", icon: "", title: "t", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "", imageQuery: "",
+      layout: "bullets", icon: "", title: "t", subtitle: "", items, stats: [], quote: "", quoteAuthor: "", imageQuery: "",
     });
     for (const mode of ["quick", "standard", "premium"] as const) {
       await generateCard({ deckTitle: "d", prompt: "p", outline, index: 1, mode }, call);

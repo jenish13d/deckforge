@@ -1,7 +1,8 @@
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canView } from "@/lib/access";
-import { getDeck, ownsDeck, reorderCards, updateDeck } from "@/lib/decks";
+import { canRemoveBadge, getDeck, ownsDeck, reorderCards, updateDeck } from "@/lib/decks";
+import { isCreditsPlace } from "@/lib/slides";
 import { forbidden, jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { isThemeId } from "@/lib/themes";
 
@@ -22,7 +23,13 @@ export async function PATCH(request: Request, ctx: RouteContext<"/api/decks/[id]
   if (!body) return jsonError("Invalid JSON.", 400);
 
   const title = str(body.title, 120);
+  if (body.badge === false && !canRemoveBadge(user.plan)) {
+    return jsonError("Removing the Slidezza badge is part of Pro.", 403);
+  }
   await updateDeck(id, {
+    ...(typeof body.badge === "boolean" ? { badge: body.badge } : {}),
+    ...(typeof body.endSlide === "boolean" ? { endSlide: body.endSlide } : {}),
+    ...(isCreditsPlace(body.credits) ? { credits: body.credits } : {}),
     ...(title ? { title } : {}),
     ...(isThemeId(body.theme) ? { theme: body.theme } : {}),
     ...(typeof body.shared === "boolean" ? { shared: body.shared } : {}),

@@ -17,10 +17,13 @@ const IDLE_MS = 2200;
 export function Presenter({
   cards,
   theme,
+  badge = false,
   onClose,
 }: {
   cards: CardContent[];
   theme: string;
+  /** "Made with Slidezza" on each slide. */
+  badge?: boolean;
   onClose: () => void;
 }) {
   const [index, setIndex] = useState(0);
@@ -124,7 +127,7 @@ export function Presenter({
         }}
       >
         <div key={index} className={`presenter__slide presenter__slide--${direction === 1 ? "next" : "prev"}`}>
-          <CardView content={cards[index]} index={index} />
+          <CardView content={cards[index]} index={index} badge={badge} />
         </div>
       </div>
       <p className="presenter__hint">Tip: turn your phone sideways for bigger slides</p>
