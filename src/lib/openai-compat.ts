@@ -72,7 +72,15 @@ export async function callCompat<T>(provider: CompatProvider, request: ModelRequ
       model: provider.model,
       messages: [
         { role: "system", content: system },
-        { role: "user", content: request.user },
+        {
+          role: "user",
+          content: request.image
+            ? [
+                { type: "text", text: request.user },
+                { type: "image_url", image_url: { url: `data:${request.image.mime};base64,${request.image.data}` } },
+              ]
+            : request.user,
+        },
       ],
       ...(provider.openai
         ? { max_completion_tokens: 16000 }

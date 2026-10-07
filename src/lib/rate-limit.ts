@@ -30,6 +30,7 @@ export const limits = {
   outline: createRateLimiter(30, HOUR),
   setup: createRateLimiter(60, HOUR),
   assist: createRateLimiter(60, HOUR),
+  extract: createRateLimiter(40, HOUR),
   deck: createRateLimiter(10, HOUR),
   card: createRateLimiter(200, HOUR),
   auth: createRateLimiter(20, HOUR),

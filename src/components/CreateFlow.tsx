@@ -1,11 +1,13 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ClipboardPaste, Layers, LayoutTemplate, LoaderCircle, Plus, Sparkles, X, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ClipboardPaste, Layers, LayoutTemplate, Paperclip, Plus, Sparkles, X, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import { Spinner3D } from "@/components/Spinner3D";
 import { CardView } from "@/components/CardView";
+import { AttachmentChips, useAttachments } from "@/components/create/Attachments";
 import { PlanningStage } from "@/components/create/PlanningStage";
 import { SetupStep } from "@/components/create/SetupStep";
 import { HeroStage } from "@/components/landing/HeroStage";
@@ -15,6 +17,7 @@ import { TemplateIcon } from "@/components/TemplateIcon";
 import { ThemePicker } from "@/components/ThemePicker";
 import { MAX_CARDS, MIN_CARDS, type Outline } from "@/lib/cards";
 import { api } from "@/lib/client";
+import { MATERIAL_ACCEPT } from "@/lib/material";
 import { DEFAULT_MODE, cardCost, type ModeId } from "@/lib/plans";
 import type { Source } from "@/lib/research";
 import { TEMPLATES, type Template } from "@/lib/templates";
@@ -40,6 +43,7 @@ const toEditable = (outline: Outline): EditableCard[] =>
 
 export function CreateFlow({
   allowedModes,
+  allowedDepths = ["medium"],
   comingSoon = [],
   credits,
   greetingName,
@@ -47,6 +51,7 @@ export function CreateFlow({
   initialTheme = "milano",
 }: {
   allowedModes: ModeId[];
+  allowedDepths?: readonly ("low" | "medium" | "high")[];
   comingSoon?: ModeId[];
   credits: number;
   /** Shown as "Ciao, name!" above the prompt. */
@@ -66,27 +71,33 @@ export function CreateFlow({
   const [error, setError] = useState("");
   const [tab, setTab] = useState<"start" | "templates">("start");
   const [stage, setStage] = useState<"start" | "setup">("start");
+  const [depth, setDepth] = useState<"low" | "medium" | "high">("medium");
   // The topic plus the chosen audience and focus: what the outline and every card are written from.
   const [brief, setBrief] = useState("");
   const [placeholder, setPlaceholder] = useState("Describe your topic, audience and goal…");
   const promptRef = useRef<HTMLTextAreaElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const attach = useAttachments();
+  const [dragging, setDragging] = useState(false);
+  // With files attached, the topic can stay empty: the deck is built from them.
+  const topic = prompt.trim() || (attach.material.length ? `A presentation based on ${attach.material.map((m) => m.name).join(", ")}` : "");
   const sampleIndex = useRef(-1);
 
   function startSetup(event: React.FormEvent) {
     event.preventDefault();
-    if (!prompt.trim()) return;
+    if (!topic || attach.reading) return;
     setError("");
     setStage("setup");
     window.scrollTo({ top: 0 });
   }
 
   async function makeOutline(audience: string, angle: string) {
-    const full = `${prompt.trim()}\n\nAudience: ${audience}\nFocus: ${angle}`;
+    const full = `${topic}\n\nAudience: ${audience}\nFocus: ${angle}`;
     setBrief(full);
     setBusy("outline");
     setError("");
     try {
-      const outline = await api<Outline & { sources: Source[]; researchId: string | null }>("/api/outline", { body: { prompt: full, cardCount } });
+      const outline = await api<Outline & { sources: Source[]; researchId: string | null }>("/api/outline", { body: { prompt: full, cardCount, depth, material: attach.material } });
       setTitle(outline.title);
       setCards(toEditable(outline));
       setResearch({ sources: outline.sources ?? [], id: outline.researchId ?? null });
@@ -106,7 +117,7 @@ export function CreateFlow({
         .filter((c) => c.title.trim())
         .map((c) => ({ title: c.title, points: c.points.split("\n").map((p) => p.trim()).filter(Boolean) }));
       const { id } = await api<{ id: string }>("/api/decks", {
-        body: { prompt: brief || prompt, title, theme, mode, outline, researchId: research.id },
+        body: { prompt: brief || prompt, title, theme, mode, depth, outline, researchId: research.id },
       });
       router.push(`/d/${id}/edit`);
     } catch (e) {
@@ -137,15 +148,19 @@ export function CreateFlow({
     focusPrompt();
   }
 
-  if (!cards && busy === "outline") return <PlanningStage topic={prompt.trim()} cardCount={cardCount} />;
+  if (!cards && busy === "outline") return <PlanningStage topic={topic} cardCount={cardCount} files={attach.material.length} />;
 
   if (!cards && stage === "setup") {
     return (
       <>
         <SetupStep
-          topic={prompt.trim()}
+          topic={topic}
+          material={attach.material}
           cardCount={cardCount}
           onCardCount={setCardCount}
+          depth={depth}
+          onDepth={setDepth}
+          allowedDepths={allowedDepths}
           onBack={() => setStage("start")}
           onContinue={(audience, angle) => void makeOutline(audience, angle)}
         />
@@ -161,22 +176,68 @@ export function CreateFlow({
         {greetingName && <p className="create-start__hello">Ciao, {greetingName}!</p>}
         <h1 className="create-start__title">What do you want to <em>present</em>?</h1>
 
-        <form className="prompt-box" onSubmit={startSetup}>
+        <form
+          className={dragging ? "prompt-box is-dragging" : "prompt-box"}
+          onSubmit={startSetup}
+          onDragOver={(e) => {
+            if (!e.dataTransfer.types.includes("Files")) return;
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
+          }}
+          onDrop={(e) => {
+            if (!e.dataTransfer.files.length) return;
+            e.preventDefault();
+            setDragging(false);
+            attach.add(e.dataTransfer.files);
+          }}
+        >
           <textarea
             ref={promptRef}
             className="prompt-box__input"
             rows={3}
             maxLength={4000}
-            required
             aria-label="Your topic"
             placeholder={placeholder}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
+            onPaste={(e) => {
+              // A pasted screenshot or file is attached; pasted text goes in the box as usual.
+              if (e.clipboardData.files.length && !e.clipboardData.getData("text/plain")) {
+                e.preventDefault();
+                attach.add(e.clipboardData.files);
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) e.currentTarget.form?.requestSubmit();
             }}
           />
+          <AttachmentChips files={attach.files} onRemove={attach.remove} />
+          {dragging && <p className="prompt-box__drop" aria-hidden="true">Drop files to build your deck from them</p>}
           <div className="prompt-box__bar">
+            <input
+              ref={fileInput}
+              type="file"
+              multiple
+              hidden
+              accept={MATERIAL_ACCEPT}
+              onChange={(e) => {
+                if (e.target.files?.length) attach.add(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              className="attach-button"
+              onClick={() => fileInput.current?.click()}
+              aria-label="Attach files: PDF, Word, PowerPoint, Excel, text or photos"
+              title="Attach PDF, Word, PowerPoint, Excel, text or photos"
+            >
+              <Paperclip size={17} aria-hidden="true" />
+              <span className="attach-button__label">Add files</span>
+            </button>
             <label className="pill-select">
               <Layers size={15} aria-hidden="true" />
               <select aria-label="Number of cards" value={cardCount} onChange={(e) => setCardCount(Number(e.target.value))}>
@@ -186,15 +247,15 @@ export function CreateFlow({
               </select>
               <ChevronDown size={15} aria-hidden="true" className="pill-select__chevron" />
             </label>
-            <span className="prompt-box__hint">The outline is free</span>
+            <span className="prompt-box__hint">{attach.reading ? "Reading your files…" : "The outline is free"}</span>
             <button
               className="send-button"
               type="submit"
               aria-label="Continue"
               title="Continue"
-              disabled={busy !== null || !prompt.trim()}
+              disabled={busy !== null || !topic || attach.reading}
             >
-              {busy === "outline" ? <LoaderCircle size={20} className="spin" aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
+              {busy === "outline" ? <Spinner3D size={20} /> : <ArrowUp size={20} aria-hidden="true" />}
             </button>
           </div>
         </form>
@@ -339,7 +400,7 @@ export function CreateFlow({
             onClick={makeDeck}
             disabled={busy !== null || usedCards === 0 || cost > credits}
           >
-            {busy === "deck" ? <LoaderCircle size={18} className="spin" aria-hidden="true" /> : <Sparkles size={18} aria-hidden="true" />}
+            {busy === "deck" ? <Spinner3D size={18} /> : <Sparkles size={18} aria-hidden="true" />}
             {busy === "deck" ? "Creating…" : `Generate ${usedCards} cards`}
           </button>
         </div>

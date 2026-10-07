@@ -242,7 +242,8 @@ export async function findWikiPhoto(
       if (everywhere.size && m.caption && ![...everywhere].some((w) => have.has(w))) score -= 3;
       return { ...m, score, i };
     })
-    .filter((m) => m.score > -2 && !used.has(photoKey(m.file.replace(/^File:/, ""))))
+    // Inside slides, a photo must match something specific the card is about (the cover may use the lead photo).
+    .filter((m) => (cover ? m.score > -2 : m.score >= 1) && !used.has(photoKey(m.file.replace(/^File:/, ""))))
     .sort((a, b) => b.score - a.score || a.i - b.i)
     .slice(0, 30);
   const infos = await fileInfo(ranked.map((m) => m.file));
@@ -277,7 +278,13 @@ export async function findPhoto(
   // The subject's last name is enough ("Ronaldo"); full names are often shortened in photo titles.
   const surname = subject ? [...stems(subject.replace(/\(.*?\)/g, ""))].pop() : undefined;
   const used = new Set([...exclude].map(photoKey));
-  const fits = (p: PhotoResult) => !used.has(photoKey(p.url)) && (!surname || stems(`${p.alt} ${p.creditUrl}`).has(surname));
+  // The photo's title must share a specific word with the card's subject, not just the person's name.
+  const wanted = [...stems(query)].filter((w) => w !== surname);
+  const fits = (p: PhotoResult) => {
+    const have = stems(`${p.alt} ${p.creditUrl}`);
+    if (used.has(photoKey(p.url)) || (surname && !have.has(surname))) return false;
+    return wanted.length === 0 || wanted.some((w) => have.has(w));
+  };
   try {
     // Specific queries ("Lionel Messi Argentina 2006") can find nothing; drop words from the end until something matches.
     const words = query.trim().split(/\s+/);

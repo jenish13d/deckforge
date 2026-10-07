@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowDown, ArrowUp, CopyPlus, Palette, Settings2, Sparkles, Ellipsis, Eye, LoaderCircle, Lock, PartyPopper, Pencil, Play, Plus, Share2, Trash2, WandSparkles, X } from "lucide-react";
+import { ArrowDown, ArrowUp, CopyPlus, Palette, Settings2, Sparkles, Ellipsis, Eye, Lock, PartyPopper, Pencil, Play, Plus, Share2, Trash2, WandSparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Spinner3D } from "@/components/Spinner3D";
 import { CardEditForm } from "@/components/CardEditForm";
 import { CardPlaceholder, CardView } from "@/components/CardView";
 import { BrandMark } from "@/components/BrandMark";
@@ -286,7 +287,7 @@ export function Editor({
             {deck.shared ? <Share2 size={16} aria-hidden="true" /> : <Lock size={16} aria-hidden="true" />}
             <span className="button__label">Share</span>
           </button>
-          <DownloadMenu cards={slides} theme={deck.theme} title={deck.title} badge={deck.look.badge} />
+          <DownloadMenu cards={slides} theme={deck.theme} title={deck.title} badge={deck.look.badge} pptx={deck.pptx} />
           <button
             type="button"
             className="button button--primary studio-bar__present"
@@ -327,7 +328,7 @@ export function Editor({
         {writing > 0 && (
           <div className="writing writing--float" role="status">
             <p className="writing__text">
-              <LoaderCircle size={16} className="spin" aria-hidden="true" />
+              <Spinner3D size={18} />
               <span>
                 {nowWriting >= 0 ? (
                   <>

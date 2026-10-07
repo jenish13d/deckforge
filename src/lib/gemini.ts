@@ -58,7 +58,9 @@ export async function callGemini<T>(request: ModelRequest<T>, maxServerWait = MA
     try {
       const response = await client.models.generateContent({
         model: request.model,
-        contents: request.user,
+        contents: request.image
+          ? [{ role: "user", parts: [{ inlineData: { mimeType: request.image.mime, data: request.image.data } }, { text: request.user }] }]
+          : request.user,
         config: {
           systemInstruction,
           responseMimeType: "application/json",

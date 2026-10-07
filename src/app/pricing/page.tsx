@@ -3,8 +3,14 @@ import { Pricing } from "@/components/landing/Pricing";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getCurrentUser } from "@/lib/auth";
+import { PLAN_IDS, PLANS } from "@/lib/plans";
+import { SITE } from "@/lib/site";
 
-export const metadata = { title: "Pricing" };
+export const metadata = {
+  title: "Pricing",
+  description: `${SITE.name} pricing: ${PLAN_IDS.map((id) => `${PLANS[id].label} ${PLANS[id].price} with ${PLANS[id].monthlyCredits.toLocaleString("en-US")} credits a month`).join("; ")}. Outlines are free; failed slides are refunded.`,
+  alternates: { canonical: "/pricing" },
+};
 
 export default async function PricingPage() {
   const user = await getCurrentUser();

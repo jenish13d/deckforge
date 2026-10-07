@@ -2,11 +2,12 @@ import { redirect } from "next/navigation";
 
 import { AccountDataActions } from "@/components/AccountDataActions";
 import { ChangePasswordForm } from "@/components/ChangePasswordForm";
+import { LogoutButton } from "@/components/LogoutButton";
 import { PlanActions } from "@/components/PlanActions";
 import { AppShell } from "@/components/app/AppShell";
 import { getCurrentUser } from "@/lib/auth";
-import { billingConfigured, billingDemoEnabled } from "@/lib/billing";
-import { MODES, PLANS, planOf } from "@/lib/plans";
+import { billingConfigured, billingDemoEnabled, maxConfigured } from "@/lib/billing";
+import { MODES, PLANS, PLAN_IDS, planOf } from "@/lib/plans";
 
 export const metadata = { title: "Account" };
 
@@ -20,7 +21,10 @@ export default async function AccountPage(props: PageProps<"/account">) {
   return (
     <AppShell next="/account">
       <div className="page page--narrow">
-        <h1 className="page-title">Account</h1>
+        <div className="row row--between page-head">
+          <h1 className="page-title">Account</h1>
+          <LogoutButton className="button" />
+        </div>
         {upgraded && <p className="success" role="status">Grazie! Your Pro plan is active.</p>}
         {user.credits === 0 && !upgraded && (
           <p className="banner" role="alert">
@@ -55,7 +59,7 @@ export default async function AccountPage(props: PageProps<"/account">) {
         </section>
 
         <section className="pricing__plans">
-          {(["free", "pro"] as const).map((id) => (
+          {PLAN_IDS.map((id) => (
             <div key={id} className={`plan${id === "pro" ? " plan--highlight" : ""}${id === plan ? " plan--current" : ""}`}>
               <h3>{PLANS[id].label} · {PLANS[id].price}</h3>
               <p>{PLANS[id].monthlyCredits.toLocaleString()} credits every month</p>
@@ -68,6 +72,7 @@ export default async function AccountPage(props: PageProps<"/account">) {
         <PlanActions
           plan={plan}
           billing={billingConfigured()}
+          maxBilling={maxConfigured()}
           demo={billingDemoEnabled()}
           hasCustomer={Boolean(user.stripeCustomerId)}
           onWaitlist={Boolean(user.proWaitlistAt)}

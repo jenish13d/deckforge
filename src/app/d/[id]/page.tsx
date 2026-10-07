@@ -65,7 +65,7 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
           <BrandMark size={28} />
         </Link>
         <h1 className="toolbar__heading studio-bar__heading">{deck.title}</h1>
-        <ViewerActions deckId={deck.id} cards={cards} theme={deck.theme} title={deck.title} shared={deck.shared} isOwner={isOwner} badge={deck.look.badge} />
+        <ViewerActions deckId={deck.id} cards={cards} theme={deck.theme} title={deck.title} shared={deck.shared} isOwner={isOwner} badge={deck.look.badge} pptx={deck.pptx} />
       </header>
       <main id="main" className="page">
         <RevealDeck className={`deck theme-${deck.theme}`}>

@@ -1049,9 +1049,9 @@ a {
 
 .site-footer__inner {
   display: grid;
-  grid-template-columns: 2fr repeat(3, 1fr);
+  grid-template-columns: 1.6fr repeat(4, 1fr);
   gap: 24px;
-  max-width: 1040px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 40px 16px 16px;
 }
@@ -1130,7 +1130,7 @@ a {
   }
 
   .site-footer__inner {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .site-footer__brand {
@@ -2628,6 +2628,11 @@ a {
 
   .app ~ .feedback {
     bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+
+  /* On the create screen it would cover the send button; feedback stays on every other page. */
+  .app:has(.create-start) ~ .feedback {
+    display: none;
   }
 }
 
@@ -6893,4 +6898,351 @@ body:has(.assistant) .feedback {
 
 .report-form .button--primary {
   align-self: flex-start;
+}
+
+.pricing-cards--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .pricing-cards.pricing-cards--three {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.menu__item--locked {
+  justify-content: space-between;
+  color: var(--muted);
+}
+
+/* Attached files in the prompt box. */
+.attach-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.15s var(--ease-out), border-color 0.15s var(--ease-out), transform 0.12s var(--ease-out);
+}
+
+.attach-button:hover {
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+
+.attach-button:active {
+  transform: scale(0.97);
+}
+
+.prompt-box.is-dragging {
+  border-style: dashed;
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
+}
+
+.prompt-box__drop {
+  margin: 0;
+  padding: 4px 6px;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0 2px;
+  list-style: none;
+}
+
+.attachment {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 6px 6px 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  animation: attachment-in 0.35s var(--ease-out) backwards;
+}
+
+.attachment__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--primary);
+  perspective: 120px;
+}
+
+.attachment.is-reading .attachment__icon svg {
+  animation: page-turn 1.1s var(--ease-out) infinite;
+}
+
+.attachment.is-error {
+  border-color: color-mix(in srgb, #b42318 40%, var(--border));
+}
+
+.attachment.is-error .attachment__icon {
+  background: color-mix(in srgb, #b42318 12%, transparent);
+  color: #b42318;
+}
+
+.attachment__body {
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.attachment__name {
+  overflow: hidden;
+  max-width: 220px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.attachment__meta {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.attachment.is-error .attachment__meta {
+  color: #b42318;
+}
+
+/* A light sweeping across the chip while the file is read. */
+.attachment__scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--primary) 16%, transparent) 50%, transparent 70%);
+  background-size: 250% 100%;
+  animation: attachment-scan 1.4s linear infinite;
+}
+
+.attachment__remove {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.attachment__remove:hover {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text);
+}
+
+.setup__files {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: -4px 0 8px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+@keyframes attachment-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+}
+
+@keyframes attachment-scan {
+  from {
+    background-position: 125% 0;
+  }
+  to {
+    background-position: -125% 0;
+  }
+}
+
+@keyframes page-turn {
+  0% {
+    transform: rotateY(0deg);
+  }
+  60%,
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+@media (max-width: 560px) {
+  .attach-button__label {
+    display: none;
+  }
+
+  .attach-button {
+    padding: 6px 8px;
+  }
+
+  .attachment__name {
+    max-width: 150px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attachment,
+  .attachment__scan,
+  .attachment.is-reading .attachment__icon svg {
+    animation: none;
+  }
+}
+
+/* 3D loader: three slides turning around a centre (Spinner3D). Colours follow the text colour,
+   so it works on light panels and dark buttons alike. */
+.spinner3d {
+  display: inline-block;
+  flex: none;
+  width: var(--s);
+  height: var(--s);
+  vertical-align: -0.15em;
+  perspective: calc(var(--s) * 4);
+}
+
+.spinner3d__ring {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: spinner3d-turn 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.spinner3d__slide {
+  position: absolute;
+  top: 22%;
+  left: 8%;
+  width: 84%;
+  height: 56%;
+  border-radius: calc(var(--s) * 0.1);
+  background: currentColor;
+  backface-visibility: visible;
+  transform: rotateY(calc(var(--k) * 120deg)) translateZ(calc(var(--s) * 0.3));
+}
+
+.spinner3d__slide:nth-child(2) {
+  background: var(--gold);
+}
+
+.spinner3d__slide:nth-child(3) {
+  background: color-mix(in srgb, currentColor 50%, transparent);
+}
+
+@keyframes spinner3d-turn {
+  from {
+    transform: rotateX(-16deg) rotateY(0deg);
+  }
+  to {
+    transform: rotateX(-16deg) rotateY(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner3d__ring {
+    animation-duration: 6s;
+  }
+}
+
+/* Setup: what the AI is doing while the choices load. */
+.setup__thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+  color: var(--primary);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+/* Use-case landing pages (/make/...). */
+.use-case__crumbs {
+  margin: 0 0 8px;
+}
+
+.use-case__crumbs a {
+  color: inherit;
+}
+
+.use-case__hero .button {
+  margin-top: 8px;
+}
+
+.use-case__prompts {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.use-case__prompts a {
+  display: block;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.15s var(--ease-out), transform 0.15s var(--ease-out);
+}
+
+.use-case__prompts a::before {
+  content: "“";
+  margin-right: 2px;
+  color: var(--accent);
+}
+
+.use-case__prompts a::after {
+  content: "”";
+  color: var(--accent);
+}
+
+.use-case__prompts a:hover {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  transform: translateY(-1px);
+}
+
+.use-case__more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.use-case__more a {
+  display: inline-block;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  text-decoration: none;
+}
+
+.use-case .step__icon {
+  font-weight: 700;
 }

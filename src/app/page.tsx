@@ -1,4 +1,4 @@
-import { BadgeCheck, Download, ImageIcon, Languages, LayoutPanelTop, Link2, Shapes, WandSparkles, X, type LucideIcon } from "lucide-react";
+import { BadgeCheck, Download, FileUp, ImageIcon, Languages, LayoutPanelTop, Link2, Shapes, WandSparkles, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
 import { AppShell } from "@/components/app/AppShell";
@@ -18,10 +18,13 @@ import { StructuredData } from "@/components/StructuredData";
 import { TemplateIcon } from "@/components/TemplateIcon";
 import { getCurrentUser } from "@/lib/auth";
 import { listDecks } from "@/lib/decks";
+import { PLANS, planOf } from "@/lib/plans";
 import { availableModes, premiumAvailable } from "@/lib/providers";
 import { SITE } from "@/lib/site";
 import { TEMPLATES, findTemplate } from "@/lib/templates";
 import { THEMES } from "@/lib/themes";
+
+export const metadata = { alternates: { canonical: "/" } };
 
 interface Point {
   icon: LucideIcon;
@@ -37,6 +40,7 @@ const CHECKED = [
 ];
 
 const FEATURES: Point[] = [
+  { icon: FileUp, title: "Build from your files", text: "Attach a PDF, Word, PowerPoint, Excel file or a photo of your notes." },
   { icon: WandSparkles, title: "Edit anything", text: "Change text by hand or rewrite one card with an instruction." },
   { icon: Shapes, title: "Smart layouts", text: "Bullets, columns, big numbers, timelines and quotes." },
   { icon: LayoutPanelTop, title: "Present mode", text: "Full-screen slides with keyboard controls." },
@@ -60,6 +64,7 @@ export default async function Home(props: PageProps<"/">) {
         <div className="create-page">
           <CreateFlow
             allowedModes={availableModes(user.plan)}
+            allowedDepths={PLANS[planOf(user.plan)].depths}
             comingSoon={premiumAvailable() ? [] : ["premium"]}
             credits={user.credits}
             greetingName={user.email.split("@")[0]}

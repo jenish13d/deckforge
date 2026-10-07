@@ -26,10 +26,12 @@ export const metadata: Metadata = {
     other: process.env.BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION } : undefined,
   },
   title: { default: `${SITE.name}: AI presentation maker`, template: `%s · ${SITE.name}` },
-  description: SITE.description,
+  description: SITE.seoDescription,
+  applicationName: SITE.name,
   openGraph: {
     title: `${SITE.name}: AI presentation maker`,
-    description: SITE.tagline,
+    description: SITE.seoDescription,
+    siteName: SITE.name,
     type: "website",
   },
 };

@@ -15,7 +15,7 @@ async function loadAdminData() {
   const [users, usersWeek, pro, decks, decksWeek, cards, feedbackCount, ratings, feedback, waitlist] = await Promise.all([
     db.user.count(),
     db.user.count({ where: { createdAt: { gte: weekAgo } } }),
-    db.user.count({ where: { plan: "pro" } }),
+    db.user.count({ where: { plan: { in: ["pro", "max"] } } }),
     db.deck.count(),
     db.deck.count({ where: { createdAt: { gte: weekAgo } } }),
     db.card.count({ where: { status: "ready" } }),
@@ -73,7 +73,7 @@ export default async function AdminPage() {
               <li key={w.id} className="feedback-item row row--between">
                 <a href={`mailto:${w.email}`}>{w.email}</a>
                 <span className="muted small">
-                  {w.plan === "pro" ? "now Pro · " : ""}
+                  {w.plan !== "free" ? `now ${w.plan === "max" ? "Max" : "Pro"} · ` : ""}
                   {w.proWaitlistAt?.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                 </span>
               </li>

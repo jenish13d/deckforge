@@ -106,6 +106,9 @@ export const callDemo: CallModel = async <T,>(request: ModelRequest<T>): Promise
   // Demo decks skip research and fact checks (the sample text is labelled as illustrative).
   if (request.role === "research") return { factual: false, searches: [] } as T;
   if (request.role === "check") return { problems: [] } as T;
+  if (request.role === "vision") {
+    return { text: "Demo mode: sample text read from your image.\nQuarterly sales grew in every region, led by online orders." } as T;
+  }
   if ((request.schema as unknown) === OutlineSchema) {
     const count = Number(/exactly (\d+) cards/.exec(request.user)?.[1] ?? 6);
     const prompt = /<request>\n([\s\S]*?)\n<\/request>/.exec(request.user)?.[1] ?? "";

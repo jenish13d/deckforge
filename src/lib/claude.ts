@@ -20,7 +20,17 @@ export function buildParams<T>(request: ModelRequest<T>) {
     model: request.model,
     max_tokens: 16000,
     system,
-    messages: [{ role: "user" as const, content: request.user }],
+    messages: [
+      {
+        role: "user" as const,
+        content: request.image
+          ? [
+              { type: "image" as const, source: { type: "base64" as const, media_type: request.image.mime, data: request.image.data } },
+              { type: "text" as const, text: request.user },
+            ]
+          : request.user,
+      },
+    ],
     output_config: {
       format: betaZodOutputFormat(request.schema),
       ...(request.effort ? { effort: request.effort } : {}),

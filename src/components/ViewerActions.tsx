@@ -17,6 +17,7 @@ export function ViewerActions({
   shared,
   isOwner,
   badge = false,
+  pptx = true,
 }: {
   deckId: string;
   cards: CardContent[];
@@ -25,6 +26,7 @@ export function ViewerActions({
   shared: boolean;
   isOwner: boolean;
   badge?: boolean;
+  pptx?: boolean;
 }) {
   const [presenting, setPresenting] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -38,7 +40,7 @@ export function ViewerActions({
       <button type="button" className="button" onClick={() => setSharing(true)} aria-label="Share">
         <Share2 size={16} aria-hidden="true" /> <span className="button__label">Share</span>
       </button>
-      <DownloadMenu cards={cards} theme={theme} title={title} badge={badge} />
+      <DownloadMenu cards={cards} theme={theme} title={title} badge={badge} pptx={pptx} />
       <button type="button" className="button button--primary studio-bar__present" onClick={() => setPresenting(true)} disabled={cards.length === 0} aria-label="Present">
         <Play size={16} aria-hidden="true" /> <span className="button__label">Present</span>
       </button>

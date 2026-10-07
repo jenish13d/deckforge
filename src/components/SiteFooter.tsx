@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth";
 import { SITE } from "@/lib/site";
+import { USE_CASES } from "@/lib/use-cases";
 import { Logo } from "./Logo";
 
 export async function SiteFooter() {
@@ -19,6 +20,12 @@ export async function SiteFooter() {
           <Link href="/#themes">Themes</Link>
           <Link href="/pricing">Pricing</Link>
           <Link href="/#faq">FAQ</Link>
+        </nav>
+        <nav className="site-footer__col" aria-label="Use cases">
+          <strong>Make</strong>
+          {USE_CASES.map((u) => (
+            <Link key={u.slug} href={`/make/${u.slug}`}>{u.name}</Link>
+          ))}
         </nav>
         <nav className="site-footer__col" aria-label="Account">
           <strong>Account</strong>

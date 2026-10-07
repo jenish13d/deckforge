@@ -10,7 +10,7 @@ import { siteUrl } from "./url";
 // Facts are then checked against all of them (see factcheck.ts): a number is shown only
 // when two independent sources agree. Personal or creative topics skip research.
 
-export const SourceSchema = z.object({ title: z.string(), url: z.string(), kind: z.enum(["wikipedia", "web"]).default("wikipedia") });
+export const SourceSchema = z.object({ title: z.string(), url: z.string(), kind: z.enum(["wikipedia", "web", "file"]).default("wikipedia") });
 export type Source = z.infer<typeof SourceSchema>;
 
 export interface SourceText {
@@ -27,6 +27,11 @@ export interface Research {
 }
 
 export const NO_RESEARCH: Research = { sources: [], webTexts: [] };
+
+// Files the user attached are stored like web pages, under "file:<name>". Their facts are the
+// user's own, so they're used as given (no second source needed).
+export const FILE_PREFIX = "file:";
+export const isFileText = (t: { title: string }) => t.title.startsWith(FILE_PREFIX);
 
 export const MAX_SOURCES = 3;
 const MAX_WEB = 6;
@@ -132,9 +137,17 @@ export function mergeResearch(...parts: Research[]): Research {
         if (!sources.some((s) => s.url === source.url)) sources.push(source);
         continue;
       }
+      if (source.kind === "file") {
+        const text = part.webTexts.find((t) => t.title === source.url);
+        if (text && !sources.some((s) => s.url === source.url)) {
+          sources.push(source);
+          webTexts.push(text);
+        }
+        continue;
+      }
       const site = new URL(source.url).hostname.replace(/^www\./, "");
       const text = part.webTexts.find((t) => t.title === site);
-      if (sites.has(site) || !text || webTexts.length >= MAX_WEB) continue;
+      if (sites.has(site) || !text || webTexts.filter((t) => !isFileText(t)).length >= MAX_WEB) continue;
       sites.add(site);
       sources.push(source);
       webTexts.push(text);
@@ -200,6 +213,8 @@ export function relevantExcerpt(texts: SourceText[], query: string, maxChars: nu
         // The opening paragraph summarises the subject; facts with numbers are what slides need.
         if (s === 0 && i === 0) score += 3;
         if (/\d/.test(text)) score += 0.5;
+        // The user's own files come first when they match.
+        if (score >= 1 && isFileText(t)) score += 2;
         return { s, i, text, title: t.title, score };
       }),
   );

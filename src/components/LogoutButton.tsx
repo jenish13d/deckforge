@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/client";
 
-export function LogoutButton() {
+export function LogoutButton({ className = "link-button" }: { className?: string }) {
   const router = useRouter();
   return (
     <button
       type="button"
-      className="link-button"
+      className={className}
       onClick={async () => {
         await api("/api/auth/logout", { method: "POST" });
         router.push("/");

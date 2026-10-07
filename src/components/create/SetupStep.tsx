@@ -1,9 +1,13 @@
 "use client";
 
-import { ArrowLeft, Pencil, Sparkles } from "lucide-react";
+import { ArrowLeft, Paperclip, Pencil, Sparkles } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 
+import { Spinner3D } from "@/components/Spinner3D";
 import { api } from "@/lib/client";
+import type { Material } from "@/lib/material";
+
+const NO_MATERIAL: Material[] = [];
 
 interface Choices {
   audiences: string[];
@@ -15,6 +19,14 @@ const GENERAL: Choices = {
   audiences: ["A general audience: a clear overview", "Students: easy to follow, with examples", "Colleagues or clients: the key facts fast"],
   angles: ["The big picture and the main facts", "The story, from the start to today", "What it means and what to do next"],
 };
+
+const DEPTHS = [
+  { id: "low", label: "Low", note: "Short and sharp" },
+  { id: "medium", label: "Medium", note: "Full, presentation-ready" },
+  { id: "high", label: "High", note: "Detailed, researched wider" },
+] as const;
+
+type Depth = (typeof DEPTHS)[number]["id"];
 
 const LENGTHS = [
   { cards: 6, label: "Quick", note: "6 cards" },
@@ -79,14 +91,24 @@ function Question({
 /** Gamma-style quick choices between the topic and the outline, tailored to the topic. */
 export function SetupStep({
   topic,
+  material = NO_MATERIAL,
   cardCount,
   onCardCount,
+  depth,
+  onDepth,
+  allowedDepths,
   onBack,
   onContinue,
 }: {
   topic: string;
+  /** Files the deck will be built from. */
+  material?: Material[];
   cardCount: number;
   onCardCount: (count: number) => void;
+  depth: Depth;
+  onDepth: (depth: Depth) => void;
+  /** Detail levels the plan includes (Free: Medium). */
+  allowedDepths: readonly Depth[];
   onBack: () => void;
   onContinue: (audience: string, angle: string) => void;
 }) {
@@ -96,7 +118,7 @@ export function SetupStep({
 
   useEffect(() => {
     let live = true;
-    api<Choices>("/api/setup", { body: { prompt: topic } })
+    api<Choices>("/api/setup", { body: { prompt: topic, material } })
       .then((c) => (c.audiences.length && c.angles.length ? c : GENERAL))
       .catch(() => GENERAL)
       .then((c) => {
@@ -108,7 +130,7 @@ export function SetupStep({
     return () => {
       live = false;
     };
-  }, [topic]);
+  }, [topic, material]);
 
   const loading = choices === null;
   return (
@@ -117,8 +139,18 @@ export function SetupStep({
         <ArrowLeft size={16} aria-hidden="true" /> Change topic
       </button>
       <p className="setup__topic">“{topic.length > 140 ? `${topic.slice(0, 140)}…` : topic}”</p>
+      {material.length > 0 && (
+        <p className="setup__files">
+          <Paperclip size={14} aria-hidden="true" /> Built from {material.length === 1 ? material[0].name : `${material.length} files`}
+        </p>
+      )}
       <h1 className="setup__title">A few quick choices</h1>
       <p className="muted setup__lead">So the deck lands with the people who will see it.</p>
+      {loading && (
+        <p className="setup__thinking" role="status">
+          <Spinner3D size={18} /> Reading your {material.length ? "files" : "topic"} for ideas…
+        </p>
+      )}
 
       <Question title="Who is it for?" options={choices?.audiences ?? []} value={audience} onChange={setAudience} loading={loading} />
       <Question title="What should it focus on?" options={choices?.angles ?? []} value={angle} onChange={setAngle} loading={loading} />
@@ -139,6 +171,31 @@ export function SetupStep({
               <span>{l.note}</span>
             </button>
           ))}
+        </div>
+      </fieldset>
+
+      <fieldset className="setup-q">
+        <legend className="setup-q__title">How much detail?</legend>
+        <div className="setup-q__options setup-q__options--row" role="radiogroup" aria-label="How much detail?">
+          {DEPTHS.map((d) => {
+            const locked = !allowedDepths.includes(d.id);
+            return (
+              <button
+                key={d.id}
+                type="button"
+                role="radio"
+                aria-checked={depth === d.id}
+                disabled={locked}
+                className="setup-option setup-option--length"
+                onClick={() => onDepth(d.id)}
+              >
+                <strong>
+                  {d.label} {locked && <span className="badge">Pro</span>}
+                </strong>
+                <span>{d.note}</span>
+              </button>
+            );
+          })}
         </div>
       </fieldset>
 

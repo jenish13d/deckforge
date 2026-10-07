@@ -3,18 +3,22 @@ import type { User } from "@prisma/client";
 import { db } from "./db";
 import { CREDIT_PERIOD_MS, PLANS, planOf } from "./plans";
 
-/** Fields for a fresh monthly allowance on the given plan. */
-export function allowance(plan: string, now = new Date()) {
+/**
+ * Fields for a new monthly allowance on the given plan. Plans with rollover (Max) keep
+ * unused credits, up to `rollover` months' worth in total; others start again from the allowance.
+ */
+export function allowance(plan: string, now = new Date(), unused = 0) {
+  const { monthlyCredits, rollover } = PLANS[planOf(plan)];
   return {
-    credits: PLANS[planOf(plan)].monthlyCredits,
+    credits: Math.min(monthlyCredits + Math.max(0, unused), monthlyCredits * rollover),
     creditsResetAt: new Date(now.getTime() + CREDIT_PERIOD_MS),
   };
 }
 
-/** Refills the user's credits if their period has ended. Unused credits don't roll over. */
+/** Refills the user's credits if their period has ended. */
 export async function refreshCredits(user: User, now = new Date()): Promise<User> {
   if (user.creditsResetAt > now) return user;
-  return db.user.update({ where: { id: user.id }, data: allowance(user.plan, now) });
+  return db.user.update({ where: { id: user.id }, data: allowance(user.plan, now, user.credits) });
 }
 
 /** Takes `amount` credits if the user has enough. Atomic, so parallel requests can't overspend. */

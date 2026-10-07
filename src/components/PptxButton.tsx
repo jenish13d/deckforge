@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Spinner3D } from "@/components/Spinner3D";
 import type { CardContent } from "@/lib/cards";
 
 export function PptxButton({
@@ -35,6 +36,7 @@ export function PptxButton({
         }
       }}
     >
+      {state === "working" && <Spinner3D size={16} />}
       {state === "working" ? "Creating PowerPoint…" : state === "error" ? "PowerPoint failed, try again" : "PowerPoint (.pptx)"}
     </button>
   );

@@ -1,5 +1,5 @@
 import { QUESTIONS } from "@/components/landing/Faq";
-import { PLANS } from "@/lib/plans";
+import { PLAN_IDS, PLANS } from "@/lib/plans";
 import { THEMES } from "@/lib/themes";
 import { SITE } from "@/lib/site";
 import { siteUrl } from "@/lib/url";
@@ -19,18 +19,25 @@ export function StructuredData() {
       applicationCategory: "BusinessApplication",
       applicationSubCategory: "AI presentation maker",
       operatingSystem: "Web browser",
-      description: SITE.description,
+      description: SITE.seoDescription,
       featureList: [
-        "Turn a topic or notes into a presentation with AI",
-        "Editable outline before slides are written",
-        `${THEMES.length} themes, 8 slide layouts (including tables and big numbers), free stock photos`,
+        "Turn a topic, notes or files (PDF, Word, PowerPoint, Excel, photos) into a presentation with AI",
+        "Quick setup questions and an editable outline before slides are written",
+        "Research from Wikipedia and the web, with sources listed and numbers checked against two sources",
+        "Low, Medium and High detail levels",
+        `${THEMES.length} themes, 8 slide layouts (including tables, timelines and big numbers), credited stock photos`,
+        "An assistant that adds or rewrites slides from a plain request",
         "Present mode, share links, PDF and PowerPoint download",
         "Works in any language",
       ],
-      offers: [
-        { "@type": "Offer", name: PLANS.free.label, price: "0", priceCurrency: "USD" },
-        { "@type": "Offer", name: PLANS.pro.label, price: "12", priceCurrency: "USD", description: `${PLANS.pro.monthlyCredits} credits per month` },
-      ],
+      offers: PLAN_IDS.map((id) => ({
+        "@type": "Offer",
+        name: PLANS[id].label,
+        price: PLANS[id].price.replace(/[^\d.]/g, ""),
+        priceCurrency: "USD",
+        description: `${PLANS[id].monthlyCredits.toLocaleString("en-US")} credits per month`,
+        url: `${url}/pricing`,
+      })),
     },
     {
       "@context": "https://schema.org",
@@ -39,6 +46,12 @@ export function StructuredData() {
       url,
       logo: `${url}/apple-icon`,
       ...(SITE.contactEmail ? { email: SITE.contactEmail } : {}),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: SITE.name,
+      url,
     },
     {
       "@context": "https://schema.org",

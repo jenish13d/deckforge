@@ -24,7 +24,7 @@ export default async function EditPage(props: PageProps<"/d/[id]/edit">) {
   if (deck.userId !== user.id) redirect(`/d/${id}`);
 
   return <Editor initial={deck} initialCredits={user.credits} allowedModes={availableModes(user.plan)}
-      parallel={parallelCards()}
+      parallel={parallelCards(user.plan)}
       photosEnabled={imagesEnabled()}
       canRemoveBadge={canRemoveBadge(user.plan)}
     />;

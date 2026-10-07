@@ -35,26 +35,55 @@ export function isModeId(value: unknown): value is ModeId {
   return typeof value === "string" && value in MODES;
 }
 
+export const DEPTH_LABELS = { low: "Low", medium: "Medium", high: "High" } as const;
+export type DepthId = keyof typeof DEPTH_LABELS;
+
 export const PLANS = {
   free: {
     label: "Free",
     price: "$0",
     monthlyCredits: 60,
     modes: ["quick", "standard"] as ModeId[],
+    depths: ["medium"] as DepthId[],
+    /** Unused credits can carry over up to this many months' worth. */
+    rollover: 1,
+    pptx: false,
   },
   pro: {
     label: "Pro",
     price: "$12 / month",
     monthlyCredits: 1000,
     modes: ["quick", "standard", "premium"] as ModeId[],
+    depths: ["low", "medium", "high"] as DepthId[],
+    rollover: 1,
+    pptx: true,
+  },
+  max: {
+    label: "Max",
+    price: "$29 / month",
+    monthlyCredits: 4000,
+    modes: ["quick", "standard", "premium"] as ModeId[],
+    depths: ["low", "medium", "high"] as DepthId[],
+    rollover: 2,
+    pptx: true,
   },
 } as const;
 
 export type PlanId = keyof typeof PLANS;
+export type PaidPlanId = Exclude<PlanId, "free">;
+export const PLAN_IDS = Object.keys(PLANS) as PlanId[];
 
 export function planOf(value: string): PlanId {
-  return value === "pro" ? "pro" : "free";
+  return value === "pro" || value === "max" ? value : "free";
 }
+
+export const isPaidPlan = (value: unknown): value is PaidPlanId => value === "pro" || value === "max";
+
+export function canUseDepth(plan: string, depth: DepthId): boolean {
+  return PLANS[planOf(plan)].depths.includes(depth);
+}
+
+export const canExportPptx = (plan: string) => PLANS[planOf(plan)].pptx;
 
 export function canUseMode(plan: string, mode: ModeId): boolean {
   return PLANS[planOf(plan)].modes.includes(mode);

@@ -27,10 +27,11 @@ export const geminiModel = (mode: "quick" | "standard") =>
     : process.env.GEMINI_STANDARD_MODEL || "gemini-flash-lite-latest";
 
 /** How many cards the editor writes at once: one at a time when only Gemini's free tier is set up. */
-export function parallelCards(): number {
+/** Cards written at once. Max plans get one more (priority generation). */
+export function parallelCards(plan = "free"): number {
   if (demoEnabled()) return 3;
   const others = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GROQ_API_KEY", "OPENROUTER_API_KEY", "ZAI_API_KEY"].some((k) => process.env[k]);
-  return others ? 2 : 1;
+  return (others ? 2 : 1) + (planOf(plan) === "max" ? 1 : 0);
 }
 
 export function premiumAvailable(): boolean {

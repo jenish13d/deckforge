@@ -9,6 +9,15 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 ## Features
 
 - **Prompt → outline → deck.** The outline step lets the user fix the structure before anything is written.
+- **Build from files:** attach up to 5 files (PDF, scanned PDF, Word .docx, PowerPoint .pptx, Excel .xlsx, CSV,
+  text/Markdown, photos). Documents are read in the browser (`src/lib/read-file.ts`; pdf.js's worker is copied
+  to `public/` on install); photos and scanned pages go to `/api/extract`, where a vision model reads them.
+  The text becomes "file" sources (`src/lib/material.ts`): the outline is planned across the whole material,
+  and figures from the user's own files are used as given by the fact check.
+- **Detail levels:** Low / Medium / High (Low and High on paid plans) set how much each card says and how wide
+  the research goes.
+- **Search pages:** `/make/...` guides for common searches (PDF to presentation, pitch decks, school, lessons,
+  reports), listed in the sitemap, footer and `llms.txt`, with FAQ and breadcrumb structured data.
 - **Cards appear one by one** (3 at a time); one failure doesn't sink the deck, and reloading resumes unfinished cards.
 - **8 card layouts** (title, section, bullets, columns, big numbers, quote, timeline, table), picked per card by
   the AI; the first card is always a cover, and neighbouring cards are kept from repeating a layout.
@@ -133,9 +142,10 @@ For real AI, put an [Anthropic API key](https://console.anthropic.com) in `.env`
 
 ### Setting up payments (Stripe)
 
-1. Create a Product "Pro" with a monthly recurring Price in the Stripe dashboard; put its id in `STRIPE_PRICE_PRO`.
+1. Create Products "Pro" and "Max" with monthly recurring Prices in the Stripe dashboard; put their ids in
+   `STRIPE_PRICE_PRO` and `STRIPE_PRICE_MAX` (Max checkout stays hidden until its price is set).
 2. Add a webhook endpoint `https://<your-domain>/api/billing/webhook` for `checkout.session.completed`,
-   `invoice.paid` and `customer.subscription.deleted`; put its signing secret in `STRIPE_WEBHOOK_SECRET`.
+   `invoice.paid`, `customer.subscription.updated` and `customer.subscription.deleted`; put its signing secret in `STRIPE_WEBHOOK_SECRET`.
 3. Put your secret key in `STRIPE_SECRET_KEY` and remove `BILLING_DEMO`.
 4. Turn on the customer portal in Stripe settings so users can cancel or change cards.
 

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { generateCard, GenerationError } from "./ai";
+import { generateCard, GenerationError, isDepth, type Depth } from "./ai";
 import {
   CardContentSchema,
   IMAGE_LAYOUTS,
@@ -14,7 +14,7 @@ import {
 import { db } from "./db";
 import { findPhoto, photoKey } from "./images";
 import { NO_RESEARCH, mergeResearch, parseSources, parseTexts, type Research, type Source } from "./research";
-import { DEFAULT_MODE, isModeId, planOf, type ModeId } from "./plans";
+import { DEFAULT_MODE, canExportPptx, isModeId, planOf, type ModeId } from "./plans";
 import { isCreditsPlace, type CreditsPlace, type DeckLook } from "./slides";
 import type { ThemeId } from "./themes";
 
@@ -35,6 +35,9 @@ export interface DeckView {
   prompt: string;
   theme: string;
   mode: ModeId;
+  depth: Depth;
+  /** The owner's plan includes PowerPoint download. */
+  pptx: boolean;
   /** Anyone with the link can view it. */
   shared: boolean;
   /** Articles the deck's facts come from ([] for non-factual decks). */
@@ -67,6 +70,8 @@ export async function getDeck(id: string): Promise<DeckView | null> {
     prompt: deck.prompt,
     theme: deck.theme,
     mode: isModeId(deck.mode) ? deck.mode : DEFAULT_MODE,
+    depth: isDepth(deck.depth) ? deck.depth : "medium",
+    pptx: canExportPptx(deck.user.plan),
     shared: deck.shared,
     sources: parseSources(deck.research?.sources),
     look: {
@@ -84,6 +89,7 @@ export async function createDeck(input: {
   prompt: string;
   theme: ThemeId;
   mode: ModeId;
+  depth?: Depth;
   outline: CardBrief[];
   /** Research saved with the outline (see saveResearch); ignored unless it's this user's. */
   researchId?: string | null;
@@ -99,6 +105,7 @@ export async function createDeck(input: {
       prompt: input.prompt,
       theme: input.theme,
       mode: input.mode,
+      depth: input.depth ?? "medium",
       researchId,
       cards: {
         create: input.outline.map((brief, position) => ({ position, brief: JSON.stringify(brief) })),
@@ -234,6 +241,7 @@ export async function generateDeckCard(
       previousLayout: deck.cards[index - 1]?.content?.layout,
       research,
       region,
+      depth: deck.depth,
     });
     const image = IMAGE_LAYOUTS.includes(card.layout)
       ? await uniquePhoto(deckId, cardId, (used) => findPhoto(imageQuery, used, { sources: research.sources, cover: index === 0 }))
@@ -323,6 +331,7 @@ export async function duplicateDeck(userId: string, deckId: string): Promise<{ i
       badge: deck.badge,
       endSlide: deck.endSlide,
       credits: deck.credits,
+      depth: deck.depth,
       researchId: deck.researchId,
       cards: {
         // Cards still being written are copied as failed so the copy never spends credits on its own.

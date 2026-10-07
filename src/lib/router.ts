@@ -48,6 +48,8 @@ const ORDER: Record<Role, ProviderId[]> = {
   outline: ["gemini", "groq", "openrouter", "zai"],
   card: ["groq", "gemini", "zai", "openrouter"],
   check: ["groq", "zai", "gemini", "openrouter"],
+  // Reading photos needs a model that sees images (Z.ai's free model doesn't).
+  vision: ["gemini", "groq", "openrouter"],
 };
 
 /** The providers to try, in order, for a request. */
@@ -64,7 +66,8 @@ export function providerOrder(request: Pick<ModelRequest<unknown>, "role" | "mod
     (id) =>
       configured(id) &&
       !(restricted && id === "gemini" && process.env.GEMINI_PAID !== "1") &&
-      !(restricted && id === "zai"),
+      !(restricted && id === "zai") &&
+      !(request.role === "vision" && id === "zai"),
   );
 }
 
@@ -78,8 +81,11 @@ function compatProvider(id: "openai" | "groq" | "openrouter" | "zai", role: Role
       id,
       apiKey,
       baseUrl: "https://api.groq.com/openai/v1",
-      // A reasoning model double-checks facts; a fast one writes.
-      model: role === "check" ? process.env.GROQ_CHECK_MODEL || "openai/gpt-oss-120b" : process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+      // A reasoning model double-checks facts; a fast one writes; a multimodal one reads photos.
+      model:
+        role === "check" ? process.env.GROQ_CHECK_MODEL || "openai/gpt-oss-120b"
+        : role === "vision" ? process.env.GROQ_VISION_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct"
+        : process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
     };
   }
   if (id === "openrouter") {
@@ -99,7 +105,7 @@ function runOn<T>(id: ProviderId, request: ModelRequest<T>, isLast: boolean): Pr
   const role = request.role ?? "card";
   if (id === "anthropic") {
     const own = request.provider === "anthropic";
-    const quickJob = role === "check" || role === "research";
+    const quickJob = role === "check" || role === "research" || role === "vision";
     return callClaude({
       ...request,
       provider: "anthropic",

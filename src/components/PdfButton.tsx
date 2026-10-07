@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { Spinner3D } from "@/components/Spinner3D";
 import type { CardContent } from "@/lib/cards";
 import { CardView } from "./CardView";
 
@@ -91,6 +92,7 @@ export function PdfButton({
           setState("rendering");
         }}
       >
+        {busy && <Spinner3D size={16} />}
         {busy ? `Creating PDF… ${progress}/${cards.length}` : state === "error" ? "PDF failed, try again" : "PDF"}
       </button>
       {busy && (

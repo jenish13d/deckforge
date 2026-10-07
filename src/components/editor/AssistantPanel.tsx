@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowUp, LoaderCircle, Palette, Plus, Sparkles, WandSparkles, X } from "lucide-react";
+import { ArrowUp, Palette, Plus, Sparkles, WandSparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { Spinner3D } from "@/components/Spinner3D";
 import type { Assist } from "@/lib/cards";
 import { api } from "@/lib/client";
 import { THEMES } from "@/lib/themes";
@@ -126,7 +127,7 @@ export function AssistantPanel({
         ))}
         {thinking && (
           <li className="assistant__msg assistant__msg--ai assistant__msg--thinking">
-            <LoaderCircle size={14} className="spin" aria-hidden="true" /> Thinking…
+            <Spinner3D size={16} /> Thinking…
           </li>
         )}
       </ol>

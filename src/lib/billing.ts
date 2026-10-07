@@ -4,9 +4,23 @@ import Stripe from "stripe";
 
 import { allowance } from "./credits";
 import { db } from "./db";
+import { type PaidPlanId, type PlanId, isPaidPlan } from "./plans";
+
+const priceFor = (plan: PaidPlanId) => (plan === "max" ? process.env.STRIPE_PRICE_MAX : process.env.STRIPE_PRICE_PRO);
+
+/** The plan a Stripe price belongs to. */
+function planForPrice(priceId: string | undefined): PaidPlanId | null {
+  if (!priceId) return null;
+  if (priceId === process.env.STRIPE_PRICE_MAX) return "max";
+  if (priceId === process.env.STRIPE_PRICE_PRO) return "pro";
+  return null;
+}
+
+/** Max can be bought once its Stripe price is set up too. */
+export const maxConfigured = () => billingConfigured() && Boolean(process.env.STRIPE_PRICE_MAX);
 
 // Paid plans through Stripe Checkout (subscriptions). Needs STRIPE_SECRET_KEY,
-// STRIPE_PRICE_PRO (a recurring price id) and STRIPE_WEBHOOK_SECRET.
+// STRIPE_PRICE_PRO (a recurring price id), STRIPE_WEBHOOK_SECRET, and STRIPE_PRICE_MAX for Max.
 
 let stripe: Stripe | null = null;
 
@@ -28,18 +42,26 @@ export const billingDemoEnabled = () => process.env.BILLING_DEMO === "1" && !pro
 
 export async function setPlan(
   userId: string,
-  plan: "free" | "pro",
+  plan: PlanId,
   extra: { stripeCustomerId?: string; stripeSubscriptionId?: string | null } = {},
+  /** Credits left from the period that just ended (kept on plans with rollover). */
+  unused = 0,
 ): Promise<void> {
-  await db.user.update({ where: { id: userId }, data: { plan, ...allowance(plan), ...extra } });
+  await db.user.update({ where: { id: userId }, data: { plan, ...allowance(plan, new Date(), unused), ...extra } });
 }
 
-export async function createCheckoutUrl(user: { id: string; email: string; stripeCustomerId: string | null }, origin: string) {
+export async function createCheckoutUrl(
+  user: { id: string; email: string; stripeCustomerId: string | null },
+  origin: string,
+  plan: PaidPlanId = "pro",
+) {
   const client = stripeClient();
-  if (!client || !process.env.STRIPE_PRICE_PRO) return null;
+  const price = priceFor(plan);
+  if (!client || !price) return null;
   const session = await client.checkout.sessions.create({
     mode: "subscription",
-    line_items: [{ price: process.env.STRIPE_PRICE_PRO, quantity: 1 }],
+    line_items: [{ price, quantity: 1 }],
+    metadata: { plan },
     client_reference_id: user.id,
     ...(user.stripeCustomerId ? { customer: user.stripeCustomerId } : { customer_email: user.email }),
     success_url: `${origin}/account?upgraded=1`,
@@ -66,7 +88,17 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
       const userId = session.client_reference_id;
       const customerId = idOf(session.customer);
       if (!userId || !customerId || session.mode !== "subscription") return;
-      await setPlan(userId, "pro", { stripeCustomerId: customerId, stripeSubscriptionId: idOf(session.subscription) });
+      const plan = isPaidPlan(session.metadata?.plan) ? session.metadata.plan : "pro";
+      await setPlan(userId, plan, { stripeCustomerId: customerId, stripeSubscriptionId: idOf(session.subscription) });
+      return;
+    }
+    case "customer.subscription.updated": {
+      // A switch between Pro and Max in the billing portal.
+      const subscription = event.data.object;
+      const plan = planForPrice(subscription.items.data[0]?.price?.id);
+      const customerId = idOf(subscription.customer);
+      const user = customerId ? await db.user.findUnique({ where: { stripeCustomerId: customerId } }) : null;
+      if (user && plan && subscription.status === "active" && user.plan !== plan) await setPlan(user.id, plan);
       return;
     }
     case "invoice.paid": {
@@ -75,7 +107,7 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
       if (invoice.billing_reason !== "subscription_cycle") return;
       const customerId = idOf(invoice.customer);
       const user = customerId ? await db.user.findUnique({ where: { stripeCustomerId: customerId } }) : null;
-      if (user?.plan === "pro") await setPlan(user.id, "pro");
+      if (user && isPaidPlan(user.plan)) await setPlan(user.id, user.plan, {}, user.credits);
       return;
     }
     case "customer.subscription.deleted": {

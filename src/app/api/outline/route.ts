@@ -1,4 +1,6 @@
-import { GenerationError, defaultCall, generateOutline } from "@/lib/ai";
+import { GenerationError, defaultCall, generateOutline, isDepth } from "@/lib/ai";
+import { parseMaterial } from "@/lib/material";
+import { canUseDepth } from "@/lib/plans";
 import { saveResearch } from "@/lib/decks";
 import { AiBusyError } from "@/lib/errors";
 import { getCurrentUser } from "@/lib/auth";
@@ -17,15 +19,23 @@ export async function POST(request: Request) {
   }
 
   const body = await readJson(request);
-  const prompt = str(body?.prompt, 4000);
+  const material = parseMaterial(body?.material);
+  // With files attached, the topic can be left empty: the deck is built from them.
+  const prompt = str(body?.prompt, 4000) || (material.length ? `A presentation based on ${material.map((m) => m.name).join(", ")}` : "");
   const cardCount = Number(body?.cardCount);
   if (!prompt) return jsonError("Describe what the deck is about.", 400);
+  if (Array.isArray(body?.material) && body.material.length > 0 && material.length === 0) {
+    return jsonError("No text could be read from your files. Try another file or paste the text.", 400);
+  }
   if (!Number.isInteger(cardCount) || cardCount < MIN_CARDS || cardCount > MAX_CARDS) {
     return jsonError(`Card count must be ${MIN_CARDS}-${MAX_CARDS}.`, 400);
   }
 
+  const depth = isDepth(body?.depth) ? body.depth : "medium";
+  if (!canUseDepth(user.plan, depth)) return jsonError("Low and High detail are part of Pro.", 403);
+
   try {
-    const { research, ...outline } = await generateOutline(prompt, cardCount, defaultCall, { region: clientCountry(request) });
+    const { research, ...outline } = await generateOutline(prompt, cardCount, defaultCall, { region: clientCountry(request), depth, material });
     const researchId = await saveResearch(user.id, research);
     return Response.json({ ...outline, sources: research.sources, researchId });
   } catch (error) {

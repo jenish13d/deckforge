@@ -2,7 +2,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { MAX_CARDS } from "@/lib/cards";
 import { createDeck, deleteDecks } from "@/lib/decks";
 import { jsonError, readJson, str, unauthorized } from "@/lib/http";
-import { DEFAULT_MODE, canUseMode, isModeId } from "@/lib/plans";
+import { DEFAULT_MODE, canUseDepth, canUseMode, isModeId } from "@/lib/plans";
+import { isDepth } from "@/lib/ai";
 import { premiumAvailable } from "@/lib/providers";
 import { clientKey, limits } from "@/lib/rate-limit";
 import { isThemeId } from "@/lib/themes";
@@ -33,9 +34,11 @@ export async function POST(request: Request) {
   if (outline.length === 0) return jsonError("The outline needs at least one card.", 400);
   if (!canUseMode(user.plan, mode)) return jsonError("Upgrade to Pro to use Premium mode.", 403);
   if (mode === "premium" && !premiumAvailable()) return jsonError("Premium mode is coming soon.", 403);
+  const depth = isDepth(body?.depth) ? body.depth : "medium";
+  if (!canUseDepth(user.plan, depth)) return jsonError("Low and High detail are part of Pro.", 403);
 
   const researchId = str(body?.researchId, 40) || null;
-  return Response.json(await createDeck({ userId: user.id, title, prompt, theme, mode, outline, researchId }), { status: 201 });
+  return Response.json(await createDeck({ userId: user.id, title, prompt, theme, mode, depth, outline, researchId }), { status: 201 });
 }
 
 /** Deletes several decks at once: `{ ids: string[] }`. Only the user's own decks are deleted. */

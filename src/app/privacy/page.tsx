@@ -5,7 +5,7 @@ export const metadata = { title: "Privacy policy" };
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy policy" updated="October 5, 2026">
+    <LegalPage title="Privacy policy" updated="October 7, 2026">
       <p>This policy explains what {SITE.name} collects, why, and the choices you have.</p>
 
       <h2>What we collect</h2>
@@ -27,11 +27,16 @@ export default function PrivacyPage() {
       <h2>Who we share it with</h2>
       <ul>
         <li>
-          <strong>AI providers:</strong> your prompts and outlines are sent to the AI services that write and check your
-          decks: Anthropic (Claude), Google (Gemini), Groq, OpenRouter and Z.ai (GLM), depending on which are available
+          <strong>AI providers:</strong> your prompts, outlines and the text of files you attach are sent to the AI services
+          that write and check your decks: Anthropic (Claude), OpenAI, Google (Gemini), Groq, OpenRouter and Z.ai (GLM), depending on which are available
           at the time. Some of them offer free tiers under which they may use submitted content to improve their models,
           so please don&apos;t enter sensitive or confidential information. If you are in the EU, EEA, UK or Switzerland,
           your content is not sent to Google&apos;s free tier or to Z.ai.
+        </li>
+        <li>
+          <strong>Files you attach:</strong> documents (PDF, Word, PowerPoint, Excel, text) are read in your browser; only
+          their text is sent to us, and it is stored with the deck so its slides can be checked against it. Photos and
+          scanned pages are sent as images to an AI provider to read their text; we don&apos;t store the images.
         </li>
         <li>
           <strong>Research:</strong> for factual topics, search terms based on your topic are sent to Wikipedia and to our
