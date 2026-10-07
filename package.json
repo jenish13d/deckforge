@@ -17,6 +17,7 @@
     "@anthropic-ai/sdk": "^0.131.0",
     "@google/genai": "^2.27.0",
     "@prisma/client": "^6.19.3",
+    "@vercel/analytics": "^2.0.1",
     "altcha": "^3.2.4",
     "altcha-lib": "^2.5.0",
     "html-to-image": "^1.11.13",
