@@ -13,6 +13,7 @@ export default function PrivacyPage() {
         <li><strong>Account details:</strong> your email address and a securely hashed version of your password. We never store your password itself.</li>
         <li><strong>Your content:</strong> the prompts, outlines and decks you create.</li>
         <li><strong>Billing details:</strong> if you upgrade, payments are handled by our payment provider. We receive your plan status, not your full card number.</li>
+        <li><strong>Pro and Max list:</strong> if you ask to hear when paid plans open, we keep your email and chosen plan, send a confirmation and one email when they open, and nothing else. Every email has a link to leave the list, which deletes your entry.</li>
         <li><strong>Technical data:</strong> basic request information such as IP address, used to keep the service secure and prevent abuse.</li>
       </ul>
 

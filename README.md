@@ -14,6 +14,9 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
   to `public/` on install); photos and scanned pages go to `/api/extract`, where a vision model reads them.
   The text becomes "file" sources (`src/lib/material.ts`): the outline is planned across the whole material,
   and figures from the user's own files are used as given by the fact check.
+- **Pro and Max list:** until payments are set up, "Get Pro" / "Get Max" lead to `/pro`, where anyone leaves an
+  email (`ProWaitlist`). They get a confirmation (when SMTP is set), every email has a leave link, and the
+  admin page has a button to email everyone once paid plans open.
 - **Detail levels:** Low / Medium / High (Low and High on paid plans) set how much each card says and how wide
   the research goes.
 - **Search pages:** `/make/...` guides for common searches (PDF to presentation, pitch decks, school, lessons,
@@ -167,7 +170,7 @@ Checks: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
 - **EU/UK:** name the business and a contact address in the Privacy policy; check whether you need an EU/UK
   representative (GDPR Art. 27) while the company is based outside the EU/UK.
 - **GitHub (free):** turn on Dependabot alerts, secret scanning and private vulnerability reporting in the
-  repository's Settings → Code security; CI, CodeQL and Dependabot updates are in `.github/`.
+  repository's Settings → Code security; CI, CodeQL, Dependabot updates, a gitleaks secret scan and a weekly Lighthouse check of the live site are in `.github/`.
 - Set `NEXT_PUBLIC_SITE_DOMAIN` once a custom domain is live (shown on the "Made with" closing slide).
 
 ## Next steps

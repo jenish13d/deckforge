@@ -29,7 +29,7 @@ export async function sendEmail(to: string, subject: string, text: string, html:
   await transport().sendMail({ from, to, subject, text, html });
 }
 
-const escapeHtml = (s: string) =>
+export const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 export function passwordResetEmail(link: string): { subject: string; text: string; html: string } {

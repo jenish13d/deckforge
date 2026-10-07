@@ -2,8 +2,11 @@ import { notFound, redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app/AppShell";
 import { isAdminEmail } from "@/lib/admin";
+import { LaunchEmailButton } from "@/components/LaunchEmailButton";
 import { getCurrentUser } from "@/lib/auth";
+import { billingConfigured } from "@/lib/billing";
 import { db } from "@/lib/db";
+import { emailEnabled } from "@/lib/email";
 
 export const metadata = { title: "Admin", robots: { index: false } };
 
@@ -22,11 +25,7 @@ async function loadAdminData() {
     db.feedback.count(),
     db.feedback.groupBy({ by: ["rating"], _count: true }),
     db.feedback.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
-    db.user.findMany({
-      where: { proWaitlistAt: { not: null } },
-      orderBy: { proWaitlistAt: "desc" },
-      select: { id: true, email: true, plan: true, proWaitlistAt: true },
-    }),
+    db.proWaitlist.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
   ]);
   return { users, usersWeek, pro, decks, decksWeek, cards, feedbackCount, ratings, feedback, waitlist };
 }
@@ -46,7 +45,7 @@ export default async function AdminPage() {
     { label: "Decks made", value: decks, note: `+${decksWeek} this week` },
     { label: "Cards written", value: cards, note: "all time" },
     { label: "Pro users", value: pro, note: "paying (or demo)" },
-    { label: "Want Pro", value: waitlist.length, note: "clicked Upgrade" },
+    { label: "Want Pro or Max", value: waitlist.length, note: "on the email list" },
     { label: "Feedback", value: feedbackCount, note: average ? `average ${MOODS[Math.round(average) - 1]} ${average.toFixed(1)}/4` : "no ratings yet" },
   ];
 
@@ -64,17 +63,22 @@ export default async function AdminPage() {
           ))}
         </div>
 
-        <h2 className="section-title">Want Pro</h2>
+        <h2 className="section-title">Pro and Max list</h2>
+        <LaunchEmailButton
+          waiting={waitlist.filter((w) => !w.notifiedAt).length}
+          ready={billingConfigured() && emailEnabled()}
+          why={!billingConfigured() ? "Set up payments first, so people can buy when they get the email." : !emailEnabled() ? "Set up email (SMTP) first." : ""}
+        />
         {waitlist.length === 0 ? (
-          <p className="muted">Nobody yet. People who click “Upgrade to Pro” (before payments are set up) appear here.</p>
+          <p className="muted">Nobody yet. People who click “Get Pro” or “Get Max” before payments open appear here.</p>
         ) : (
           <ul className="feedback-list">
             {waitlist.map((w) => (
               <li key={w.id} className="feedback-item row row--between">
                 <a href={`mailto:${w.email}`}>{w.email}</a>
                 <span className="muted small">
-                  {w.plan !== "free" ? `now ${w.plan === "max" ? "Max" : "Pro"} · ` : ""}
-                  {w.proWaitlistAt?.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                  {w.plan === "max" ? "Max" : "Pro"} · {w.createdAt.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                  {w.notifiedAt ? " · emailed" : ""}
                 </span>
               </li>
             ))}

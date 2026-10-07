@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -25,7 +26,6 @@ export function PlanActions({
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [joined, setJoined] = useState(onWaitlist);
   const [error, setError] = useState("");
 
   async function go(action: () => Promise<void>) {
@@ -50,12 +50,6 @@ export function PlanActions({
     go(async () => {
       await api("/api/billing/demo", { body: { plan: target } });
       router.refresh();
-    });
-
-  const joinWaitlist = () =>
-    go(async () => {
-      await api("/api/billing/waitlist", { body: {} });
-      setJoined(true);
     });
 
   return (
@@ -91,18 +85,26 @@ export function PlanActions({
           <p className="muted small">Demo billing is on: plans switch without payment. Turn it off before launch.</p>
         </>
       )}
-      {plan === "free" && !billing && !demo && (joined ? (
-        <p className="success" role="status">
-          Perfetto! You&apos;re on the Pro list. Pro opens very soon and we&apos;ll email you first.
-        </p>
-      ) : (
+      {plan === "free" && !billing && !demo && (
         <>
-          <button type="button" className="button button--primary" disabled={busy} onClick={joinWaitlist}>
-            Upgrade to Pro
-          </button>
-          <p className="muted small">Pro is opening soon. Click to get on the list and we&apos;ll email you the moment it&apos;s ready.</p>
+          {onWaitlist && (
+            <p className="success" role="status">
+              Perfetto! You&apos;re on the list. We&apos;ll email you the moment paid plans open.
+            </p>
+          )}
+          <div className="row">
+            <Link href="/pro?plan=pro" className="button button--primary">
+              {onWaitlist ? "Change plan" : "Get Pro"}
+            </Link>
+            {!onWaitlist && (
+              <Link href="/pro?plan=max" className="button">
+                Get Max
+              </Link>
+            )}
+          </div>
+          {!onWaitlist && <p className="muted small">Pro and Max open soon. Leave your email and we&apos;ll tell you first.</p>}
         </>
-      ))}
+      )}
       {error && <p className="error" role="alert">{error}</p>}
     </div>
   );

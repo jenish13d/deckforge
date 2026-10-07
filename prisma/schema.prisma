@@ -130,3 +130,16 @@ model Research {
 
   @@index([userId])
 }
+
+// People who asked for Pro or Max before payments opened. They get a confirmation now and
+// one email when it opens; the token lets them leave the list from any email.
+model ProWaitlist {
+  id         String    @id @default(cuid())
+  email      String    @unique
+  // "pro" | "max"
+  plan       String    @default("pro")
+  token      String    @unique
+  createdAt  DateTime  @default(now())
+  // When the "it's open" email was sent.
+  notifiedAt DateTime?
+}

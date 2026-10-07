@@ -7246,3 +7246,109 @@ body:has(.assistant) .feedback {
 .use-case .step__icon {
   font-weight: 700;
 }
+
+/* Pro and Max list (/pro). */
+.waitlist {
+  display: grid;
+  gap: 14px;
+  max-width: 520px;
+  margin: 8px auto 0;
+  padding: 24px;
+}
+
+.waitlist__plans {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.waitlist__plans legend {
+  margin-bottom: 8px;
+}
+
+.waitlist__plan {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease-out), background-color 0.15s var(--ease-out);
+}
+
+.waitlist__plan input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.waitlist__plan:has(input:focus-visible) {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.waitlist__plan.is-selected {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+}
+
+.waitlist__plan-name {
+  font-weight: 700;
+}
+
+.waitlist__plan-price {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.waitlist__trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.waitlist--done {
+  justify-items: start;
+}
+
+.waitlist__check {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--primary-text);
+  animation: attachment-in 0.4s var(--ease-out) backwards;
+}
+
+.waitlist__title {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.pro-page__perks {
+  display: grid;
+  gap: 8px;
+  max-width: 520px;
+  margin: 24px auto 0;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+@media (max-width: 420px) {
+  .waitlist {
+    padding: 18px;
+  }
+
+  .waitlist__plans {
+    grid-template-columns: 1fr;
+  }
+}

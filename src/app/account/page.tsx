@@ -8,6 +8,7 @@ import { AppShell } from "@/components/app/AppShell";
 import { getCurrentUser } from "@/lib/auth";
 import { billingConfigured, billingDemoEnabled, maxConfigured } from "@/lib/billing";
 import { MODES, PLANS, PLAN_IDS, planOf } from "@/lib/plans";
+import { onWaitlist } from "@/lib/waitlist";
 
 export const metadata = { title: "Account" };
 
@@ -75,7 +76,7 @@ export default async function AccountPage(props: PageProps<"/account">) {
           maxBilling={maxConfigured()}
           demo={billingDemoEnabled()}
           hasCustomer={Boolean(user.stripeCustomerId)}
-          onWaitlist={Boolean(user.proWaitlistAt)}
+          onWaitlist={Boolean(await onWaitlist(user.email))}
         />
 
         <section className="section section--tight">

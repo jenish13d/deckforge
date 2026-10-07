@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { billingConfigured } from "@/lib/billing";
 import { MODES, MODE_IDS, PLANS } from "@/lib/plans";
 import { premiumAvailable } from "@/lib/providers";
 
@@ -40,6 +41,9 @@ const cell = (value: string | boolean) =>
   );
 
 export function Pricing({ ctaHref = "/signup", compact = false }: { ctaHref?: string; /** Hide the comparison table (landing page). */ compact?: boolean }) {
+  // Until payments open, the paid buttons lead to the list for an email when they do.
+  const open = billingConfigured();
+  const paidHref = (plan: "pro" | "max") => (open ? ctaHref : `/pro?plan=${plan}`);
   return (
     <div className="pricing-block">
       <div className="pricing-cards pricing-cards--three">
@@ -50,13 +54,13 @@ export function Pricing({ ctaHref = "/signup", compact = false }: { ctaHref?: st
           <Link href={ctaHref} className="button">Start free</Link>
         </div>
         <div className="price-card price-card--featured">
-          <span className="badge">Most popular</span>
+          <span className="badge">Recommended</span>
           <h3>{PLANS.pro.label}</h3>
           <p className="price-card__price">
             $12<span className="muted small"> / month</span>
           </p>
           <p className="muted">For people who present every week. PowerPoint, no badge, more detail.</p>
-          <Link href={ctaHref} className="button button--primary">Get Pro</Link>
+          <Link href={paidHref("pro")} className="button button--primary">Get Pro</Link>
         </div>
         <div className="price-card">
           <h3>{PLANS.max.label}</h3>
@@ -64,7 +68,7 @@ export function Pricing({ ctaHref = "/signup", compact = false }: { ctaHref?: st
             $29<span className="muted small"> / month</span>
           </p>
           <p className="muted">For teams and heavy users. 4× the credits, rollover and priority.</p>
-          <Link href={ctaHref} className="button">Get Max</Link>
+          <Link href={paidHref("max")} className="button">Get Max</Link>
         </div>
       </div>
 
