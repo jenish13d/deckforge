@@ -14,6 +14,10 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
   to `public/` on install); photos and scanned pages go to `/api/extract`, where a vision model reads them.
   The text becomes "file" sources (`src/lib/material.ts`): the outline is planned across the whole material,
   and figures from the user's own files are used as given by the fact check.
+- **Marketing hub (`/admin`, owner only):** a to-do list built from the numbers, sign-ups and decks per day, leads
+  on the Pro/Max list, newest sign-ups and feedback (counts only: nobody's deck titles or prompts). It can be
+  installed as an app (Edge or Chrome → Apps → Install this site as an app), and a summary email arrives each
+  morning when `CRON_SECRET` is set (Vercel cron in `vercel.json`, once a day on the free plan).
 - **Pro and Max list:** until payments are set up, "Get Pro" / "Get Max" lead to `/pro`, where anyone leaves an
   email (`ProWaitlist`). They get a confirmation (when SMTP is set), every email has a leave link, and the
   admin page has a button to email everyone once paid plans open.

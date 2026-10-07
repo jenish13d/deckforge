@@ -7352,3 +7352,101 @@ body:has(.assistant) .feedback {
     grid-template-columns: 1fr;
   }
 }
+
+/* Marketing hub (/admin). */
+.hub__tasks {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 28px;
+  padding: 0;
+  list-style: none;
+}
+
+.hub__tasks li {
+  padding: 12px 14px 12px 40px;
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.hub__tasks li::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 15px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--primary);
+  border-radius: 4px;
+}
+
+.hub__chart {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 6px;
+  align-items: end;
+  height: 150px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.hub__day {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 4px;
+  height: 100%;
+}
+
+.hub__bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  min-height: 0;
+}
+
+.hub__bar {
+  width: 40%;
+  max-width: 14px;
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+}
+
+.hub__bar--users,
+.hub__key--users {
+  background: var(--primary);
+}
+
+.hub__bar--decks,
+.hub__key--decks {
+  background: var(--gold);
+}
+
+.hub__label {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.hub__legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.hub__key {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  border-radius: 3px;
+}
+
+.hub > .section-title {
+  margin-top: 32px;
+}
