@@ -120,6 +120,8 @@ interface Colors {
   text: string;
   muted: string;
   panel: string;
+  /** Colour of *highlighted* title words where the accent wouldn't read well. */
+  highlight?: string;
 }
 
 /** Lays out one card's content as stacked blocks at `scale` (1 = on-screen size). */
@@ -153,7 +155,7 @@ function buildBlocks(card: CardContent, style: ThemeStyle, colors: Colors, x: nu
     const upper = (t: string) => (style.upperTitles ? t.toUpperCase() : t);
     const text = upper(plainTitle(card.title));
     // Highlighted words keep the slide's accent colour, as on screen.
-    const runs = titleParts(card.title).map((part) => ({ text: upper(part.text), options: part.highlight ? { color: style.accent } : {} }));
+    const runs = titleParts(card.title).map((part) => ({ text: upper(part.text), options: part.highlight ? { color: (!fullBleed && colors.highlight) || style.accent } : {} }));
     // Bold serif titles run wide (and wider still where Georgia is replaced), so allow for that.
     const th = textHeight(text, size, w, style.upperTitles ? 1.2 : 1.12, style.upperTitles ? 0.7 : 0.62);
     add(th, (s, y) => s.addText(runs, { x, y, w, h: th, fontFace: heading, fontSize: size, bold: !style.upperTitles, color: colors.title, valign: "top", margin: 0, lineSpacingMultiple: 0.95 }));
@@ -371,7 +373,7 @@ export async function buildPptx(cards: CardContent[], theme: string, title: stri
     const panel = variant?.panel ?? style.panel;
     const colors: Colors = fullBleed
       ? { title: style.panelText, text: style.panelText, muted: style.muted, panel }
-      : { title: variant?.title ?? style.title ?? style.text, text: style.panelBody ? style.panelText : style.text, muted: style.muted, panel };
+      : { title: variant?.title ?? style.title ?? style.text, text: style.panelBody ? style.panelText : style.text, muted: style.muted, panel, highlight: variant?.highlight };
 
     // Content area
     let x = PAD_X;

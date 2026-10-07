@@ -19,6 +19,7 @@ export function PlanningStage({ topic, cardCount }: { topic: string; cardCount: 
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
+    window.scrollTo({ top: 0 });
     const start = Date.now();
     const timer = setInterval(() => setElapsed(Date.now() - start), 250);
     return () => clearInterval(timer);

@@ -32,7 +32,7 @@ export interface ThemeStyle {
   /** Title colour when it differs from the text colour. */
   title?: string;
   /** Backgrounds that rotate from slide to slide. */
-  variants?: { bg: string; title: string; panel?: string }[];
+  variants?: { bg: string; title: string; panel?: string; highlight?: string }[];
   /** Body text always sits on a panel (Milano). */
   panelBody?: boolean;
   tag?: string;
@@ -54,7 +54,7 @@ export const THEME_STYLES: Record<ThemeId, ThemeStyle> = {
     bg: ["1F3B8F", "1F3B8F"], text: "1B2A4A", muted: "4A5568", accent: "C8323C", surface: "F0E9DC", onAccent: "FFFFFF",
     serifHeadings: true, serifBody: true, panel: "FDF6E9", panelText: "1B2A4A", title: "F6B81A",
     variants: [
-      { bg: "1F3B8F", title: "F6B81A" },
+      { bg: "1F3B8F", title: "F6B81A", highlight: "FDF6E9" },
       { bg: "F2A900", title: "1B2A4A" },
       { bg: "F4EAD5", title: "1F3B8F", panel: "FFFAF1" },
     ],

@@ -78,6 +78,7 @@ export default async function ViewPage(props: PageProps<"/d/[id]">) {
         <p className="made-with no-print">
           Made with <Link href="/">{SITE.name}</Link>
           {!user && <> · <Link href="/signup">Make your own free</Link></>}
+          {!isOwner && <> · <Link href={`/report?deck=${deck.id}`}>Report</Link></>}
         </p>
       </main>
     </>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, CopyPlus, Settings2, Ellipsis, Eye, LoaderCircle, Lock, PartyPopper, Pencil, Play, Plus, Share2, Trash2, WandSparkles, X } from "lucide-react";
+import { ArrowDown, ArrowUp, CopyPlus, Palette, Settings2, Sparkles, Ellipsis, Eye, LoaderCircle, Lock, PartyPopper, Pencil, Play, Plus, Share2, Trash2, WandSparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -9,6 +9,7 @@ import { CardEditForm } from "@/components/CardEditForm";
 import { CardPlaceholder, CardView } from "@/components/CardView";
 import { BrandMark } from "@/components/BrandMark";
 import { DownloadMenu } from "@/components/DownloadMenu";
+import { AssistantPanel } from "@/components/editor/AssistantPanel";
 import { DeckSettingsDialog } from "@/components/editor/DeckSettingsDialog";
 import { SlideRail } from "@/components/editor/SlideRail";
 import { ThemeDialog } from "@/components/editor/ThemeDialog";
@@ -25,7 +26,7 @@ import { ApiError, api } from "@/lib/client";
 import type { CardView as CardData, DeckView } from "@/lib/decks";
 import { MODES, type ModeId } from "@/lib/plans";
 import { deckSlides, type DeckLook } from "@/lib/slides";
-import { THEMES, type ThemeId } from "@/lib/themes";
+import { THEMES, isThemeId, type ThemeId } from "@/lib/themes";
 
 // How many times a card waits out the AI's per-minute limit before giving up.
 const MAX_BUSY_RETRIES = 8;
@@ -78,6 +79,7 @@ export function Editor({
   const [sharing, setSharing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  const [assistant, setAssistant] = useState(false);
   const [toast, showToast] = useToast();
   const router = useRouter();
   const [tick, setTick] = useState(0);
@@ -189,6 +191,23 @@ export function Editor({
     void generate(card.id, instructions || undefined, mode);
   }
 
+  /** Carries out the changes the assistant proposed and the user approved. */
+  function applyAssist(actions: { type: "add" | "rewrite" | "theme"; slide: number; title: string; instruction: string; theme: string }[]) {
+    for (const a of actions) {
+      if (a.type === "theme" && isThemeId(a.theme)) changeTheme(a.theme);
+      if (a.type === "rewrite") {
+        const card = deck.cards[a.slide - 1];
+        if (card) {
+          setOutOfCredits(false);
+          void generate(card.id, a.instruction, mode);
+        }
+      }
+    }
+    // New slides go in last, from the end backwards, so earlier positions stay right.
+    const adds = actions.filter((a) => a.type === "add").sort((x, y) => y.slide - x.slide);
+    for (const a of adds) addAfter(a.slide === 0 ? -1 : (deck.cards[a.slide - 1]?.position ?? deck.cards.length - 1), a.title);
+  }
+
   function changeLook(patch: Partial<DeckLook>) {
     setDeck((d) => ({ ...d, look: { ...d.look, ...patch } }));
     void patchDeck(patch);
@@ -249,6 +268,15 @@ export function Editor({
           }}
         />
         <div className="studio-bar__actions">
+          <button
+            type="button"
+            className={`button studio-bar__ask${assistant ? " is-on" : ""}`}
+            aria-label="Ask Slidezza"
+            aria-expanded={assistant}
+            onClick={() => setAssistant((a) => !a)}
+          >
+            <Sparkles size={16} aria-hidden="true" /> <span className="button__label">Ask AI</span>
+          </button>
           <button type="button" className="button studio-bar__theme" onClick={() => setDialog({ kind: "theme" })} aria-label={`Theme: ${themeName}`}>
             <span className={`studio-bar__swatch theme-${deck.theme}`} aria-hidden="true" />
             <span className="button__label">{themeName}</span>
@@ -271,6 +299,9 @@ export function Editor({
           <Menu label={{ text: "More options", content: <Ellipsis size={18} aria-hidden="true" /> }} buttonClassName="button button--icon">
             {(close) => (
               <>
+                <button type="button" className="menu__item" onClick={() => { close(); setDialog({ kind: "theme" }); }}>
+                  <Palette size={16} aria-hidden="true" /> Change theme
+                </button>
                 <button type="button" className="menu__item" onClick={() => { close(); setDialog({ kind: "settings" }); }}>
                   <Settings2 size={16} aria-hidden="true" /> Deck settings
                 </button>
@@ -421,6 +452,14 @@ export function Editor({
       </main>
       </div>
 
+      {assistant && (
+        <AssistantPanel
+          deckId={deck.id}
+          creditsPerRewrite={MODES[mode].creditsPerCard}
+          onApply={applyAssist}
+          onClose={() => setAssistant(false)}
+        />
+      )}
       {dialog?.kind === "settings" && (
         <DeckSettingsDialog look={deck.look} canRemoveBadge={canRemoveBadge} onChange={changeLook} onClose={() => setDialog(null)} />
       )}

@@ -89,6 +89,19 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 - **Demo modes for testing at $0:** `DEMO_AI=1` replaces the AI with sample content; `BILLING_DEMO=1`
   adds a no-payment Free/Pro switch on the Account page (ignored when Stripe is configured; never enable in production).
 
+- **Setup choices:** after the topic, three quick, topic-specific choices (who it's for, what to focus on,
+  how long) shape the outline and every card (`/api/setup`).
+- **Live planning and writing:** the planning screen shows what the AI is doing; slides shimmer while
+  written and land softly when ready.
+- **Ask Slidezza:** an assistant in the editor turns requests ("add a slide comparing him with Messi",
+  "make slide 3 shorter", "try a darker theme") into changes the user applies with one click.
+- **Deck settings:** "Made with Slidezza" badge (always on for Free, removable on Pro), an optional closing
+  slide, and photo credits on each photo or on a credits slide at the end; applied on screen, in the
+  slideshow, PDF and PowerPoint.
+- **Headline highlights:** card titles can mark key words with `*asterisks*`; they show in the theme's accent.
+- **Safety:** security headers and a Content Security Policy (`next.config.ts`), a "Report" link and form
+  for shared decks, and quotes only when the sources show the person saying them.
+
 ## How it works
 
 | Piece | Where |
@@ -137,6 +150,15 @@ Checks: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
 - Set `NEXT_PUBLIC_CONTACT_EMAIL` (shown in the footer and legal pages).
 - Have the Privacy policy (`src/app/privacy`) and Terms (`src/app/terms`) reviewed for your country and business.
 - Turn off `DEMO_AI` and `BILLING_DEMO`.
+- **Hosting plan:** Vercel's free Hobby plan is for non-commercial use only. Move to Vercel Pro (or a host
+  whose free tier allows commercial use) before taking the first payment.
+- **Copyright safe harbor (US):** register a DMCA designated agent with the US Copyright Office and name it in
+  the Terms; reports arrive through the "Report" link under shared decks (`/report`) and show in `/admin`.
+- **EU/UK:** name the business and a contact address in the Privacy policy; check whether you need an EU/UK
+  representative (GDPR Art. 27) while the company is based outside the EU/UK.
+- **GitHub (free):** turn on Dependabot alerts, secret scanning and private vulnerability reporting in the
+  repository's Settings → Code security; CI, CodeQL and Dependabot updates are in `.github/`.
+- Set `NEXT_PUBLIC_SITE_DOMAIN` once a custom domain is live (shown on the "Made with" closing slide).
 
 ## Next steps
 

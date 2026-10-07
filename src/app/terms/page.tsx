@@ -5,7 +5,7 @@ export const metadata = { title: "Terms of service" };
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of service" updated="October 4, 2026">
+    <LegalPage title="Terms of service" updated="October 7, 2026">
       <p>By creating an account or using {SITE.name}, you agree to these terms.</p>
 
       <h2>Your account</h2>
@@ -13,6 +13,15 @@ export default function TermsPage() {
 
       <h2>Your content</h2>
       <p>You own the prompts you enter and the decks you create. You give us permission to store and process them only to provide the service to you. Don&apos;t submit content you don&apos;t have the right to use.</p>
+
+      <h2>Shared decks</h2>
+      <p>A deck you share with a link can be viewed by anyone who has the link. Turn sharing off at any time from the Share window.</p>
+
+      <h2>Photos and other people&apos;s work</h2>
+      <p>Photos are found automatically from free-licence libraries (such as Wikimedia Commons and Openverse) and credited to their authors, as their licences require. Keep those credits when you reuse a deck, and check a photo&apos;s licence before using it on its own.</p>
+
+      <h2>Reporting content and copyright</h2>
+      <p>If a deck uses your copyrighted work without permission, or breaks these terms, use the “Report” link under the deck{SITE.contactEmail ? <> or write to <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a></> : null}. Tell us which deck and slide, what the original work is, and how to reach you. We review every report and remove content that infringes rights or breaks these terms, and may close accounts of repeat infringers.</p>
 
       <h2>AI-generated content</h2>
       <p>Decks are written with the help of AI and may contain mistakes. Review facts, figures and quotes before you rely on or publish them.</p>

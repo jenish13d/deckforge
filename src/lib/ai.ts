@@ -118,7 +118,7 @@ export async function generateSetup(prompt: string, call: CallModel = defaultCal
     schema: SetupSchema,
   });
   const tidy = (list: string[]) => [...new Set(list.map((o) => o.trim().replace(/\s+/g, " ").slice(0, 90)).filter(Boolean))].slice(0, 3);
-  return { audiences: tidy(result.audiences), angles: tidy(result.angles) };
+  return { audiences: tidy(result.audiences ?? []), angles: tidy(result.angles ?? []) };
 }
 
 const ASSIST_INSTRUCTIONS = `You are the assistant inside a presentation editor. The user asks for changes to their deck in plain words.

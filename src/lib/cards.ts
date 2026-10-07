@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+// Zod would otherwise probe for eval() support, which the site's security policy (CSP) blocks.
+z.config({ jitless: true });
+
 export const LAYOUTS = ["title", "bullets", "columns", "stats", "quote", "timeline", "section", "table"] as const;
 export type Layout = (typeof LAYOUTS)[number];
 
