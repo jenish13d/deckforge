@@ -33,6 +33,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/deckforge
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/deckforge
       DEMO_AI: "1"
       CAPTCHA: "off"
       NEXT_TELEMETRY_DISABLED: "1"
