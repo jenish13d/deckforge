@@ -112,9 +112,13 @@ describe("deck variety", () => {
   });
 
   it("asks once more when a content card comes back as a bare title", async () => {
+    // Demo mode (as on CI) skips the second ask; this checks the real path.
+    vi.stubEnv("DEMO_AI", "");
     const thin = { ...card, layout: "section", items: [] };
     const { call, requests } = fakeModel(thin);
-    const result = await generateCard({ deckTitle: "d", prompt: "p", outline, index: 1, mode: "quick", factCheck: false }, call);
+    const result = await generateCard({ deckTitle: "d", prompt: "p", outline, index: 1, mode: "quick", factCheck: false }, call).finally(() =>
+      vi.unstubAllEnvs(),
+    );
     expect(requests).toHaveLength(2);
     expect(requests[1].user).toContain("almost nothing on it");
     // Still thin after the second try: keep it rather than loop.
