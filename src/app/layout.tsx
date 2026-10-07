@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Crimson_Pro, Fraunces, Geist, Marcellus } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { getCurrentUser } from "@/lib/auth";
@@ -49,6 +50,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         )}
         {children}
         <FeedbackButton loggedIn={Boolean(user)} captcha={captchaEnabled()} />
+        <Analytics />
       </body>
     </html>
   );
