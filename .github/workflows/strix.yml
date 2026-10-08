@@ -1,0 +1,63 @@
+# Strix (https://github.com/usestrix/strix): an AI agent that looks for security problems in this
+# repository. It is NOT automatic. Run it yourself: GitHub → Actions → "Strix security scan" → Run workflow.
+#
+# Before the first run, add in GitHub → Settings → Secrets and variables → Actions:
+#   Secret   LLM_API_KEY  an API key for the AI provider Strix should use
+#   Variable STRIX_LLM    the model, e.g. openai/gpt-5.4 (see https://docs.strix.ai/llm-providers/overview)
+#
+# What you should know first:
+# - Strix sends parts of this repository's code to that AI provider, and each run costs tokens.
+# - It tests only what it is pointed at: this repository checkout, inside a Docker sandbox on the runner.
+#   It never touches slidezza.vercel.app. Don't point it at sites you don't own.
+# - The install script below was read before it was pinned; the check fails if the script ever changes,
+#   so nothing unreviewed runs with your key. The Strix program it downloads is version-pinned too,
+#   but it is a binary we haven't read (the project is Apache-2.0, source at the link above).
+name: Strix security scan
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check the settings are there
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          STRIX_LLM: ${{ vars.STRIX_LLM }}
+        run: |
+          if [ -z "$LLM_API_KEY" ] || [ -z "$STRIX_LLM" ]; then
+            echo "Add the LLM_API_KEY secret and the STRIX_LLM variable first (see the top of this file)." >&2
+            exit 1
+          fi
+
+      - name: Install Strix (reviewed script, pinned version)
+        env:
+          VERSION: "1.7.0"
+        run: |
+          curl -sSL https://strix.ai/install -o strix-install.sh
+          echo "525c5898b176dd15f0bb97afdf4ba8c62ad526ba75d6af456681b6aff4ae3952  strix-install.sh" | sha256sum -c -
+          bash strix-install.sh
+
+      - name: Scan
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          STRIX_LLM: ${{ vars.STRIX_LLM }}
+        run: strix -n -t ./ --scan-mode quick
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strix-report
+          path: strix_runs/
+          retention-days: 7
+          if-no-files-found: ignore

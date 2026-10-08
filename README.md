@@ -197,6 +197,28 @@ editor's poll nudges it if it stops. To follow the hand-over locally set `APP_UR
 `JOBS_SECRET=anything`. Run `npx prisma migrate deploy` first: the new tables and the one-job-per-card index come
 with migration `20261008120000_generation_jobs`.
 
+### Developer tools
+
+Tools connected through GitHub, and ones deliberately left out:
+
+- **Claude Code Setup** (official, `anthropics/claude-plugins-official`): turned on for this project in
+  `.claude/settings.json`. It only reads the code and recommends automations (hooks, skills, MCP servers); ask
+  Claude Code "recommend automations for this project".
+- **Strix** (`usestrix/strix`, AI security testing): `.github/workflows/strix.yml`, run by hand from
+  GitHub → Actions → "Strix security scan". Needs the `LLM_API_KEY` secret and `STRIX_LLM` variable. It scans this
+  repository's code in a sandbox, never the live site, sends code to the AI provider you choose, and costs tokens.
+  The install script is hash-checked and the version pinned (see the comments in the workflow).
+- **Claude-Mem** (`thedotmack/claude-mem`): not added to the project. It is a personal Claude Code plugin that
+  records everything a session does (including anything pasted into chat) and can sync it to a hosted service.
+  If you want it on your own computer: `/plugin marketplace add thedotmack/claude-mem`, then
+  `/plugin install claude-mem`, and set `CLAUDE_MEM_ONLINE_OPTIN=false` to keep it local.
+- **Agent Reach** (`Panniantong/Agent-Reach`): not added. It is a personal research tool that reads sites such as X,
+  Reddit and YouTube, and several of them need your cookies or logins (the project itself warns of account bans).
+  Slidezza's marketing helper never logs in to or posts on social accounts, so nothing here uses it.
+- **FreeLLMAPI** (`tashfeenahmed/freellmapi`): not added. It describes itself as "personal experimentation only", and
+  it would send customers' deck text through a pool of free AI tiers we don't control. Slidezza already has its own
+  provider router with fallbacks and UK/EU rules (`src/lib/router.ts`); add provider keys there instead.
+
 ### Setting up payments (Stripe)
 
 1. Create Products "Pro" and "Max" with monthly recurring Prices in the Stripe dashboard; put their ids in
