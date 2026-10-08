@@ -1,9 +1,7 @@
 import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth";
-import { FOOTER_SEARCH_SLUGS, findSearchPage } from "@/lib/search-pages";
 import { SITE } from "@/lib/site";
-import { USE_CASES } from "@/lib/use-cases";
 import { Logo } from "./Logo";
 
 export async function SiteFooter() {
@@ -18,18 +16,24 @@ export async function SiteFooter() {
         <nav className="site-footer__col" aria-label="Product">
           <strong>Product</strong>
           <Link href="/templates">Templates</Link>
-          <Link href="/#themes">Themes</Link>
+          <Link href="/features">Features</Link>
+          <Link href="/how-it-works">How it works</Link>
           <Link href="/pricing">Pricing</Link>
-          <Link href="/#faq">FAQ</Link>
+        </nav>
+        <nav className="site-footer__col" aria-label="AI presentation tools">
+          <strong>AI presentations</strong>
+          <Link href="/ai-presentation-maker">AI presentation maker</Link>
+          <Link href="/ai-ppt-maker">AI PPT maker</Link>
+          <Link href="/ai-powerpoint-generator">AI PowerPoint generator</Link>
+          <Link href="/presentation-maker">Presentation maker</Link>
         </nav>
         <nav className="site-footer__col" aria-label="Use cases">
-          <strong>Make</strong>
-          {FOOTER_SEARCH_SLUGS.map((slug) => (
-            <Link key={slug} href={`/${slug}`}>{findSearchPage(slug)?.name}</Link>
-          ))}
-          {USE_CASES.map((u) => (
-            <Link key={u.slug} href={`/make/${u.slug}`}>{u.name}</Link>
-          ))}
+          <strong>Use cases</strong>
+          <Link href="/presentation-maker-for-students">For students</Link>
+          <Link href="/business-presentation-maker">For business</Link>
+          <Link href="/presentation-maker-for-teachers">For teachers</Link>
+          <Link href="/pitch-deck-generator">Pitch decks</Link>
+          <Link href="/make/pdf-to-presentation">PDF to presentation</Link>
         </nav>
         <nav className="site-footer__col" aria-label="Account">
           <strong>Account</strong>
@@ -47,6 +51,7 @@ export async function SiteFooter() {
         </nav>
         <nav className="site-footer__col" aria-label="Legal">
           <strong>Company</strong>
+          <Link href="/about">About</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms</Link>
           {SITE.contactEmail && <a href={`mailto:${SITE.contactEmail}`}>Contact</a>}

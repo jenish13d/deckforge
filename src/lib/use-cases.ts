@@ -16,6 +16,12 @@ export interface UseCase {
   steps: { title: string; text: string }[];
   points: { title: string; text: string }[];
   prompts: string[];
+  /** Who it's for, what you can make and what it can't do: shown as "At a glance". */
+  who?: string;
+  makes?: string;
+  limits?: string;
+  /** Slugs of pages outside this page's topic group that are worth a link. */
+  also?: string[];
   faq: { q: string; a: string }[];
 }
 
@@ -26,6 +32,10 @@ export const USE_CASES: UseCase[] = [
     slug: "pdf-to-presentation",
     name: "PDF to presentation",
     title: "Turn a PDF into a presentation with AI",
+    intro: [
+      "A PDF is often the starting point: a report, a paper, a handout, a scanned chapter. Slidezza reads it and writes slides from what it says, instead of from the AI's general knowledge.",
+      "Text PDFs are read in your browser. Pages without a text layer are read by an AI model that sees images."
+    ],
     description:
       "Attach a PDF (report, paper, handout or scan) and Slidezza turns it into a designed slide deck you can edit, present, and download as PDF or PowerPoint.",
     lead: "Attach a report, article, study or scanned handout. Slidezza reads it, plans the story and writes the slides from what the file actually says.",
@@ -45,6 +55,10 @@ export const USE_CASES: UseCase[] = [
       "Turn this research paper into a 10-minute class presentation",
       "Make a client update from this PDF, focused on what changed this quarter",
     ],
+    who: "Anyone with a report, paper, handout or scan to present: students, analysts, managers, teachers.",
+    makes: "A summary deck, a class presentation or a client update built from what the PDF says.",
+    limits: "Very long PDFs are cut to about 20,000 characters. Scanned pages are read by an AI that sees images, so poor scans can be misread. Check figures against the original.",
+    also: ["/document-to-presentation", "/research-presentation-maker", "/text-to-ppt"],
     faq: [
       { q: "Is my PDF uploaded to your servers?", a: "Text PDFs are read in your browser and only the extracted text is sent to write the deck; it is stored with the deck so slides can be checked against it. Scanned pages are sent as images to be read, and the images are not stored." },
       { q: "How long can the PDF be?", a: "Files up to 15 MB. About 20,000 characters of text are used from each file and 40,000 across all files in one deck, which covers most reports and papers." },
@@ -55,6 +69,10 @@ export const USE_CASES: UseCase[] = [
     slug: "word-to-powerpoint",
     name: "Word to PowerPoint",
     title: "Turn a Word document into slides",
+    intro: [
+      "Slidezza reads a Word document (.docx) and redesigns its content as a presentation: headings become the story, tables become table slides, lists become short slides.",
+      "It keeps your content and figures, not your page layout, so the result looks like slides rather than a document."
+    ],
     description:
       "Convert a Word document (.docx) into a designed presentation with AI. Tables become table slides, headings become the story. Download as PowerPoint on Pro.",
     lead: "Notes, a draft, a proposal or meeting minutes in Word: attach the .docx and get a structured, designed deck instead of copy-pasting into slides.",
@@ -74,6 +92,10 @@ export const USE_CASES: UseCase[] = [
       "Make a training session from this procedure document",
       "Create a proposal deck from this Word draft for a new client",
     ],
+    who: "People who write in Word first: managers, consultants, students, project leads.",
+    makes: "A deck from a draft, proposal, procedure or meeting minutes, with tables kept as table slides.",
+    limits: "Only .docx is read (save old .doc files as .docx). Your Word layout is not copied: the content is redesigned as slides.",
+    also: ["/document-to-presentation", "/ai-ppt-maker", "/business-presentation-maker"],
     faq: [
       { q: "Does it keep my formatting?", a: "It keeps your content (headings, lists, tables, numbers) and redesigns it as slides in the theme you choose, rather than copying the document's layout." },
       { q: "What about Google Docs or Pages?", a: "Download them as .docx or PDF first, then attach the file." },
@@ -81,38 +103,13 @@ export const USE_CASES: UseCase[] = [
     ],
   },
   {
-    slug: "lesson-slides",
-    name: "Lesson slides for teachers",
-    title: "Lesson slides in minutes for teachers",
-    description:
-      "Create lesson and lecture slides with AI from a topic or your own worksheet, notes or PDF. Pick the class level, edit the outline, present or export.",
-    lead: "Start from a topic or from the material you already use (a worksheet, chapter PDF or your notes) and get slides pitched at your class.",
-    steps: [
-      { title: "Topic or material", text: `Type the lesson topic, or attach ${FILES}.` },
-      { title: "Set the audience", text: "Tell it the class (\"10-year-olds\", \"first-year nursing students\") and the focus." },
-      { title: "Teach from it", text: "Present full screen, share a view-only link with the class, or download a PDF handout." },
-    ],
-    points: [
-      { title: "Your material leads", text: "When you attach files, slides follow their content and wording." },
-      { title: "Sourced facts", text: "Background facts come from listed sources, with numbers checked." },
-      { title: "Fast changes", text: "Ask the assistant to simplify a slide, add an example or turn a list into a timeline." },
-      { title: "Share links", text: "Students open a view-only link on any device; keep decks private when you prefer." },
-    ],
-    prompts: [
-      "Introduction to fractions for 9-year-olds, with everyday examples",
-      "A lecture on the causes of World War I for first-year students",
-      "Photosynthesis explained in 8 slides, ending with 3 quiz questions",
-    ],
-    faq: [
-      { q: "Can students see the deck without an account?", a: "Yes. Share a view-only link; they can open it in any browser." },
-      { q: "Can I use my own worksheets?", a: "Yes. Attach PDFs, Word or PowerPoint files, or a photo of a worksheet, and the deck is built from them." },
-      { q: "Is there a school plan?", a: "Not yet. Teachers use the Free, Pro or Max plans; contact us if you need something for a whole school." },
-    ],
-  },
-  {
     slug: "business-report-presentation",
     name: "Business reports",
     title: "Turn reports and spreadsheets into meeting slides",
+    intro: [
+      "Reports and spreadsheets already hold the story. Slidezza turns them into meeting slides: headline numbers first, detail after, next steps last.",
+      "Figures from your files are used exactly as they are, and the files are listed as the deck's sources."
+    ],
     description:
       "Make monthly, quarterly or project report slides with AI from your spreadsheet, PDF or notes: key numbers, problems and next steps, ready for the meeting.",
     lead: "Attach the spreadsheet or report you already have and get a clear meeting deck: the headline numbers, what changed, what went wrong and what happens next.",
@@ -132,6 +129,10 @@ export const USE_CASES: UseCase[] = [
       "Quarterly project update for the steering committee",
       "Customer support report: volumes, response times and top issues",
     ],
+    who: "Team leads, analysts and managers who report results to a team, board or client.",
+    makes: "A monthly or quarterly report, a results update or a project review, with key figures as big-number slides.",
+    limits: "It presents the figures you give it; it can't judge whether the numbers are right. Brand colours and logos aren't supported yet.",
+    also: ["/business-presentation-maker", "/sales-presentation-maker", "/ppt-generator"],
     faq: [
       { q: "Does it calculate totals or charts?", a: "It reads the values in your file and puts them on slides; it doesn't run new calculations. Put totals you need in the sheet or the prompt." },
       { q: "Which spreadsheet formats work?", a: "Excel .xlsx and CSV. Old .xls files need saving as .xlsx first." },

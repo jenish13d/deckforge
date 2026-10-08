@@ -58,7 +58,7 @@ export const endSlide = (): CardContent => ({
   layout: "title",
   icon: "✨",
   title: `Made with *${SITE.name}*`,
-  subtitle: `Make your own deck in a minute at ${SITE.domain}`,
+  subtitle: `Make your own deck at ${SITE.domain}`,
 });
 
 /** The slides as presented and exported: credits moved to the end when asked, plus the closing slide. */

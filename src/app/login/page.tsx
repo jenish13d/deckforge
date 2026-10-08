@@ -5,8 +5,9 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { getCurrentUser } from "@/lib/auth";
 import { captchaEnabled } from "@/lib/captcha";
 import { safeNext } from "@/lib/site";
+import { PRIVATE_ROBOTS } from "@/lib/seo";
 
-export const metadata = { title: "Log in" };
+export const metadata = { title: "Log in", robots: PRIVATE_ROBOTS };
 
 export default async function Page(props: PageProps<"/login">) {
   const next = safeNext((await props.searchParams).next);

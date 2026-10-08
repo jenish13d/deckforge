@@ -4,19 +4,23 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PLANS } from "@/lib/plans";
 import { SITE } from "@/lib/site";
+import { relatedFor } from "@/lib/search-pages";
 import type { UseCase } from "@/lib/use-cases";
 import { siteUrl } from "@/lib/url";
 
 export const startHref = (prompt?: string) => `/signup?next=${encodeURIComponent(prompt ? `/?prompt=${encodeURIComponent(prompt)}` : "/")}`;
 
-export interface RelatedLink {
-  href: string;
-  name: string;
-}
-
 /** A search landing page: a guide to one thing people look for, with FAQ and structured data. */
-export function UseCaseView({ useCase, path, related }: { useCase: UseCase; path: string; related: RelatedLink[] }) {
+export function UseCaseView({ useCase, path }: { useCase: UseCase; path: string }) {
   const base = siteUrl();
+  const related = relatedFor(path);
+  const glance: [string, string][] = [
+    ["Who it's for", useCase.who ?? ""],
+    ["What you can make", useCase.makes ?? ""],
+    ["Export", `PDF on every plan. Editable PowerPoint (.pptx) on Pro and Max. Present online or share a view-only link.`],
+    ["Cost", `The Free plan gives ${PLANS.free.monthlyCredits} credits a month with no card. Pro and Max add more credits, all detail levels and PowerPoint download. See pricing.`],
+    ["Limits", useCase.limits ?? ""],
+  ];
   const url = `${base}${path}`;
   const data = [
     {
@@ -25,8 +29,8 @@ export function UseCaseView({ useCase, path, related }: { useCase: UseCase; path
       name: useCase.title,
       description: useCase.description,
       url,
-      isPartOf: { "@type": "WebSite", name: SITE.name, url: base },
-      about: { "@type": "SoftwareApplication", name: SITE.name, url: base, applicationCategory: "BusinessApplication", operatingSystem: "Web browser" },
+      isPartOf: { "@type": "WebSite", "@id": `${base}/#website`, name: SITE.name, url: base },
+      about: { "@type": "SoftwareApplication", "@id": `${base}/#app`, name: SITE.name, url: base, applicationCategory: "BusinessApplication", operatingSystem: "Web browser" },
     },
     {
       "@context": "https://schema.org",
@@ -74,6 +78,20 @@ export function UseCaseView({ useCase, path, related }: { useCase: UseCase; path
             ))}
           </section>
         )}
+
+        <section className="section" aria-labelledby="glance">
+          <h2 id="glance" className="section-heading">At a glance</h2>
+          <dl className="glance">
+            {glance
+              .filter(([, value]) => value)
+              .map(([label, value]) => (
+                <div key={label} className="glance__row">
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+          </dl>
+        </section>
 
         <section className="section" aria-labelledby="how">
           <h2 id="how" className="section-heading">How it works</h2>
@@ -126,13 +144,26 @@ export function UseCaseView({ useCase, path, related }: { useCase: UseCase; path
         </section>
 
         <section className="section" aria-labelledby="more">
-          <h2 id="more" className="section-heading">More ways to use {SITE.name}</h2>
+          <h2 id="more" className="section-heading">Related guides</h2>
+          {related.map((group) => (
+            <div key={group.heading} className="use-case__group">
+              <h3 className="use-case__group-title">{group.heading}</h3>
+              <ul className="use-case__more">
+                {group.links.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href}>{link.name}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
           <ul className="use-case__more">
-            {related.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href}>{link.name}</Link>
-              </li>
-            ))}
+            <li>
+              <Link href="/how-it-works">How it works</Link>
+            </li>
+            <li>
+              <Link href="/features">Features</Link>
+            </li>
             <li>
               <Link href="/templates">Templates</Link>
             </li>

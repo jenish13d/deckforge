@@ -5,13 +5,14 @@ import { SiteHeader } from "@/components/SiteHeader";
 import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth";
+import { pageMetadata } from "@/lib/seo";
 import { TEMPLATE_PAGES, templateFor } from "@/lib/template-pages";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Presentation templates",
   description: "Start a presentation from a template: startup pitch, sales proposal, monthly report, lesson, team onboarding or talk. AI fills it in for your topic.",
-  alternates: { canonical: "/templates" },
-};
+  path: "/templates",
+});
 
 const startWith = (id: string) => `/?template=${id}`;
 const signupFor = (id: string) => `/signup?next=${encodeURIComponent(startWith(id))}`;

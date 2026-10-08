@@ -1,4 +1,5 @@
 import { MODES, PLANS } from "./plans";
+import { TEMPLATE_PAGES } from "./template-pages";
 import { FILES, USE_CASES, type UseCase } from "./use-cases";
 
 // One page per thing people search for ("ai ppt maker", "text to ppt", ...). Each page has its
@@ -39,6 +40,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "The history of the Silk Road in 8 slides",
       "Quarterly update for the team: what shipped, what slipped, what's next",
     ],
+    who: "Students, teachers, professionals and founders who need a presentation without starting from a blank slide.",
+    makes: "Talks, reports, lessons, pitches and updates from a topic, notes or files.",
+    limits: "Facts can still be wrong, so read the sources list before presenting. Custom brand themes and logos aren't supported yet.",
+    also: ["/templates", "/make/pdf-to-presentation"],
     faq: [
       { q: "Is the content accurate?", a: "Factual decks are written from the sources the AI found, and numbers need two sources that agree. Mistakes are still possible, so read the sources list and check anything important before you present." },
       { q: "Do I need to design anything?", a: "No. Pick one of the themes; layouts such as bullets, columns, big numbers, timelines, tables and quotes are chosen to fit the content." },
@@ -73,6 +78,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "A 10-slide intro to project management for new hires",
       "Product launch plan for a small bakery, with a timeline",
     ],
+    who: "People who need a PowerPoint file at the end.",
+    makes: "An editable .pptx (Pro and Max) or a PDF, plus online present and share links.",
+    limits: "The .pptx download is a paid-plan feature. Fonts and spacing can differ slightly in PowerPoint, Keynote or Google Slides.",
+    also: ["/make/word-to-powerpoint", "/pricing"],
     faq: [
       { q: "Can I download a .pptx for free?", a: "No. PowerPoint download is part of Pro and Max. The Free plan downloads a PDF and can present and share online. Pricing shows what is open now." },
       { q: "Will it open in Google Slides or Keynote?", a: "A .pptx is the standard format those apps can import. How closely it matches depends on the app, so check the result there." },
@@ -107,6 +116,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "Annual review for a small design studio: wins, lessons, goals",
       "A beginner's guide to personal budgeting, 8 slides",
     ],
+    who: "People who want a full deck from one prompt.",
+    makes: "Explainers, updates, lessons and guides, with an outline you approve first.",
+    limits: "Premium quality, High detail and .pptx download need Pro or Max. The first draft is a draft: edit it.",
+    also: ["/presentation-from-prompt", "/pricing"],
     faq: [
       { q: "How much does a deck cost in credits?", a: `Per card: Quick ${MODES.quick.creditsPerCard}, Standard ${MODES.standard.creditsPerCard}, Premium ${MODES.premium.creditsPerCard}. The Free plan has ${free.monthlyCredits} credits a month, about ${standardCards} Standard cards.` },
       { q: "Can I generate a PowerPoint file?", a: "Pro and Max download an editable .pptx. Every plan can present online, share a link and download a PDF." },
@@ -141,6 +154,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "A 5-minute talk about my town for a school visit",
       "Welcome deck for new volunteers at our community garden",
     ],
+    who: "Anyone who wants an ordinary presentation tool with an AI head start.",
+    makes: "Talks, class slides, team updates and simple reports.",
+    limits: "No live co-editing, and no custom brand themes or fonts yet.",
+    also: ["/templates", "/ai-presentation-maker"],
     faq: [
       { q: "Do I have to use AI?", a: "AI writes the first version, but every slide can be edited by hand, and you can delete or rewrite anything it wrote." },
       { q: "Does it work on a phone?", a: "Yes for viewing and presenting. Building a deck is easier on a laptop." },
@@ -175,6 +192,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "How a heat pump works, for homeowners deciding whether to buy one",
       "A short history of the printing press",
     ],
+    who: "People who want planning and research behind the deck, not only slides.",
+    makes: "Factual explainers, lessons, briefings and reports.",
+    limits: "Research uses public sources such as Wikipedia and web pages, so niche topics may have few sources and shorter decks.",
+    also: ["/make/pdf-to-presentation", "/presentation-maker-for-students"],
     faq: [
       { q: "Which AI does it use?", a: "Several providers, chosen per step and per plan, with automatic fallback. Your text is processed by them; the privacy policy lists which ones." },
       { q: "Why ask questions first?", a: "A deck for investors differs from one for a class. Two quick answers change the outline noticeably." },
@@ -209,6 +230,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "Turn this spreadsheet's results into a monthly update",
       "Make a training deck from this Word procedure",
     ],
+    who: "People converting material they already have into slides.",
+    makes: "A deck from pasted text, a report, a spreadsheet or a scan.",
+    limits: "Up to 5 files per deck, 15 MB each. Old .doc files need saving as .docx first.",
+    also: ["/document-to-presentation", "/make/word-to-powerpoint"],
     faq: [
       { q: "Is there a size limit?", a: "Files up to 15 MB. About 20,000 characters of text are used per file and 40,000 across the files in one deck." },
       { q: "Is the PPT download free?", a: "No, .pptx is on Pro and Max. The Free plan downloads PDF and can present and share online." },
@@ -243,6 +268,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "Turn this blog post into a talk with three key ideas",
       "Summarise this essay as a class presentation",
     ],
+    who: "People with notes, an article or an essay to turn into slides.",
+    makes: "A structured deck from pasted text or a text file.",
+    limits: "Long text is cut at about 20,000 characters per file, and condensing means some detail is dropped.",
+    also: ["/document-to-presentation", "/presentation-from-prompt"],
     faq: [
       { q: "How much text can I paste?", a: "About 20,000 characters per file or pasted block are used, and 40,000 across all material in one deck." },
       { q: "Can I get a .pptx?", a: "Yes on Pro and Max. Free decks download as PDF." },
@@ -277,6 +306,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "The water cycle, simply, for 8-year-olds",
       "Key results from our customer survey, with big numbers",
     ],
+    who: "People who would rather adjust slides by asking than by dragging boxes.",
+    makes: "A deck you refine slide by slide.",
+    limits: "The assistant handles one request at a time and works within the eight built-in layouts and nine themes.",
+    also: ["/templates", "/ai-presentation-generator"],
     faq: [
       { q: "Can I use my own material?", a: "Yes. Attach files such as a PDF or Word document and the slides follow them, then use the assistant to adjust any slide." },
       { q: "Can I change the photos?", a: "Yes. In the card editor you can search the free photo libraries and pick another one. Uploading your own pictures onto slides isn't supported yet." },
@@ -312,6 +345,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "Compare three note-taking apps for a small team, with a table",
       "Explain how the stock market works to a first-time investor",
     ],
+    who: "People who know what they want to say but not how to structure it.",
+    makes: "A deck from one or two sentences, or from a long brief.",
+    limits: "Vague prompts give generic decks. Say the audience and the goal.",
+    also: ["/templates", "/text-to-ppt"],
     faq: [
       { q: "How long should a prompt be?", a: "One or two sentences work. Add the audience and any numbers or names you want kept." },
       { q: "Can I paste a long brief?", a: "Yes. A long brief or notes work well; see the text to PPT page." },
@@ -346,6 +383,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "The life of Marie Curie for a history project, with a timeline",
       "Renewable energy in my country: pros, cons and the numbers",
     ],
+    who: "Students at school or university.",
+    makes: "Class talks, projects, revision decks and competition slides.",
+    limits: "Your school may limit AI use, so rewrite in your own words and cite your sources. The sources list is not a formatted bibliography.",
+    also: ["/research-presentation-maker", "/make/pdf-to-presentation"],
     faq: [
       { q: "Can I trust the facts?", a: "Factual decks are written only from the sources the AI found, and numbers need two sources that agree. Mistakes are still possible, so check the sources list before you present." },
       { q: "Is it allowed at my school?", a: "Rules differ. Many schools allow AI for research and drafting but expect your own words; ask your teacher and say how you used it." },
@@ -380,6 +421,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "Sales proposal for a mid-sized logistics client: problem, solution, scope, pricing",
       "Onboarding for new hires: mission, team, tools, first-week checklist",
     ],
+    who: "Managers, consultants, sales and operations teams.",
+    makes: "Reports, proposals, team updates and onboarding decks.",
+    limits: "No custom brand themes or logos yet, and no live co-editing.",
+    also: ["/make/business-report-presentation", "/templates/business-report"],
     faq: [
       { q: "Is my business data safe?", a: "Decks stay private unless you share the link. Your text is processed by our AI providers, and some free tiers may use it to improve their models, so leave out confidential details. The privacy policy has the full list." },
       { q: "Can I use my company's colours?", a: "Not custom brand themes yet. Pick from the nine built-in themes." },
@@ -414,6 +459,10 @@ export const SEARCH_PAGES: UseCase[] = [
       "Proposal for a website redesign for a local dental clinic",
       "Partnership pitch to a gym chain for our nutrition app",
     ],
+    who: "Founders and freelancers pitching investors, partners or clients.",
+    makes: "A pitch or proposal deck: problem, solution, market, pricing and next steps.",
+    limits: "It won't invent traction or market size, so missing numbers are left for you. It can't tell you whether the pitch will raise money.",
+    also: ["/templates/pitch-deck", "/sales-presentation-maker"],
     faq: [
       { q: "Will it make up market size or traction?", a: "No. For personal or business topics without sources, the rules forbid invented statistics. Put your real numbers in the prompt or attach them." },
       { q: "Can I edit it in PowerPoint?", a: "Yes. Pro and Max download an editable .pptx." },
@@ -446,29 +495,257 @@ export const SEARCH_PAGES: UseCase[] = [
       "Study notes on the causes of the First World War",
       "A short update for my club's committee",
     ],
+    who: "Anyone trying Slidezza, or presenting now and then.",
+    makes: "A few decks a month at Quick or Standard quality.",
+    limits: `${free.monthlyCredits} credits is about ${standardCards} Standard cards a month. No PowerPoint download, Medium detail only, and the "Made with Slidezza" badge stays.`,
+    also: ["/pricing", "/ai-presentation-maker"],
     faq: [
       { q: "Is it really free?", a: "Yes. The Free plan costs nothing and needs no card. When credits run out you wait for next month or choose a paid plan." },
       { q: "What do I get by paying?", a: `Pro (${PLANS.pro.price}) has ${PLANS.pro.monthlyCredits.toLocaleString("en-US")} credits a month, all detail levels, Premium mode, PowerPoint download and no badge. Max (${PLANS.max.price}) has ${PLANS.max.monthlyCredits.toLocaleString("en-US")}. See the pricing page for what is open now.` },
       { q: "Is there a time limit?", a: "No. The Free plan doesn't expire." },
     ],
   },
+  {
+    slug: "document-to-presentation",
+    name: "Document to presentation",
+    title: "Document to presentation with AI",
+    heading: "Turn any document into a presentation, or combine several",
+    description:
+      "Turn a PDF, Word, Excel, PowerPoint, text file or photo into a designed presentation. Combine up to 5 files, keep your figures, and edit before you present.",
+    intro: [
+      "Most real material is a mix: a report in PDF, a spreadsheet of results, notes in Word, a photo of a whiteboard. Slidezza reads them together and builds one deck.",
+      "Your files lead. Figures and wording come from them, and the files are listed as sources, so the deck matches what you gave it.",
+    ],
+    lead: "Attach up to 5 files of different kinds and get one structured deck, with the outline for you to check first.",
+    steps: [
+      { title: "Add your files", text: `Drop in ${FILES}. Up to 5 files, 15 MB each.` },
+      { title: "Say who it's for", text: "The audience and focus decide what is kept, what is shortened and what is left out." },
+      { title: "Check, then generate", text: "Review the outline, then the slides. Open any slide to see which file its content came from in the sources list." },
+    ],
+    points: [
+      { title: "Mixed formats in one deck", text: "A PDF, a spreadsheet and a Word draft can feed the same presentation." },
+      { title: "Tables stay tables", text: "Rows from Word and Excel tables arrive as table slides, with the numbers intact." },
+      { title: "Scans and photos", text: "Pages without a text layer and photos of notes are read by an AI model that sees images." },
+      { title: "Add the web if you want", text: "For topics that need background, factual research can sit alongside your files, with its own sources." },
+    ],
+    prompts: [
+      "Combine this report and spreadsheet into a 10-minute update for the board",
+      "Turn my lecture notes and the chapter PDF into a revision deck",
+      "Summarise these three project documents for a client handover",
+    ],
+    who: "Anyone whose material is already written down: analysts, students, project managers, teachers.",
+    makes: "One deck from several documents: briefings, updates, revision slides, handovers.",
+    limits: "Each file is cut at about 20,000 characters (40,000 in total per deck). Images inside documents aren't copied onto slides, and old formats like .doc need saving in the newer format first.",
+    also: ["/make/pdf-to-presentation", "/make/word-to-powerpoint", "/text-to-ppt"],
+    faq: [
+      { q: "Which file types work?", a: "PDF (including scans), Word .docx, PowerPoint .pptx, Excel .xlsx, CSV, text, Markdown, and photos or screenshots of notes." },
+      { q: "What happens to my files?", a: "Documents are read in your browser and the extracted text is stored with the deck so slides can be checked against it. Photos and scans are sent to an AI model to be read and the images are not stored." },
+      { q: "Will it mix up my files?", a: "The deck follows the outline you approve, and the sources list shows which files were used. Check figures against the originals before you present." },
+    ],
+  },
+  {
+    slug: "presentation-maker-for-teachers",
+    name: "Presentation maker for teachers",
+    title: "Presentation maker for teachers",
+    heading: "Lesson slides for teachers, from a topic or your own worksheet",
+    description:
+      "Create lesson and lecture slides with AI from a topic or your own worksheet, notes or PDF. Pick the class level, edit the outline, present or export.",
+    intro: [
+      "Start from a topic or from the material you already use (a worksheet, a chapter PDF, your notes) and get slides pitched at your class.",
+      "Tell Slidezza who is in the room, from 8-year-olds to first-year students, and it adjusts the wording and the examples.",
+    ],
+    lead: "Slides pitched at your class, built from your material when you have it.",
+    steps: [
+      { title: "Topic or material", text: `Type the lesson topic, or attach ${FILES}.` },
+      { title: "Set the audience", text: "Tell it the class (\"10-year-olds\", \"first-year nursing students\") and the focus." },
+      { title: "Teach from it", text: "Present full screen, share a view-only link with the class, or download a PDF handout." },
+    ],
+    points: [
+      { title: "Your material leads", text: "When you attach files, slides follow their content and wording." },
+      { title: "Sourced facts", text: "Background facts come from listed sources, with numbers checked." },
+      { title: "Fast changes", text: "Ask the assistant to simplify a slide, add an example or turn a list into a timeline." },
+      { title: "Share links", text: "Students open a view-only link on any device; keep decks private when you prefer." },
+    ],
+    prompts: [
+      "Introduction to fractions for 9-year-olds, with everyday examples",
+      "A lecture on the causes of World War I for first-year students",
+      "Photosynthesis explained in 8 slides, ending with 3 quiz questions",
+    ],
+    who: "Teachers, tutors and lecturers, in school or higher education.",
+    makes: "Lesson slides, lecture decks, revision summaries and short quizzes at the end of a deck.",
+    limits: "There are no school accounts or class management. Check facts and age-appropriateness yourself before you teach from a deck.",
+    also: ["/templates/lesson-presentation", "/make/pdf-to-presentation", "/presentation-maker-for-students"],
+    faq: [
+      { q: "Can students see the deck without an account?", a: "Yes. Share a view-only link; they can open it in any browser." },
+      { q: "Can I use my own worksheets?", a: "Yes. Attach PDFs, Word or PowerPoint files, or a photo of a worksheet, and the deck is built from them." },
+      { q: "Is there a school plan?", a: "Not yet. Teachers use the Free, Pro or Max plans; contact us if you need something for a whole school." },
+    ],
+  },
+  {
+    slug: "sales-presentation-maker",
+    name: "Sales presentation maker",
+    title: "Sales presentation maker with AI",
+    heading: "A sales presentation maker that keeps your pricing and proof yours",
+    description:
+      "Make a sales presentation or proposal with AI: the customer's problem, your offer, pricing and next steps, from your notes or price sheet. Edit and share a link.",
+    intro: [
+      "A sales deck has a job: help one buyer decide. Slidezza structures it around their problem, your offer, the price and what happens next, using the notes or price sheet you give it.",
+      "It does not invent case studies, customer names or statistics. Proof comes from you, so what you present is true.",
+    ],
+    lead: "Describe the customer and the offer, or attach your price sheet and notes, and get a deck built to move one decision forward.",
+    steps: [
+      { title: "Describe the buyer and the offer", text: "Who they are, what problem they have, what you sell. Attach pricing or a brief if you have one." },
+      { title: "Choose the audience", text: "A first meeting with a new prospect and a renewal with an existing customer need different decks." },
+      { title: "Add your proof, then send", text: "Fill in real results and quotes in the editor, then share a view-only link or download." },
+    ],
+    points: [
+      { title: "Structure that follows the buyer", text: "Problem, solution, scope, timeline, pricing and next steps, in an order you can change." },
+      { title: "Your price sheet, as given", text: "Figures from a spreadsheet or document are used exactly as they are." },
+      { title: "Share a link", text: "Send one view-only link instead of a heavy attachment. Decks stay private until you share them." },
+      { title: "PowerPoint when needed", text: "Pro and Max download an editable .pptx, handy when the client asks for a file." },
+    ],
+    prompts: [
+      "Sales proposal for a regional logistics firm: delivery delays, our tracking service, pricing, rollout",
+      "First-meeting deck for a SaaS tool that automates invoice reminders",
+      "Renewal pitch for an existing client with three new options",
+    ],
+    who: "Sales reps, account managers, consultants and freelancers.",
+    makes: "Proposals, first-meeting decks, product overviews and renewal pitches.",
+    limits: "It does not know your customer, so add real results and quotes yourself. No CRM integration and no custom brand themes yet.",
+    also: ["/templates/sales-proposal", "/pitch-deck-generator", "/business-presentation-maker"],
+    faq: [
+      { q: "Will it invent testimonials or customer logos?", a: "No. It has no customer data to draw on, and the rules forbid invented statistics. Add your own real proof." },
+      { q: "Can I keep my own wording?", a: "Yes. Paste your talking points or attach your notes and the slides follow them." },
+      { q: "Can I change the look to match my company?", a: "You can pick from nine themes. Custom brand colours and logos aren't supported yet." },
+    ],
+  },
+  {
+    slug: "marketing-presentation-maker",
+    name: "Marketing presentation maker",
+    title: "Marketing presentation maker with AI",
+    heading: "A marketing presentation maker for plans, campaigns and results",
+    description:
+      "Make marketing presentations with AI: strategy and campaign plans, results recaps from your spreadsheet, audience overviews. Your numbers stay as given. Edit and share.",
+    intro: [
+      "Marketing decks mix a story with numbers: what we planned, what happened, what we do next. Slidezza handles the story and keeps your numbers exactly as you give them.",
+      "Attach an exported spreadsheet or CSV and the figures arrive as big-number and table slides.",
+    ],
+    lead: "From a brief or a results export to a deck for your team, a client or a stakeholder review.",
+    steps: [
+      { title: "Start with a brief or an export", text: "Describe the campaign, or attach a CSV or Excel export of the results." },
+      { title: "Say who is watching", text: "A client, your boss or the wider team: it changes what is led with." },
+      { title: "Edit the story", text: "Rewrite headlines, reorder slides and ask the assistant to simplify any slide." },
+    ],
+    points: [
+      { title: "Numbers as exported", text: "Rows and totals from your file are used as given, not recalculated or rounded by the AI." },
+      { title: "Big numbers and tables", text: "Headline results get their own slides; detail goes into tables." },
+      { title: "Photos with credits", text: "Where a photo helps, a free-licence one is added and credited." },
+      { title: "Any language", text: "Prepare a deck for a market in its own language." },
+    ],
+    prompts: [
+      "Q3 campaign recap for the leadership team, with the headline numbers first",
+      "Content strategy for a small bakery's Instagram, with a 4-week plan",
+      "Launch plan for a new fitness app aimed at office workers",
+    ],
+    who: "Marketers, agencies, founders doing their own marketing and students of marketing.",
+    makes: "Marketing plans, campaign recaps, audience overviews and launch plans.",
+    limits: "No charts yet: figures appear as big numbers and tables. It doesn't connect to analytics tools, so bring your export. Any market-size claims need sources you can show.",
+    also: ["/business-presentation-maker", "/make/business-report-presentation", "/templates/business-report"],
+    faq: [
+      { q: "Can I attach analytics exports?", a: "Yes. CSV and Excel files are read, and their figures are used as given." },
+      { q: "Does it make charts?", a: "Not yet. Results appear as big-number slides and tables." },
+      { q: "Will it make up market statistics?", a: "For topics without sources, the AI is told not to invent statistics. Where a fact is missing, add it from a source you trust." },
+    ],
+  },
+  {
+    slug: "research-presentation-maker",
+    name: "Research presentation maker",
+    title: "Research presentation maker with AI",
+    heading: "A research presentation maker that starts from your paper or notes",
+    description:
+      "Turn a paper, thesis chapter or research notes into a clear presentation for a talk, lab meeting or defence. Your findings stay as written and sources are listed.",
+    intro: [
+      "A research talk is a paper made shorter: the question, the method, the findings and what they mean. Slidezza reads your paper or notes and builds that structure, keeping your numbers as written.",
+      "For background it can add sourced facts from Wikipedia and web pages, listed separately from your own material.",
+    ],
+    lead: "From a PDF or notes to a talk outline you can edit, with findings kept exactly as you wrote them.",
+    steps: [
+      { title: "Attach the paper or your notes", text: "A PDF, Word draft or notes. Several files can be combined, up to 5." },
+      { title: "Set the audience and length", text: "A 10-minute conference talk, a lab meeting and a defence call for different depth." },
+      { title: "Check findings against the paper", text: "Review every number and claim on the slides before presenting. Your own results are used as given." },
+    ],
+    points: [
+      { title: "Your findings, as written", text: "Numbers and wording from your file are used as given and not replaced by outside figures." },
+      { title: "Sources listed", text: "Files and web sources used are listed with the deck." },
+      { title: "Clear structure", text: "Question, method, results, limitations and next steps, in an order you can change." },
+      { title: "Timeline and table layouts", text: "Chronologies and comparisons are laid out as timelines and tables." },
+    ],
+    prompts: [
+      "A 10-minute conference talk from this paper, for an audience outside my subfield",
+      "Lab meeting update on my last three months of results",
+      "Thesis defence overview: question, method, findings, limitations",
+    ],
+    who: "Researchers, graduate students and anyone presenting findings.",
+    makes: "Conference talks, lab-meeting updates, thesis overviews and journal-club slides.",
+    limits: "Figures, charts and equations inside a PDF are not copied onto slides. The sources list isn't a formatted bibliography. Always check results against the paper.",
+    also: ["/make/pdf-to-presentation", "/presentation-maker-for-students", "/document-to-presentation"],
+    faq: [
+      { q: "Will it change my results?", a: "No. Numbers and findings from your file are used as given. Check the slides against the paper anyway, since summarising can still drop context." },
+      { q: "Can it include figures from the paper?", a: "Not yet. Figures and equations in PDFs aren't copied onto slides, so add them where you need them." },
+      { q: "Does it format citations?", a: "No. It lists the sources it used, but it doesn't produce citation styles such as APA or Vancouver." },
+    ],
+  },
 ];
 
 export const findSearchPage = (slug: string) => SEARCH_PAGES.find((p) => p.slug === slug);
 
-/** Pages linked from the footer and home page. */
-export const FOOTER_SEARCH_SLUGS = [
-  "ai-presentation-maker",
-  "ai-ppt-maker",
-  "ai-powerpoint-generator",
-  "text-to-ppt",
-  "presentation-from-prompt",
-  "pitch-deck-generator",
-  "ai-presentation-maker-free",
+/**
+ * Topic groups. A page links to the others in its group, plus the few pages it names in `also`,
+ * so related pages support each other without every page linking to every other page.
+ */
+export const CLUSTERS: { name: string; paths: string[] }[] = [
+  {
+    name: "AI presentation makers",
+    paths: ["/ai-presentation-maker", "/ai-presentation-generator", "/ai-slide-generator", "/presentation-maker", "/presentation-from-prompt", "/ai-presentation-maker-free"],
+  },
+  { name: "PowerPoint and PPT", paths: ["/ai-ppt-maker", "/ai-powerpoint-generator", "/ppt-generator", "/text-to-ppt"] },
+  { name: "From your files", paths: ["/document-to-presentation", "/make/pdf-to-presentation", "/make/word-to-powerpoint"] },
+  { name: "Students and teachers", paths: ["/presentation-maker-for-students", "/presentation-maker-for-teachers", "/research-presentation-maker"] },
+  {
+    name: "Business",
+    paths: ["/business-presentation-maker", "/sales-presentation-maker", "/marketing-presentation-maker", "/pitch-deck-generator", "/make/business-report-presentation"],
+  },
 ];
 
-/** Every guide page, for "more ways to use" lists. */
-export const guideLinks = (): { href: string; name: string }[] => [
-  ...SEARCH_PAGES.map((p) => ({ href: `/${p.slug}`, name: p.name })),
-  ...USE_CASES.map((u) => ({ href: `/make/${u.slug}`, name: u.name })),
+const ALL: (UseCase & { path: string })[] = [
+  ...SEARCH_PAGES.map((p) => ({ ...p, path: `/${p.slug}` })),
+  ...USE_CASES.map((u) => ({ ...u, path: `/make/${u.slug}` })),
 ];
+
+export const findGuide = (path: string) => ALL.find((g) => g.path === path);
+
+export interface RelatedGroup {
+  heading: string;
+  links: { href: string; name: string }[];
+}
+
+/** Contextual links for a guide page: its topic group first, then the pages it names. */
+export function relatedFor(path: string): RelatedGroup[] {
+  const guide = findGuide(path);
+  const nameOf = (href: string) => findGuide(href)?.name ?? href;
+  const cluster = CLUSTERS.find((c) => c.paths.includes(path));
+  const groups: RelatedGroup[] = [];
+  const seen = new Set([path]);
+  if (cluster) {
+    const links = cluster.paths.filter((h) => !seen.has(h)).map((href) => ({ href, name: nameOf(href) }));
+    links.forEach((l) => seen.add(l.href));
+    if (links.length) groups.push({ heading: cluster.name, links });
+  }
+  const extra = (guide?.also ?? []).filter((h) => !seen.has(h)).map((href) => ({ href, name: href.startsWith("/templates/") ? (TEMPLATE_PAGES.find((t) => `/templates/${t.slug}` === href)?.title ?? href) : nameOf(href) }));
+  if (extra.length) groups.push({ heading: "Also useful", links: extra });
+  return groups;
+}
+
+/** Every guide page, for the sitemap, llms.txt and the home page. */
+export const guidePaths = () => ALL.map((g) => g.path);
+export const allGuides = () => ALL;

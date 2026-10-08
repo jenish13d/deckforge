@@ -6,8 +6,9 @@ import { DeckLibrary } from "@/components/DeckLibrary";
 import { AppShell } from "@/components/app/AppShell";
 import { getCurrentUser } from "@/lib/auth";
 import { listDecks } from "@/lib/decks";
+import { PRIVATE_ROBOTS } from "@/lib/seo";
 
-export const metadata = { title: "My decks" };
+export const metadata = { title: "My decks", robots: PRIVATE_ROBOTS };
 
 export default async function DecksPage() {
   const user = await getCurrentUser();

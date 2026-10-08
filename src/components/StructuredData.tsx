@@ -1,16 +1,33 @@
 import { QUESTIONS } from "@/components/landing/Faq";
+import { billingConfigured } from "@/lib/billing";
 import { PLAN_IDS, PLANS } from "@/lib/plans";
-import { THEMES } from "@/lib/themes";
+import { organizationJsonLd } from "@/lib/seo";
 import { SITE } from "@/lib/site";
+import { THEMES } from "@/lib/themes";
 import { siteUrl } from "@/lib/url";
 
 /**
  * schema.org data for the home page, so search engines and AI assistants can read
  * what the product is, what it costs and the FAQ. Facts only: no ratings or reviews.
+ * The pieces refer to each other by @id: the page is part of the site, the site and the
+ * application are published by the organization.
  */
 export function StructuredData() {
   const url = siteUrl();
+  const org = { "@id": `${url}/#organization` };
+  // Paid plans are listed as offers only once they can actually be bought.
+  const offered = PLAN_IDS.filter((id) => id === "free" || billingConfigured());
   const data = [
+    { "@context": "https://schema.org", ...organizationJsonLd() },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": `${url}/#website`,
+      name: SITE.name,
+      url,
+      description: SITE.seoDescription,
+      publisher: org,
+    },
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
@@ -21,6 +38,7 @@ export function StructuredData() {
       applicationSubCategory: "AI presentation maker",
       operatingSystem: "Web browser",
       description: SITE.seoDescription,
+      publisher: org,
       featureList: [
         "Turn a topic, notes or files (PDF, Word, PowerPoint, Excel, photos) into a presentation with AI",
         "Quick setup questions and an editable outline before slides are written",
@@ -31,7 +49,7 @@ export function StructuredData() {
         "Present mode, share links, PDF and PowerPoint download",
         "Works in any language",
       ],
-      offers: PLAN_IDS.map((id) => ({
+      offers: offered.map((id) => ({
         "@type": "Offer",
         name: PLANS[id].label,
         price: PLANS[id].price.replace(/[^\d.]/g, ""),
@@ -42,17 +60,13 @@ export function StructuredData() {
     },
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
-      name: SITE.name,
+      "@type": "WebPage",
+      "@id": `${url}/#webpage`,
       url,
-      logo: `${url}/apple-icon`,
-      ...(SITE.contactEmail ? { email: SITE.contactEmail } : {}),
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      name: SITE.name,
-      url,
+      name: `AI Presentation Maker | Create Beautiful PPTs with ${SITE.name}`,
+      description: SITE.seoDescription,
+      isPartOf: { "@id": `${url}/#website` },
+      about: { "@id": `${url}/#app` },
     },
     {
       "@context": "https://schema.org",

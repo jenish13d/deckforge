@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TemplateIcon } from "@/components/TemplateIcon";
 import { PLANS } from "@/lib/plans";
+import { pageMetadata } from "@/lib/seo";
 import { SITE } from "@/lib/site";
 import { TEMPLATE_PAGES, findTemplatePage, templateFor } from "@/lib/template-pages";
 import { siteUrl } from "@/lib/url";
@@ -20,13 +21,7 @@ export function generateStaticParams() {
 export async function generateMetadata(props: PageProps<"/templates/[slug]">): Promise<Metadata> {
   const page = findTemplatePage((await props.params).slug);
   if (!page) return {};
-  const path = `/templates/${page.slug}`;
-  return {
-    title: page.title,
-    description: page.description,
-    alternates: { canonical: path },
-    openGraph: { title: `${page.title} · ${SITE.name}`, description: page.description, url: path, type: "website" },
-  };
+  return pageMetadata({ title: page.title, description: page.description, path: `/templates/${page.slug}` });
 }
 
 export default async function TemplatePage(props: PageProps<"/templates/[slug]">) {
@@ -82,7 +77,14 @@ export default async function TemplatePage(props: PageProps<"/templates/[slug]">
               <li key={item}>{item}</li>
             ))}
           </ul>
-          <p className="muted">{page.suits}</p>
+        </section>
+
+        <section className="section" aria-labelledby="who">
+          <h2 id="who" className="section-heading">Who it&apos;s for</h2>
+          <p>{page.suits}</p>
+          <h2 id="example" className="section-heading">An example</h2>
+          <p>{page.example}</p>
+          <p className="muted small">An illustration of how the template is used, not a real customer.</p>
         </section>
 
         <section className="section" aria-labelledby="prompt">
@@ -98,7 +100,13 @@ export default async function TemplatePage(props: PageProps<"/templates/[slug]">
               <li key={p.slug}><Link href={`/templates/${p.slug}`}>{templateFor(p).name}</Link></li>
             ))}
             <li><Link href="/templates">All templates</Link></li>
-            <li><Link href="/ai-presentation-maker">AI presentation maker</Link></li>
+          </ul>
+          <h3 className="use-case__group-title">Related guides</h3>
+          <ul className="use-case__more">
+            {page.also.map((link) => (
+              <li key={link.href}><Link href={link.href}>{link.name}</Link></li>
+            ))}
+            <li><Link href="/how-it-works">How it works</Link></li>
           </ul>
         </section>
       </main>

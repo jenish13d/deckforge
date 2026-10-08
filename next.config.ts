@@ -34,11 +34,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  // Two guides moved to top-level pages; keep old links and search results working.
+  // Three guides moved to top-level pages; keep old links and search results working.
   async redirects() {
     return [
       { source: "/make/pitch-deck", destination: "/pitch-deck-generator", permanent: true },
       { source: "/make/school-presentation", destination: "/presentation-maker-for-students", permanent: true },
+      { source: "/make/lesson-slides", destination: "/presentation-maker-for-teachers", permanent: true },
     ];
   },
   // The search landing pages live in app/guide/[slug] and are served at the top level, so the

@@ -20,15 +20,18 @@ import { getCurrentUser } from "@/lib/auth";
 import { listDecks } from "@/lib/decks";
 import { PLANS, planOf } from "@/lib/plans";
 import { availableModes, premiumAvailable } from "@/lib/providers";
-import { SEARCH_PAGES } from "@/lib/search-pages";
+import { CLUSTERS, findGuide } from "@/lib/search-pages";
+import { pageMetadata } from "@/lib/seo";
 import { SITE } from "@/lib/site";
 import { TEMPLATES, findTemplate } from "@/lib/templates";
 import { THEMES } from "@/lib/themes";
 
-export const metadata = {
-  title: { absolute: `AI Presentation Maker | Create Beautiful PPTs with ${SITE.name}` },
-  alternates: { canonical: "/" },
-};
+export const metadata = pageMetadata({
+  title: `AI Presentation Maker | Create Beautiful PPTs with ${SITE.name}`,
+  description: SITE.seoDescription,
+  path: "/",
+  absoluteTitle: true,
+});
 
 interface Point {
   icon: LucideIcon;
@@ -170,13 +173,23 @@ export default async function Home(props: PageProps<"/">) {
 
           <section id="guides" className="section">
             <h2 className="section-heading center">What do you want to make?</h2>
-            <ul className="use-case__more use-case__more--center">
-              {SEARCH_PAGES.map((p) => (
-                <li key={p.slug}>
-                  <Link href={`/${p.slug}`}>{p.name}</Link>
-                </li>
+            <p className="muted center">
+              {SITE.name} works as an AI presentation maker and an AI PPT maker: describe a topic or attach your files and get a designed, editable deck. Pick the guide that matches what you need, or read <Link href="/how-it-works">how it works</Link> and <Link href="/features">what it can do</Link>.
+            </p>
+            <div className="guide-groups">
+              {CLUSTERS.map((cluster) => (
+                <div key={cluster.name} className="guide-groups__col">
+                  <h3 className="use-case__group-title">{cluster.name}</h3>
+                  <ul className="guide-groups__list">
+                    {cluster.paths.map((path) => (
+                      <li key={path}>
+                        <Link href={path}>{findGuide(path)?.name}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
 
           <section id="faq" className="section">

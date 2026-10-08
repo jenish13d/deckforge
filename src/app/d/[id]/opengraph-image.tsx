@@ -19,7 +19,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   return new ImageResponse(
     <OgCard
       eyebrow={visible ? "Presentation" : "Private deck"}
-      title={visible ? deck.title : "Beautiful slides in a minute"}
+      title={visible ? deck.title : "Beautiful slides from your idea"}
       footer={visible ? `${cards} slide${cards === 1 ? "" : "s"} · Made with ${SITE.name}` : `Made with ${SITE.name}`}
     />,
     size,

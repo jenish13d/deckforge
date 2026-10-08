@@ -9,8 +9,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { billingConfigured, billingDemoEnabled, maxConfigured } from "@/lib/billing";
 import { MODES, PLANS, PLAN_IDS, planOf } from "@/lib/plans";
 import { onWaitlist } from "@/lib/waitlist";
+import { PRIVATE_ROBOTS } from "@/lib/seo";
 
-export const metadata = { title: "Account" };
+export const metadata = { title: "Account", robots: PRIVATE_ROBOTS };
 
 export default async function AccountPage(props: PageProps<"/account">) {
   const user = await getCurrentUser();
