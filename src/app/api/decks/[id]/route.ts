@@ -4,6 +4,7 @@ import { canView } from "@/lib/access";
 import { canRemoveBadge, getDeck, ownsDeck, reorderCards, updateDeck } from "@/lib/decks";
 import { isCreditsPlace } from "@/lib/slides";
 import { forbidden, jsonError, readJson, str, unauthorized } from "@/lib/http";
+import { cancelJobs } from "@/lib/jobs";
 import { isThemeId } from "@/lib/themes";
 
 export async function GET(_request: Request, ctx: RouteContext<"/api/decks/[id]">) {
@@ -50,6 +51,7 @@ export async function DELETE(_request: Request, ctx: RouteContext<"/api/decks/[i
   const user = await getCurrentUser();
   if (!user) return unauthorized();
   if (!(await ownsDeck(user.id, id))) return forbidden();
+  await cancelJobs({ deckId: id });
   await db.deck.delete({ where: { id } });
   return new Response(null, { status: 204 });
 }

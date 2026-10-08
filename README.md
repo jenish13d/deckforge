@@ -128,9 +128,10 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 | API | `src/app/api/{auth,outline,decks,billing,feedback,captcha,image,images}` |
 | AI | `src/lib/ai.ts` (Claude + routing), `src/lib/gemini.ts` (Gemini), `src/lib/providers.ts` (which provider), `src/lib/demo-ai.ts` (sample content) |
 | Accounts | `src/lib/auth.ts` (session cookies), `src/lib/password.ts` (scrypt) |
-| Credits & plans | `src/lib/credits.ts`, `src/lib/plans.ts` |
+| Credits & plans | `src/lib/credits.ts` (charge and refund through the ledger), `src/lib/plans.ts` |
+| Background generation | `src/lib/jobs.ts` (jobs), `src/lib/worker.ts` (worker loop), `src/lib/job-dispatch.ts` (how workers start), `src/lib/job-state.ts` (what the editor shows) |
 | Payments | `src/lib/billing.ts` |
-| Data | Prisma + PostgreSQL (`prisma/schema.prisma`): `User`, `Session`, `Deck`, `Card`, `PasswordReset`, `Feedback` |
+| Data | Prisma + PostgreSQL (`prisma/schema.prisma`): `User`, `Session`, `Deck`, `Card`, `PasswordReset`, `Feedback`, `GenerationJob`, `CreditLedger` |
 
 ## Run it
 
@@ -146,6 +147,55 @@ npm run dev                 # http://localhost:3000
 To put it online, follow **[DEPLOY.md](DEPLOY.md)** (Neon + Vercel, step by step).
 
 For real AI, put an [Anthropic API key](https://console.anthropic.com) in `.env` and set `DEMO_AI=""`.
+
+### Background generation
+
+Cards are written by the server, not by the browser. You can start a deck, close the tab or refresh, and it
+carries on; opening the editor again shows where every card stands.
+
+- **A job per card** (`GenerationJob`). Asking for a card (the deck's first write, or "Rewrite") creates a job.
+  The credits are taken in the same database transaction that creates the job, and recorded in `CreditLedger`
+  as a `charge`. A failed job's credits are returned once (`refund`); the ledger allows one charge and one
+  refund per job, so retries, refreshes and several tabs never charge twice or refund twice.
+- **No duplicates.** A card has at most one waiting or running job (a unique index in the migration backs this
+  up), and the editor sends one `key` per click, so a repeated request finds the job it already made.
+- **Statuses.** `queued` → `running` (with a stage: researching, writing, checking, photos) → `succeeded`;
+  a failed attempt goes back to `queued` and retries up to 3 times (the editor shows "Retrying…"); after the
+  last attempt the job is `failed` and refunded. Deleting a card or deck cancels its jobs and refunds them.
+  A worker that dies is recovered: its job's lease (90 s) runs out and the job is retried or failed.
+- **Parallel limit.** The server runs at most `parallelCards(plan)` jobs per user at once (the same limit the
+  editor used to follow); the rest wait their turn. Provider fallback, the UK/EU routing rule (the visitor's
+  country is saved on the job), fact checking and photo choice are unchanged.
+- **Following along.** `POST /api/decks/[id]/generate` queues every card still waiting (the editor calls it when it
+  opens; it is safe to call again). `GET /api/decks/[id]/jobs` returns each card's latest job and the credits;
+  the editor polls it while any job is active, and re-reads a card when its job finishes.
+
+**Who runs the jobs.** The jobs live in the database, so how a worker is started is a small adapter
+(`src/lib/job-dispatch.ts`), chosen with `JOB_DISPATCHER`:
+
+| Value | What happens |
+| --- | --- |
+| `after` (default) | A worker runs right after the request that created the job (Next's `after()`), for up to `JOB_WORKER_SECONDS` (35). If jobs are left it calls `/api/jobs/process` to start a fresh worker with its own time limit. Needs `JOBS_SECRET` (or `CRON_SECRET`) for that hand-over. |
+| `webhook` | Sends `{ "userId" }` to `JOB_DISPATCH_URL` (an external queue such as Vercel Queues, QStash or Inngest). That service must call `POST /api/jobs/process` with `Authorization: Bearer <JOBS_SECRET>`, which runs the worker. Falls back to `after` if the queue can't be reached. |
+| `none` | Starts nothing (tests, or your own process calling `/api/jobs/process`). |
+
+Whatever the setting, leftovers are also picked up by the editor's poll and by the cron in `vercel.json`
+(`/api/jobs/process`, once a day, because the free Vercel plan allows nothing more often; on Pro change its
+schedule to `* * * * *` so jobs finish even when nobody has the editor open and the hand-over is unavailable).
+
+Environment variables (all optional):
+
+| Variable | Purpose |
+| --- | --- |
+| `JOB_DISPATCHER` | `after` (default), `webhook` or `none`, as above. |
+| `JOBS_SECRET` | Password for `/api/jobs/process`. Falls back to `CRON_SECRET`; with neither set the endpoint answers 404 and the hand-over is off. |
+| `JOB_DISPATCH_URL` | Queue ingest URL for `webhook`. |
+| `JOB_WORKER_SECONDS` | How long a worker keeps starting new jobs (default 35; routes stop at 60 s). |
+
+**Locally.** Nothing extra is needed: `npm run dev` uses `after`, so the worker runs inside the dev server, and the
+editor's poll nudges it if it stops. To follow the hand-over locally set `APP_URL=http://localhost:3000` and
+`JOBS_SECRET=anything`. Run `npx prisma migrate deploy` first: the new tables and the one-job-per-card index come
+with migration `20261008120000_generation_jobs`.
 
 ### Setting up payments (Stripe)
 

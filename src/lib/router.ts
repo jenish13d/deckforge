@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+
 import type { ModelRequest, Role } from "./ai";
 import { callClaude } from "./claude";
 import { AiBusyError, GenerationError } from "./errors";
@@ -100,6 +102,30 @@ function compatProvider(id: "openai" | "groq" | "openrouter" | "zai", role: Role
   return { id, apiKey, baseUrl: "https://api.z.ai/api/paas/v4", model: process.env.ZAI_MODEL || "glm-4.7-flash" };
 }
 
+/** The model a provider will use for a request (what runOn calls), for the record of who wrote a card. */
+function modelName(id: ProviderId, request: Pick<ModelRequest<unknown>, "role" | "mode">): string {
+  const mode = request.mode ?? "standard";
+  const role = request.role ?? "card";
+  if (id === "anthropic") return MODES[role === "check" || role === "research" || role === "vision" ? "quick" : mode].model;
+  if (id === "gemini") return geminiModel(mode === "quick" ? "quick" : "standard");
+  return compatProvider(id, role).model;
+}
+
+export interface Usage {
+  provider: string;
+  model: string;
+}
+
+const usageStore = new AsyncLocalStorage<{ role: Role; usage: Usage }[]>();
+
+/** Runs `fn` and reports which provider and model answered its card-writing call (the last one, if it retried). */
+export async function withUsage<T>(fn: () => Promise<T>): Promise<{ result: T; usage: Usage | null }> {
+  const used: { role: Role; usage: Usage }[] = [];
+  const result = await usageStore.run(used, fn);
+  const writer = [...used].reverse().find((u) => u.role === "card") ?? used[used.length - 1];
+  return { result, usage: writer?.usage ?? null };
+}
+
 function runOn<T>(id: ProviderId, request: ModelRequest<T>, isLast: boolean): Promise<T> {
   const mode = request.mode ?? "standard";
   const role = request.role ?? "card";
@@ -149,7 +175,9 @@ export async function routeCall<T>(request: ModelRequest<T>): Promise<T> {
   let failure: unknown = null;
   for (const [i, id] of attempts.entries()) {
     try {
-      return await runOn(id, request, i === attempts.length - 1);
+      const answer = await runOn(id, request, i === attempts.length - 1);
+      usageStore.getStore()?.push({ role: request.role ?? "card", usage: { provider: id, model: modelName(id, request) } });
+      return answer;
     } catch (error) {
       if (error instanceof AiBusyError) {
         const wait = error.daily ? 6 * 3600 : Math.max(15, error.retryAfterSeconds);

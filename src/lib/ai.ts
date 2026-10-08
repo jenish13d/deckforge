@@ -365,6 +365,8 @@ export async function generateCard(
     /** Check facts before returning the card (off for the sample content in demo mode). */
     factCheck?: boolean;
     depth?: Depth;
+    /** Told where the card is: looking at sources, writing, or checking facts. */
+    onStage?: (stage: "researching" | "writing" | "checking") => void;
   },
   call: CallModel = defaultCall,
 ): Promise<{ card: CardContent; imageQuery: string; /** Extra pages found for this card. */ found?: Research }> {
@@ -376,6 +378,7 @@ export async function generateCard(
       : (last ? " This is the closing card: sum up the key takeaways or end with a call to action." : "") +
         (args.previousLayout ? ` The previous card used the "${args.previousLayout}" layout, so choose a different one.` : "");
 
+  args.onStage?.(args.research?.sources.length ? "researching" : "writing");
   const cardQuery = `${brief.title} ${brief.points.join(" ")}`;
   let texts: SourceText[] = args.research?.sources.length ? await researchTexts(args.research) : [];
   const depth = args.depth ?? "medium";
@@ -416,6 +419,7 @@ export async function generateCard(
     return args.index === 0 ? { ...normalized, layout: "title" as const } : varyLayout(normalized, args.previousLayout);
   };
 
+  args.onStage?.("writing");
   let first = await call(request);
   // A content card that came back as a bare divider (a title and one line) is asked once more for substance.
   if (!demoEnabled() && thinCard(normalizeCard(first), args.index, args.outline.length)) {
@@ -429,6 +433,7 @@ export async function generateCard(
   let imageQuery = first.imageQuery;
 
   if (args.factCheck ?? !demoEnabled()) {
+    args.onStage?.("checking");
     const problems = verifyCard(card, texts, own);
     if (excerpt) problems.push(...(await checkClaims(card, excerpt, call, base)));
     if (problems.length > 0) {

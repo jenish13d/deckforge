@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { CardContentSchema } from "@/lib/cards";
 import { deleteCard, ownsCard, updateCardContent } from "@/lib/decks";
 import { forbidden, jsonError, readJson, unauthorized } from "@/lib/http";
+import { cancelJobs } from "@/lib/jobs";
 
 type Ctx = RouteContext<"/api/decks/[id]/cards/[cardId]">;
 
@@ -21,6 +22,7 @@ export async function DELETE(_request: Request, ctx: Ctx) {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
   if (!(await ownsCard(user.id, id, cardId))) return forbidden();
+  await cancelJobs({ cardId });
   await deleteCard(id, cardId);
   return new Response(null, { status: 204 });
 }

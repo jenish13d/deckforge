@@ -29,6 +29,8 @@ model User {
   passwordResets       PasswordReset[]
   feedback             Feedback[]
   research             Research[]
+  generationJobs       GenerationJob[]
+  creditLedger         CreditLedger[]
 }
 
 model PasswordReset {
@@ -142,4 +144,73 @@ model ProWaitlist {
   createdAt  DateTime  @default(now())
   // When the "it's open" email was sent.
   notifiedAt DateTime?
+}
+
+// One accepted request to write a card. The server owns it: it is charged once when it is
+// accepted, runs in the background, and is refunded once if it ends in failure. deckId and
+// cardId are plain strings (no foreign keys) so deleting a card or deck never erases what a
+// job cost; a job whose card is gone is cancelled and refunded.
+//
+// Besides the indexes below, the migration adds a partial unique index that allows only one
+// queued or running job per card (Prisma can't express it): see
+// prisma/migrations/20261008120000_generation_jobs.
+model GenerationJob {
+  id             String         @id @default(cuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deckId         String
+  cardId         String
+  // "quick" | "standard" | "premium"
+  mode           String
+  // Extra instruction from "Rewrite" (empty for the first write).
+  instruction    String         @default("")
+  // Visitor's country when the job was accepted, so UK/EU routing rules still apply in the background.
+  region         String?
+  // queued | running | succeeded | failed | cancelled
+  status         String         @default("queued")
+  // While running: researching | writing | checking | photos.
+  stage          String         @default("")
+  attempts       Int            @default(0)
+  maxAttempts    Int            @default(3)
+  // Credits charged when the job was accepted.
+  cost           Int
+  // Provider and model that wrote the card (set when it succeeds).
+  provider       String?
+  model          String?
+  // Message safe to show to the user, and a short code for the UI.
+  error          String?
+  errorCode      String?
+  // Same key, same job: lets a retried request find the job it already made.
+  idempotencyKey String         @unique
+  // Not before this time (retries wait here).
+  runAfter       DateTime       @default(now())
+  // A running job whose lease has passed was abandoned (the worker died) and is recovered.
+  lockedUntil    DateTime?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  ledger         CreditLedger[]
+
+  @@index([userId, status, runAfter])
+  @@index([deckId, cardId, createdAt])
+  @@index([status, runAfter])
+}
+
+// Every credit a job takes or gives back. A job has at most one charge and one refund.
+model CreditLedger {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String?
+  job       GenerationJob? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  // Always positive; `type` says which way the credits moved.
+  amount    Int
+  // "charge" | "refund"
+  type      String
+  reason    String
+  createdAt DateTime       @default(now())
+
+  @@unique([jobId, type])
+  @@index([userId, createdAt])
 }

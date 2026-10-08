@@ -224,6 +224,11 @@ export async function generateDeckCard(
   mode: ModeId,
   extra?: string,
   region?: string | null,
+  options: {
+    /** Mark a never-written card as failed when this attempt fails (off for background jobs, which retry first). */
+    markFailed?: boolean;
+    onStage?: (stage: "researching" | "writing" | "checking" | "photos") => void;
+  } = {},
 ): Promise<CardView> {
   const deck = await getDeck(deckId);
   const index = deck?.cards.findIndex((c) => c.id === cardId) ?? -1;
@@ -242,7 +247,9 @@ export async function generateDeckCard(
       research,
       region,
       depth: deck.depth,
+      onStage: options.onStage,
     });
+    options.onStage?.("photos");
     const image = IMAGE_LAYOUTS.includes(card.layout)
       ? await uniquePhoto(deckId, cardId, (used) => findPhoto(imageQuery, used, { sources: research.sources, cover: index === 0 }))
       : null;
@@ -255,7 +262,7 @@ export async function generateDeckCard(
     return toCardView(row);
   } catch (error) {
     // Keep existing content on a failed regenerate; only mark never-generated cards as failed.
-    if (!deck.cards[index].content) {
+    if ((options.markFailed ?? true) && !deck.cards[index].content) {
       await db.card.update({ where: { id: cardId }, data: { status: "failed" } });
     }
     throw error;

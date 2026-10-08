@@ -3,7 +3,7 @@
 import { ArrowDown, ArrowUp, CopyPlus, Palette, Settings2, Sparkles, Ellipsis, Eye, Lock, PartyPopper, Pencil, Play, Plus, Share2, Trash2, WandSparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Spinner3D } from "@/components/Spinner3D";
 import { CardEditForm } from "@/components/CardEditForm";
@@ -25,13 +25,14 @@ import { useToast } from "@/components/ui/Toast";
 import { emptyCard, plainTitle, type CardContent } from "@/lib/cards";
 import { ApiError, api } from "@/lib/client";
 import type { CardView as CardData, DeckView } from "@/lib/decks";
+import { describeJob, isActive, showsFailure, type JobView } from "@/lib/job-state";
 import { MODES, type ModeId } from "@/lib/plans";
 import { deckSlides, type DeckLook } from "@/lib/slides";
 import { THEMES, isThemeId, type ThemeId } from "@/lib/themes";
 
-// How many times a card waits out the AI's per-minute limit before giving up.
-const MAX_BUSY_RETRIES = 8;
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+// How often the editor asks the server how the cards are doing (seconds): faster while you look at it.
+const POLL_SECONDS = 2;
+const POLL_HIDDEN_SECONDS = 6;
 
 type Dialog =
   | { kind: "add"; position: number }
@@ -48,17 +49,17 @@ function without<T>(record: Record<string, T>, key: string): Record<string, T> {
 
 export function Editor({
   initial,
+  initialJobs = [],
   initialCredits,
   allowedModes,
-  parallel = 3,
   photosEnabled = false,
   canRemoveBadge = false,
 }: {
   initial: DeckView;
+  /** Where each card's generation job stands (the server writes the cards; this only follows along). */
+  initialJobs?: JobView[];
   initialCredits: number;
   allowedModes: ModeId[];
-  /** Cards written at once (1 on the free Gemini tier, which allows few requests per minute). */
-  parallel?: number;
   photosEnabled?: boolean;
   /** Paid plans can take the "Made with" badge off. */
   canRemoveBadge?: boolean;
@@ -66,15 +67,15 @@ export function Editor({
   const [deck, setDeck] = useState(initial);
   const [credits, setCredits] = useState(initialCredits);
   const [mode, setMode] = useState<ModeId>(allowedModes.includes(initial.mode) ? initial.mode : allowedModes[0]);
-  // Set when the server says we're out of credits, so pending cards stop retrying.
+  // Set when the server couldn't take credits for a card, so waiting cards say so instead of spinning.
   const [outOfCredits, setOutOfCredits] = useState(false);
-  // Set when the AI's daily limit is reached, for the same reason.
-  const [dailyLimit, setDailyLimit] = useState(false);
-  // "Waiting for the AI…" notes for cards that are waiting out a rate limit.
-  const [waiting, setWaiting] = useState<Record<string, string>>({});
+  // The latest generation job of each card, as the server last told us.
+  const [jobs, setJobs] = useState<Record<string, JobView>>(() => Object.fromEntries(initialJobs.map((j) => [j.cardId, j])));
+  // Requests to start a job that haven't been answered yet.
+  const [requesting, setRequesting] = useState<Record<string, boolean>>({});
+  const [requestErrors, setRequestErrors] = useState<Record<string, string>>({});
+  const [now, setNow] = useState(() => Date.now());
   const [editing, setEditing] = useState<string | null>(null);
-  const [busy, setBusy] = useState<Record<string, boolean>>({});
-  const [cardErrors, setCardErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [presenting, setPresenting] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -83,68 +84,113 @@ export function Editor({
   const [assistant, setAssistant] = useState(false);
   const [toast, showToast] = useToast();
   const router = useRouter();
-  const [tick, setTick] = useState(0);
   // Celebrate once a freshly generated deck has every card written.
   const [startedWriting] = useState(() => initial.cards.some((c) => c.status === "pending"));
   const [bravoClosed, setBravoClosed] = useState(false);
-  const inFlight = useRef(new Set<string>());
+  const jobsRef = useRef(jobs);
+  jobsRef.current = jobs;
+  const ensuring = useRef(false);
 
   const replaceCard = (card: CardData) =>
     setDeck((d) => ({ ...d, cards: d.cards.map((c) => (c.id === card.id ? card : c)) }));
 
-  const generate = useCallback(
-    async (cardId: string, instructions?: string, cardMode?: ModeId) => {
-      if (inFlight.current.has(cardId)) return;
-      inFlight.current.add(cardId);
-      setBusy((b) => ({ ...b, [cardId]: true }));
-      setCardErrors((errs) => without(errs, cardId));
-      try {
-        for (let attempt = 0; ; attempt++) {
-          try {
-            const result = await api<{ card: CardData; credits: number }>(
-              `/api/decks/${deck.id}/cards/${cardId}/generate`,
-              { body: { instructions, mode: cardMode } },
-            );
-            replaceCard(result.card);
-            setCredits(result.credits);
-            break;
-          } catch (e) {
-            // The AI is rate limited for a moment: wait as long as it asks, then try again.
-            const busy = e instanceof ApiError && e.status === 429 && typeof e.data.retryAfter === "number";
-            if (!busy || e.data.daily || attempt >= MAX_BUSY_RETRIES) throw e;
-            const seconds = Math.min(Math.max(e.data.retryAfter as number, 5), 60);
-            setWaiting((w) => ({ ...w, [cardId]: `Waiting for the AI (free plan limit)… retrying in ${seconds}s` }));
-            await sleep(seconds * 1000);
-            setWaiting((w) => without(w, cardId));
-          }
-        }
-      } catch (e) {
-        if (e instanceof ApiError && e.status === 402) setOutOfCredits(true);
-        if (e instanceof ApiError && e.status === 429 && e.data.daily) setDailyLimit(true);
-        setCardErrors((errs) => ({ ...errs, [cardId]: e instanceof Error ? e.message : String(e) }));
-        setDeck((d) => ({
-          ...d,
-          cards: d.cards.map((c) => (c.id === cardId && !c.content ? { ...c, status: "failed" } : c)),
-        }));
-      } finally {
-        inFlight.current.delete(cardId);
-        setBusy((b) => without(b, cardId));
-        setWaiting((w) => without(w, cardId));
-        setTick((t) => t + 1);
-      }
-    },
-    [deck.id],
-  );
+  const applyJobs = (list: JobView[]) => {
+    const next = Object.fromEntries(list.map((j) => [j.cardId, j]));
+    // A card whose job just finished has new content (or a failure) on the server: fetch it.
+    const finished = list.filter((j) => {
+      const before = jobsRef.current[j.cardId];
+      return !isActive(j) && (before?.id !== j.id || isActive(before));
+    });
+    setJobs((old) => ({ ...old, ...next }));
+    if (finished.length > 0) void refreshCards(finished.map((j) => j.cardId));
+  };
 
-  // Write pending cards a few at a time; resumes after a page reload too.
+  /** Re-reads the given cards from the server (after their job finished, possibly in another tab). */
+  async function refreshCards(cardIds: string[]) {
+    try {
+      const fresh = await api<DeckView>(`/api/decks/${deck.id}`);
+      setDeck((d) => ({ ...d, sources: fresh.sources, cards: d.cards.map((c) => (cardIds.includes(c.id) ? (fresh.cards.find((f) => f.id === c.id) ?? c) : c)) }));
+    } catch {
+      // The next poll tries again through the next finished job; the page reload always shows the truth.
+    }
+  }
+
+  /** Asks the server to write every card that is still waiting. Safe to repeat: nothing is charged twice. */
+  async function ensure() {
+    if (ensuring.current) return;
+    ensuring.current = true;
+    try {
+      const result = await api<{ outOfCredits: boolean; refused: { message: string } | null; jobs: JobView[]; credits: number }>(`/api/decks/${deck.id}/generate`, { body: {} });
+      setCredits(result.credits);
+      setOutOfCredits(result.outOfCredits);
+      if (result.refused) setError(result.refused.message);
+      applyJobs(result.jobs);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      ensuring.current = false;
+    }
+  }
+
+  // Opening the editor (or refreshing it) carries on with whatever isn't written yet.
   useEffect(() => {
-    if (outOfCredits || dailyLimit) return;
-    const free = parallel - inFlight.current.size;
-    deck.cards
-      .filter((c) => c.status === "pending" && !inFlight.current.has(c.id))
-      .slice(0, Math.max(free, 0))
-      .forEach((c) => void generate(c.id));
-  }, [deck.cards, outOfCredits, dailyLimit, parallel, generate, tick]);
+    if (deck.cards.some((c) => c.status === "pending")) void ensure();
+    // Only on open: later changes ask for jobs themselves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // While any job is waiting or running, follow it. The server keeps working without this tab.
+  const following = Object.values(jobs).some(isActive);
+  useEffect(() => {
+    if (!following) return;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      try {
+        const result = await api<{ jobs: JobView[]; credits: number }>(`/api/decks/${deck.id}/jobs`);
+        if (stopped) return;
+        setCredits(result.credits);
+        setNow(Date.now());
+        applyJobs(result.jobs);
+      } catch {
+        // A hiccup in the network: try again at the next beat.
+      }
+      if (!stopped) timer = setTimeout(poll, (document.hidden ? POLL_HIDDEN_SECONDS : POLL_SECONDS) * 1000);
+    };
+    timer = setTimeout(poll, POLL_SECONDS * 1000);
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+    // applyJobs only uses refs and setters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [following, deck.id]);
+
+  /** Asks the server to (re)write one card. The same `key` is used if the request has to be repeated. */
+  async function requestCard(cardId: string, instructions?: string, cardMode?: ModeId) {
+    const key = crypto.randomUUID();
+    setRequesting((r) => ({ ...r, [cardId]: true }));
+    setRequestErrors((errs) => without(errs, cardId));
+    try {
+      for (let attempt = 0; ; attempt++) {
+        try {
+          const result = await api<{ job: JobView; credits: number }>(`/api/decks/${deck.id}/cards/${cardId}/generate`, { body: { instructions, mode: cardMode, key } });
+          setJobs((old) => ({ ...old, [cardId]: result.job }));
+          setCredits(result.credits);
+          return;
+        } catch (e) {
+          // A dropped connection: repeat with the same key, so a request that did arrive isn't charged twice.
+          if (e instanceof ApiError || attempt >= 2) throw e;
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        }
+      }
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 402) setOutOfCredits(true);
+      setRequestErrors((errs) => ({ ...errs, [cardId]: e instanceof Error ? e.message : String(e) }));
+    } finally {
+      setRequesting((r) => without(r, cardId));
+    }
+  }
 
   async function run(action: () => Promise<void>) {
     setError("");
@@ -184,12 +230,13 @@ export function Editor({
     void run(async () => {
       await api(`/api/decks/${deck.id}/cards`, { body: { afterPosition: position, title } });
       setDeck(await api<DeckView>(`/api/decks/${deck.id}`));
+      void ensure(); // the new slide is written like the others
     });
   }
 
   function regenerate(card: CardData, instructions: string) {
     setOutOfCredits(false);
-    void generate(card.id, instructions || undefined, mode);
+    void requestCard(card.id, instructions || undefined, mode);
   }
 
   /** Carries out the changes the assistant proposed and the user approved. */
@@ -200,7 +247,7 @@ export function Editor({
         const card = deck.cards[a.slide - 1];
         if (card) {
           setOutOfCredits(false);
-          void generate(card.id, a.instruction, mode);
+          void requestCard(card.id, a.instruction, mode);
         }
       }
     }
@@ -243,7 +290,13 @@ export function Editor({
   const slides = deckSlides(readyCards, deck.look);
   const extraSlides = slides.slice(readyCards.length);
   const writing = deck.cards.filter((c) => c.status === "pending").length;
-  const nowWriting = deck.cards.findIndex((c) => c.status === "pending" && busy[c.id]);
+  // Cards with a job in progress (or a request on its way), by id.
+  const busy = useMemo(() => Object.fromEntries(deck.cards.map((c) => [c.id, Boolean(requesting[c.id]) || isActive(jobs[c.id])])), [deck.cards, jobs, requesting]);
+  const notes = useMemo(() => Object.fromEntries(deck.cards.map((c) => [c.id, busy[c.id] ? describeJob(jobs[c.id], now) : null])), [deck.cards, jobs, busy, now]);
+  const failures = Object.fromEntries(deck.cards.map((c) => [c.id, showsFailure(jobs[c.id], Boolean(c.content), now) ? jobs[c.id].error : null]));
+  const dailyLimit = Object.values(jobs).some((j) => j.errorCode === "ai_daily_limit" && showsFailure(j, false, now));
+  const nowWriting = deck.cards.findIndex((c) => c.status === "pending" && jobs[c.id]?.status === "running");
+  const retrying = deck.cards.map((c) => notes[c.id]).find((n) => n?.phase === "retrying");
   const themeName = THEMES.find((t) => t.id === deck.theme)?.name ?? "Theme";
   const bravo = startedWriting && !bravoClosed && deck.cards.length > 0 && deck.cards.every((c) => c.status === "ready");
 
@@ -325,7 +378,7 @@ export function Editor({
       <SlideRail cards={deck.cards} theme={deck.theme} />
       <main id="main" className="page studio__canvas">
         <h1 className="sr-only">{deck.title}</h1>
-        {writing > 0 && (
+        {writing > 0 && Object.values(busy).some(Boolean) && (
           <div className="writing writing--float" role="status">
             <p className="writing__text">
               <Spinner3D size={18} />
@@ -334,6 +387,8 @@ export function Editor({
                   <>
                     Writing slide {nowWriting + 1}: <strong>{plainTitle(deck.cards[nowWriting].brief.title)}</strong>
                   </>
+                ) : retrying ? (
+                  retrying.label
                 ) : (
                   `Writing card ${deck.cards.length - writing + 1} of ${deck.cards.length}…`
                 )}
@@ -414,12 +469,14 @@ export function Editor({
                 <CardPlaceholder
                   title={card.brief.title}
                   failed={card.status === "failed" && !busy[card.id]}
-                  note={waiting[card.id]}
-                  active={Boolean(busy[card.id])}
+                  note={notes[card.id]?.label ?? (outOfCredits && card.status === "pending" ? "Not written yet: you're out of credits." : undefined)}
+                  active={Boolean(busy[card.id]) && notes[card.id]?.phase !== "queued"}
                 />
               )}
-              {card.content && waiting[card.id] && <p className="status" role="status">{waiting[card.id]}</p>}
-              {cardErrors[card.id] && <p className="error" role="alert">{cardErrors[card.id]}</p>}
+              {card.content && (notes[card.id]?.phase === "queued" || notes[card.id]?.phase === "retrying") && (
+                <p className="status" role="status">{notes[card.id]?.label}</p>
+              )}
+              {(requestErrors[card.id] ?? failures[card.id]) && <p className="error" role="alert">{requestErrors[card.id] ?? failures[card.id]}</p>}
 
               <div className="add-card">
                 <button type="button" className="add-card__button" onClick={() => setDialog({ kind: "add", position: card.position })}>

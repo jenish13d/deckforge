@@ -1,17 +1,19 @@
-import { GenerationError } from "@/lib/ai";
-import { AiBusyError } from "@/lib/errors";
 import { getCurrentUser } from "@/lib/auth";
-import { chargeCredits, creditsOf, refundCredits } from "@/lib/credits";
-import { db } from "@/lib/db";
-import { generateDeckCard, ownsCard } from "@/lib/decks";
-import { busyResponse, forbidden, jsonError, readJson, str, unauthorized } from "@/lib/http";
-import { DEFAULT_MODE, MODES, canUseMode, cardCost, isModeId } from "@/lib/plans";
-import { premiumAvailable } from "@/lib/providers";
+import { creditsOf } from "@/lib/credits";
+import { ownsCard } from "@/lib/decks";
+import { forbidden, jsonError, readJson, str, unauthorized } from "@/lib/http";
+import { dispatchJobs } from "@/lib/job-dispatch";
+import { acceptJob, refusal, toJobView } from "@/lib/jobs";
 import { clientCountry, clientKey, limits } from "@/lib/rate-limit";
 
-// AI calls can take a while, especially in Premium mode.
+// The worker runs after this response, in this same invocation, so it needs room for AI calls.
 export const maxDuration = 60;
 
+/**
+ * Asks for a card to be written (or rewritten). The request becomes a job on the server and
+ * this answers straight away; the editor follows the job's progress. Repeating the request
+ * (same card with a job in progress, or the same `key`) returns that job and charges nothing.
+ */
 export async function POST(request: Request, ctx: RouteContext<"/api/decks/[id]/cards/[cardId]/generate">) {
   const { id, cardId } = await ctx.params;
   const user = await getCurrentUser();
@@ -22,30 +24,20 @@ export async function POST(request: Request, ctx: RouteContext<"/api/decks/[id]/
   }
 
   const body = await readJson(request);
-  const deck = await db.deck.findUniqueOrThrow({ where: { id }, select: { mode: true } });
-  const mode = isModeId(body?.mode) ? body.mode : isModeId(deck.mode) ? deck.mode : DEFAULT_MODE;
-  if (!canUseMode(user.plan, mode)) {
-    return jsonError(`${MODES[mode].label} mode is part of Pro. Upgrade or pick another mode.`, 403);
+  const key = str(request.headers.get("idempotency-key") ?? body?.key, 120) || undefined;
+  const result = await acceptJob({
+    user,
+    deckId: id,
+    cardId,
+    mode: body?.mode,
+    instruction: str(body?.instructions, 500),
+    key,
+    region: clientCountry(request),
+  });
+  if (!result.ok) {
+    const { status, message } = refusal(result.reason, result.mode);
+    return jsonError(message, status);
   }
-
-  if (mode === "premium" && !premiumAvailable()) {
-    return jsonError("Premium mode is coming soon. Pick Quick or Standard.", 403);
-  }
-
-  const cost = cardCost(mode);
-  if (!(await chargeCredits(user.id, cost))) {
-    return jsonError("You're out of credits. Upgrade to Pro or wait for your monthly refill.", 402);
-  }
-
-  const extra = str(body?.instructions, 500);
-  try {
-    const card = await generateDeckCard(id, cardId, mode, extra || undefined, clientCountry(request));
-    return Response.json({ card, credits: await creditsOf(user.id) });
-  } catch (error) {
-    await refundCredits(user.id, cost);
-    if (error instanceof AiBusyError) return busyResponse(error);
-    console.error(`Card generation failed (${id}/${cardId})`, error);
-    const message = error instanceof GenerationError ? error.message : "Couldn't write this card. Try again.";
-    return jsonError(message, 502);
-  }
+  dispatchJobs({ userId: user.id });
+  return Response.json({ job: toJobView(result.job), created: result.created, credits: await creditsOf(user.id) }, { status: result.created ? 202 : 200 });
 }
