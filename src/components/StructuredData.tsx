@@ -14,6 +14,7 @@ export function StructuredData() {
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
+      "@id": `${url}/#app`,
       name: SITE.name,
       url,
       applicationCategory: "BusinessApplication",

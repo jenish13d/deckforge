@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     // Everyone, including AI assistants' crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended), may read
     // the public pages. Deck pages stay crawlable so chat apps can build link previews; they ask not to be indexed.
-    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/admin", "/account", "/decks"] },
+    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/admin", "/account", "/decks", "/guide/"] },
     sitemap: `${siteUrl()}/sitemap.xml`,
   };
 }

@@ -1,6 +1,8 @@
 import { MAX_FILE_MB, MAX_FILES } from "@/lib/material";
 import { MODES, PLANS } from "@/lib/plans";
+import { SEARCH_PAGES } from "@/lib/search-pages";
 import { SITE } from "@/lib/site";
+import { TEMPLATE_PAGES } from "@/lib/template-pages";
 import { TEMPLATES } from "@/lib/templates";
 import { THEMES } from "@/lib/themes";
 import { siteUrl } from "@/lib/url";
@@ -35,7 +37,10 @@ export function GET() {
 - Credits per card: ${Object.values(MODES).map((m) => `${m.label} ${m.creditsPerCard}`).join(", ")}. Outlines are free; failed cards are refunded.
 
 ## Guides
-${USE_CASES.map((u) => `- [${u.title}](${url}/make/${u.slug}): ${u.description}`).join("\n")}
+${[...SEARCH_PAGES.map((p) => ({ ...p, path: `/${p.slug}` })), ...USE_CASES.map((u) => ({ ...u, path: `/make/${u.slug}` }))].map((u) => `- [${u.title}](${url}${u.path}): ${u.description}`).join("\n")}
+
+## Template pages
+${TEMPLATE_PAGES.map((p) => `- [${p.title}](${url}/templates/${p.slug}): ${p.description}`).join("\n")}
 
 ## Links
 - [Home and create](${url}/)

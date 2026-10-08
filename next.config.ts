@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { SEARCH_PAGES } from "./src/lib/search-pages";
+
 const isDev = process.env.NODE_ENV === "development";
 
 // Browsers only run what the site itself serves. Photos come from free-licence libraries
@@ -32,6 +34,18 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Two guides moved to top-level pages; keep old links and search results working.
+  async redirects() {
+    return [
+      { source: "/make/pitch-deck", destination: "/pitch-deck-generator", permanent: true },
+      { source: "/make/school-presentation", destination: "/presentation-maker-for-students", permanent: true },
+    ];
+  },
+  // The search landing pages live in app/guide/[slug] and are served at the top level, so the
+  // address people see is /ai-ppt-maker, and any other unknown address is still a real 404.
+  async rewrites() {
+    return [{ source: `/:slug(${SEARCH_PAGES.map((p) => p.slug).join("|")})`, destination: "/guide/:slug" }];
+  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

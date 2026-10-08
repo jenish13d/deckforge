@@ -3,6 +3,10 @@
 
 export interface UseCase {
   slug: string;
+  /** On-page heading, when it should differ from the title. */
+  heading?: string;
+  /** Short paragraphs under the heading that say what the page is about. */
+  intro?: string[];
   /** Short name for links. */
   name: string;
   /** Page title (also the <title>). */
@@ -15,7 +19,7 @@ export interface UseCase {
   faq: { q: string; a: string }[];
 }
 
-const FILES = "PDF, Word (.docx), PowerPoint (.pptx), Excel (.xlsx), text and Markdown files, and photos or scans";
+export const FILES = "PDF, Word (.docx), PowerPoint (.pptx), Excel (.xlsx), text and Markdown files, and photos or scans";
 
 export const USE_CASES: UseCase[] = [
   {
@@ -77,35 +81,6 @@ export const USE_CASES: UseCase[] = [
     ],
   },
   {
-    slug: "school-presentation",
-    name: "School presentations",
-    title: "AI presentation maker for school projects",
-    description:
-      "Make a school or university presentation with AI: researched facts from Wikipedia and the web, sources listed, numbers checked, and slides you can edit and present.",
-    lead: "For class talks, projects and competitions: Slidezza researches the topic, lists its sources and checks the numbers, so you can present with confidence and still make it your own.",
-    steps: [
-      { title: "Write your topic", text: "\"The water cycle for year 7\" or \"Causes of the French Revolution\". Or attach your notes, a worksheet or a photo of the board." },
-      { title: "Choose the detail", text: "Medium is presentation-ready; High (Pro) adds more facts per slide and searches wider for each one." },
-      { title: "Check and present", text: "Read the sources list, edit what you want in your own words, then present full screen." },
-    ],
-    points: [
-      { title: "Sources you can cite", text: "Facts come from Wikipedia articles and web pages, listed with links at the end of the deck." },
-      { title: "Numbers checked", text: "A number appears only when two independent sources agree on it." },
-      { title: "Real photos, credited", text: "Photos come from Wikimedia Commons and Openverse with their credits." },
-      { title: "Learn, don't copy", text: "Use the outline to understand the structure, and rewrite the slides in your own words where your school expects it." },
-    ],
-    prompts: [
-      "A 5-minute talk on how volcanoes form, for a science class",
-      "The life of Marie Curie for a history project, with a timeline",
-      "Renewable energy in my country: pros, cons and the numbers",
-    ],
-    faq: [
-      { q: "Can I trust the facts?", a: "Factual decks are written only from the sources the AI found, and numbers need two sources that agree. Mistakes are still possible, so check the sources list before you present." },
-      { q: "Is it allowed at my school?", a: "Rules differ. Many schools allow AI for research and drafting but expect your own words; ask your teacher and say how you used it." },
-      { q: "Do I need to pay?", a: "No. The Free plan gives 60 credits every month, enough for about 30 Standard cards." },
-    ],
-  },
-  {
     slug: "lesson-slides",
     name: "Lesson slides for teachers",
     title: "Lesson slides in minutes for teachers",
@@ -132,35 +107,6 @@ export const USE_CASES: UseCase[] = [
       { q: "Can students see the deck without an account?", a: "Yes. Share a view-only link; they can open it in any browser." },
       { q: "Can I use my own worksheets?", a: "Yes. Attach PDFs, Word or PowerPoint files, or a photo of a worksheet, and the deck is built from them." },
       { q: "Is there a school plan?", a: "Not yet. Teachers use the Free, Pro or Max plans; contact us if you need something for a whole school." },
-    ],
-  },
-  {
-    slug: "pitch-deck",
-    name: "Pitch decks",
-    title: "AI pitch deck maker for startups and clients",
-    description:
-      "Make a pitch or client proposal deck with AI: problem, solution, market, pricing and next steps, written from your notes and designed in minutes.",
-    lead: "Describe the business or attach your notes, model or one-pager. Slidezza structures the pitch and designs it, and never invents traction or market numbers.",
-    steps: [
-      { title: "Describe or attach", text: "Paste your idea or attach a one-pager, spreadsheet or previous deck (.pptx)." },
-      { title: "Choose the audience", text: "Investors, a client or a partner: the outline adapts to who will see it." },
-      { title: "Polish and send", text: "Edit, pick a theme, then share a link or download PDF or PowerPoint (Pro)." },
-    ],
-    points: [
-      { title: "No made-up numbers", text: "Without sources, the AI is told not to invent statistics; figures come from your files or are left for you to fill in." },
-      { title: "Your figures as given", text: "Numbers from your spreadsheet or notes are used exactly as they are." },
-      { title: "Premium writing", text: "Premium mode uses the strongest model for pitches and client work (Pro and Max)." },
-      { title: "Remove the badge", text: "Paid plans remove the \"Made with Slidezza\" badge." },
-    ],
-    prompts: [
-      "Seed pitch for a meal-prep subscription: problem, offer, pricing, go-to-market",
-      "Proposal for a website redesign for a local dental clinic",
-      "Partnership pitch to a gym chain for our nutrition app",
-    ],
-    faq: [
-      { q: "Will it make up market size or traction?", a: "No. For personal or business topics without sources, the rules forbid invented statistics. Put your real numbers in the prompt or attach them." },
-      { q: "Can I edit it in PowerPoint?", a: "Yes. Pro and Max download an editable .pptx." },
-      { q: "Is my business information private?", a: "Decks stay private unless you share the link. Your text is processed by our AI providers, and some free tiers may use it to improve their models, so leave out confidential details. The privacy policy has the full list." },
     ],
   },
   {

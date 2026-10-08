@@ -20,11 +20,15 @@ import { getCurrentUser } from "@/lib/auth";
 import { listDecks } from "@/lib/decks";
 import { PLANS, planOf } from "@/lib/plans";
 import { availableModes, premiumAvailable } from "@/lib/providers";
+import { SEARCH_PAGES } from "@/lib/search-pages";
 import { SITE } from "@/lib/site";
 import { TEMPLATES, findTemplate } from "@/lib/templates";
 import { THEMES } from "@/lib/themes";
 
-export const metadata = { alternates: { canonical: "/" } };
+export const metadata = {
+  title: { absolute: `AI Presentation Maker | Create Beautiful PPTs with ${SITE.name}` },
+  alternates: { canonical: "/" },
+};
 
 interface Point {
   icon: LucideIcon;
@@ -93,8 +97,10 @@ export default async function Home(props: PageProps<"/">) {
         <section className="hero3d">
           <div className="hero3d__copy">
             <p className="eyebrow">AI presentation maker</p>
-            <h1 className="landing-top__title">Beautiful slides, <em>in a minute</em></h1>
-            <p className="landing-top__subtitle">{SITE.description}</p>
+            <h1 className="landing-top__title">Create stunning presentations <em>with AI</em></h1>
+            <p className="landing-top__subtitle">
+              {SITE.name} is an AI presentation maker that turns your ideas, prompts and files into designed slides in minutes. Sources are listed and numbers are checked.
+            </p>
             <TryPrompt />
             <div className="quick-chips" role="group" aria-label="Start from a template">
               {TEMPLATES.map((t) => (
@@ -160,6 +166,17 @@ export default async function Home(props: PageProps<"/">) {
             <h2 className="section-heading center">Simple pricing</h2>
             <p className="muted center">Start free. Upgrade when you present every week.</p>
             <Pricing compact />
+          </section>
+
+          <section id="guides" className="section">
+            <h2 className="section-heading center">What do you want to make?</h2>
+            <ul className="use-case__more use-case__more--center">
+              {SEARCH_PAGES.map((p) => (
+                <li key={p.slug}>
+                  <Link href={`/${p.slug}`}>{p.name}</Link>
+                </li>
+              ))}
+            </ul>
           </section>
 
           <section id="faq" className="section">
