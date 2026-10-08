@@ -1,5 +1,18 @@
 {
+  "extraKnownMarketplaces": {
+    "thedotmack": {
+      "source": {
+        "source": "github",
+        "repo": "thedotmack/claude-mem",
+        "ref": "v13.34.2"
+      }
+    }
+  },
   "enabledPlugins": {
-    "claude-code-setup@claude-plugins-official": true
+    "claude-code-setup@claude-plugins-official": true,
+    "claude-mem@thedotmack": true
+  },
+  "env": {
+    "CLAUDE_MEM_ONLINE_OPTIN": "false"
   }
 }

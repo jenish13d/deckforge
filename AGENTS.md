@@ -19,3 +19,10 @@ AI presentation builder (prompt → outline → themed cards). See README.md for
   polish pass), `emil-design-eng` (Emil Kowalski's motion and interaction rules), `web-design-guidelines`
   (Vercel's checklist for reviews), `playwright-cli` (drive a real browser to check changes).
   Figma is connected as an MCP server for design files.
+
+## Research tools
+
+- **Agent Reach** (read-only research): install with `scripts/setup-agent-reach.sh` (pinned commit). Use it only to read
+  public pages. Never run `agent-reach configure`, never pass `--channels` or `--system`, never give it cookies, logins
+  or accounts, and never post, comment, message or follow anything. Slidezza's marketing work only prepares text.
+- **FreeLLMAPI** is a development-only AI provider (see `src/lib/router.ts`, `freeLlmApiBase`). Don't enable it for production.

@@ -21,8 +21,9 @@ import { siteUrl } from "./url";
 //   GROQ_API_KEY       Groq: very fast open models (free tier)
 //   OPENROUTER_API_KEY OpenRouter: rotating free models
 //   ZAI_API_KEY        Z.ai GLM Flash (free; hosted in China)
+//   FREELLMAPI_*       FreeLLMAPI, a self-hosted router over many free tiers (development only: see freeLlmApiEnabled)
 
-export type ProviderId = "anthropic" | "openai" | "gemini" | "groq" | "openrouter" | "zai";
+export type ProviderId = "anthropic" | "openai" | "gemini" | "groq" | "openrouter" | "zai" | "freellmapi";
 
 // Google's terms allow only the paid Gemini API for users in the EEA, Switzerland and the UK.
 // We also keep these users' text off China-hosted models, to keep GDPR simple.
@@ -39,17 +40,41 @@ const KEYS: Record<ProviderId, string> = {
   groq: "GROQ_API_KEY",
   openrouter: "OPENROUTER_API_KEY",
   zai: "ZAI_API_KEY",
+  freellmapi: "FREELLMAPI_KEY",
 };
 
-export const configured = (id: ProviderId) => Boolean(process.env[KEYS[id]]);
+/**
+ * FreeLLMAPI (github.com/tashfeenahmed/freellmapi) pools many providers' free tiers behind one
+ * OpenAI-style address. Its own README says "personal experimentation and learning, not production",
+ * and customers' deck text would go to whichever free provider it picks, so it is development only:
+ * it needs FREELLMAPI_BASE_URL (e.g. http://localhost:3001/v1) and FREELLMAPI_KEY, it stays off on
+ * Vercel unless FREELLMAPI_ALLOW_PRODUCTION=1 (then the privacy policy must name it), it is never
+ * used for UK/EU/Swiss visitors, Premium or photo reading, and plain http is only allowed to this machine.
+ */
+export function freeLlmApiBase(): string | null {
+  const raw = process.env.FREELLMAPI_BASE_URL;
+  if (!raw || !process.env.FREELLMAPI_KEY) return null;
+  if (process.env.VERCEL && process.env.FREELLMAPI_ALLOW_PRODUCTION !== "1") return null;
+  try {
+    const url = new URL(raw);
+    const here = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+    if (url.protocol !== "https:" && !(url.protocol === "http:" && here)) return null;
+    return raw.replace(/\/$/, "");
+  } catch {
+    return null;
+  }
+}
+
+export const configured = (id: ProviderId) => (id === "freellmapi" ? freeLlmApiBase() !== null : Boolean(process.env[KEYS[id]]));
 
 // Who goes first for each job. Groq is fastest, so it writes and checks cards;
 // Gemini plans the deck. Claude, when paid for, leads everything.
 const ORDER: Record<Role, ProviderId[]> = {
-  research: ["groq", "gemini", "openrouter", "zai"],
-  outline: ["gemini", "groq", "openrouter", "zai"],
-  card: ["groq", "gemini", "zai", "openrouter"],
-  check: ["groq", "zai", "gemini", "openrouter"],
+  // FreeLLMAPI, when it is set up for development, comes last.
+  research: ["groq", "gemini", "openrouter", "zai", "freellmapi"],
+  outline: ["gemini", "groq", "openrouter", "zai", "freellmapi"],
+  card: ["groq", "gemini", "zai", "openrouter", "freellmapi"],
+  check: ["groq", "zai", "gemini", "openrouter", "freellmapi"],
   // Reading photos needs a model that sees images (Z.ai's free model doesn't).
   vision: ["gemini", "groq", "openrouter"],
 };
@@ -69,11 +94,12 @@ export function providerOrder(request: Pick<ModelRequest<unknown>, "role" | "mod
       configured(id) &&
       !(restricted && id === "gemini" && process.env.GEMINI_PAID !== "1") &&
       !(restricted && id === "zai") &&
-      !(request.role === "vision" && id === "zai"),
+      !(restricted && id === "freellmapi") &&
+      !(request.role === "vision" && (id === "zai" || id === "freellmapi")),
   );
 }
 
-function compatProvider(id: "openai" | "groq" | "openrouter" | "zai", role: Role): CompatProvider {
+function compatProvider(id: "openai" | "groq" | "openrouter" | "zai" | "freellmapi", role: Role): CompatProvider {
   const apiKey = process.env[KEYS[id]] ?? "";
   if (id === "openai") {
     return { id, apiKey, baseUrl: "https://api.openai.com/v1", model: process.env.OPENAI_MODEL || "gpt-6-astra", openai: true };
@@ -89,6 +115,10 @@ function compatProvider(id: "openai" | "groq" | "openrouter" | "zai", role: Role
         : role === "vision" ? process.env.GROQ_VISION_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct"
         : process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
     };
+  }
+  if (id === "freellmapi") {
+    // "auto" lets the router pick a model.
+    return { id, apiKey, baseUrl: freeLlmApiBase() ?? "", model: process.env.FREELLMAPI_MODEL || "auto" };
   }
   if (id === "openrouter") {
     return {

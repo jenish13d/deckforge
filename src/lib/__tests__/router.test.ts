@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { extractJson, fillMissing } from "../openai-compat";
 import { relevantExcerpt, mergeResearch } from "../research";
-import { isRestrictedRegion, providerOrder } from "../router";
+import { freeLlmApiBase, isRestrictedRegion, providerOrder } from "../router";
 
 describe("AI team routing", () => {
   afterEach(() => vi.unstubAllEnvs());
@@ -33,6 +33,48 @@ describe("AI team routing", () => {
     expect(providerOrder({ role: "card", mode: "premium" })).toEqual(["openai"]);
     keys("GEMINI_API_KEY");
     expect(providerOrder({ role: "card", mode: "premium" })).toEqual([]);
+  });
+});
+
+describe("FreeLLMAPI (development only)", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  const setup = (base = "http://localhost:3001/v1") => {
+    for (const k of ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY", "OPENROUTER_API_KEY", "ZAI_API_KEY", "AI_PROVIDER", "GEMINI_PAID", "VERCEL", "FREELLMAPI_ALLOW_PRODUCTION"]) vi.stubEnv(k, "");
+    vi.stubEnv("GROQ_API_KEY", "k");
+    vi.stubEnv("FREELLMAPI_BASE_URL", base);
+    vi.stubEnv("FREELLMAPI_KEY", "freellmapi-test");
+  };
+
+  it("is off unless both its address and key are set, and then comes last", () => {
+    setup();
+    expect(providerOrder({ role: "card" })).toEqual(["groq", "freellmapi"]);
+    vi.stubEnv("FREELLMAPI_KEY", "");
+    expect(providerOrder({ role: "card" })).toEqual(["groq"]);
+    expect(freeLlmApiBase()).toBeNull();
+  });
+
+  it("stays out of production on Vercel unless that is switched on", () => {
+    setup();
+    vi.stubEnv("VERCEL", "1");
+    expect(providerOrder({ role: "card" })).toEqual(["groq"]);
+    vi.stubEnv("FREELLMAPI_ALLOW_PRODUCTION", "1");
+    expect(providerOrder({ role: "card" })).toEqual(["groq", "freellmapi"]);
+  });
+
+  it("is never used for UK/EU visitors, Premium or photo reading", () => {
+    setup();
+    expect(providerOrder({ role: "card", region: "DE" })).toEqual(["groq"]);
+    expect(providerOrder({ role: "vision" })).toEqual(["groq"]);
+    expect(providerOrder({ role: "card", mode: "premium" })).toEqual([]);
+  });
+
+  it("only talks plain http to this machine", () => {
+    setup("http://freellm.example.com/v1");
+    expect(freeLlmApiBase()).toBeNull();
+    setup("https://freellm.example.com/v1/");
+    expect(freeLlmApiBase()).toBe("https://freellm.example.com/v1");
+    setup("not a url");
+    expect(freeLlmApiBase()).toBeNull();
   });
 });
 

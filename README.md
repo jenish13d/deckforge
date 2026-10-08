@@ -199,25 +199,15 @@ with migration `20261008120000_generation_jobs`.
 
 ### Developer tools
 
-Tools connected through GitHub, and ones deliberately left out:
+All five tools you asked for are connected, each in the safest form that still works:
 
-- **Claude Code Setup** (official, `anthropics/claude-plugins-official`): turned on for this project in
-  `.claude/settings.json`. It only reads the code and recommends automations (hooks, skills, MCP servers); ask
-  Claude Code "recommend automations for this project".
-- **Strix** (`usestrix/strix`, AI security testing): `.github/workflows/strix.yml`, run by hand from
-  GitHub → Actions → "Strix security scan". Needs the `LLM_API_KEY` secret and `STRIX_LLM` variable. It scans this
-  repository's code in a sandbox, never the live site, sends code to the AI provider you choose, and costs tokens.
-  The install script is hash-checked and the version pinned (see the comments in the workflow).
-- **Claude-Mem** (`thedotmack/claude-mem`): not added to the project. It is a personal Claude Code plugin that
-  records everything a session does (including anything pasted into chat) and can sync it to a hosted service.
-  If you want it on your own computer: `/plugin marketplace add thedotmack/claude-mem`, then
-  `/plugin install claude-mem`, and set `CLAUDE_MEM_ONLINE_OPTIN=false` to keep it local.
-- **Agent Reach** (`Panniantong/Agent-Reach`): not added. It is a personal research tool that reads sites such as X,
-  Reddit and YouTube, and several of them need your cookies or logins (the project itself warns of account bans).
-  Slidezza's marketing helper never logs in to or posts on social accounts, so nothing here uses it.
-- **FreeLLMAPI** (`tashfeenahmed/freellmapi`): not added. It describes itself as "personal experimentation only", and
-  it would send customers' deck text through a pool of free AI tiers we don't control. Slidezza already has its own
-  provider router with fallbacks and UK/EU rules (`src/lib/router.ts`); add provider keys there instead.
+| Tool | How it is connected | Read this first |
+| --- | --- | --- |
+| **Claude Code Setup** (official) | On for this project in `.claude/settings.json`. Ask Claude Code "recommend automations for this project". | Read-only: it only recommends. |
+| **Claude-Mem** (`thedotmack/claude-mem`) | On for this project in `.claude/settings.json`, pinned to release `v13.34.2`, with `CLAUDE_MEM_ONLINE_OPTIN=false` so it stays on your computer. | It records what each session does (prompts and tool results, so anything pasted into chat or printed by a command) in a local database and feeds summaries into later sessions. Never paste keys or passwords into chat. Wrap anything sensitive in `<private>…</private>`. Old summaries come back as context, so treat them like any other untrusted text. It downloads Bun and uv if missing. To turn it off, delete its two lines in `.claude/settings.json`. |
+| **Strix** (`usestrix/strix`) | Manual GitHub workflow `.github/workflows/strix.yml` (Actions → "Strix security scan" → Run workflow). | Needs the `LLM_API_KEY` secret and `STRIX_LLM` variable. Scans this repository's code in a sandbox, never the live site; sends code to your AI provider and costs tokens. Install script hash-checked, version pinned. |
+| **Agent Reach** (`Panniantong/Agent-Reach`) | `scripts/setup-agent-reach.sh` installs reviewed commit `f65526c` (v1.5.0) into its own virtual environment and only runs its status check. Rules for using it are in `AGENTS.md`. | Public pages only. Its login channels (X, Reddit, Instagram, Facebook, LinkedIn, Xiaohongshu…) need your cookies and risk account bans, so we don't set them up. |
+| **FreeLLMAPI** (`tashfeenahmed/freellmapi`) | An optional last-choice AI provider in `src/lib/router.ts`, **development only**. Run FreeLLMAPI yourself, then set `FREELLMAPI_BASE_URL` (e.g. `http://localhost:3001/v1`) and `FREELLMAPI_KEY`. | Its README says "personal experimentation and learning, not production". It is off on Vercel unless `FREELLMAPI_ALLOW_PRODUCTION=1` (then the privacy policy must name it), never used for UK/EU/Swiss visitors, Premium or photo reading, and plain `http` is allowed only to this computer. |
 
 ### Setting up payments (Stripe)
 
