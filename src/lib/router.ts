@@ -105,16 +105,15 @@ function compatProvider(id: "openai" | "groq" | "openrouter" | "zai" | "freellma
     return { id, apiKey, baseUrl: "https://api.openai.com/v1", model: process.env.OPENAI_MODEL || "gpt-6-astra", openai: true };
   }
   if (id === "groq") {
-    return {
-      id,
-      apiKey,
-      baseUrl: "https://api.groq.com/openai/v1",
-      // A reasoning model double-checks facts; a fast one writes; a multimodal one reads photos.
-      model:
-        role === "check" ? process.env.GROQ_CHECK_MODEL || "openai/gpt-oss-120b"
-        : role === "vision" ? process.env.GROQ_VISION_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct"
-        : process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
-    };
+    // Groq retired Llama 3.3 70B and Llama 4 Scout in 2026; these are its recommended replacements.
+    // GPT-OSS reasons before it answers: it checks facts with its default effort, and writes with low effort,
+    // which keeps it fast and leaves its token budget for the card. A multimodal model reads photos.
+    const model =
+      role === "check" ? process.env.GROQ_CHECK_MODEL || "openai/gpt-oss-120b"
+      : role === "vision" ? process.env.GROQ_VISION_MODEL || "qwen/qwen3.8-27b"
+      : process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+    const body = model.startsWith("openai/gpt-oss") && role !== "check" ? { reasoning_effort: "low" } : model.startsWith("qwen/") ? { reasoning_effort: "none" } : undefined;
+    return { id, apiKey, baseUrl: "https://api.groq.com/openai/v1", model, ...(body ? { body } : {}) };
   }
   if (id === "freellmapi") {
     // "auto" lets the router pick a model.

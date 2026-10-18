@@ -91,6 +91,12 @@ export function createFakeDb() {
   const cards = new Table(() => ({ status: "pending", content: "" }));
   const decks = new Table();
   const ledger = new Table(() => ({ createdAt: new Date() }), [["jobId", "type"]]);
+  // Like the real table's CHECK ("amount" > 0): a ledger row always moves credits.
+  const insertEntry = ledger.insert.bind(ledger);
+  ledger.insert = (data) => {
+    if (!(Number(data.amount) > 0)) throw new Prisma.PrismaClientUnknownRequestError('violates check constraint "CreditLedger_amount_check"', { clientVersion: "test" });
+    return insertEntry(data);
+  };
   const jobsTable = new Table(
     () => ({ status: "queued", stage: "", attempts: 0, maxAttempts: 3, instruction: "", region: null, error: null, errorCode: null, provider: null, model: null, runAfter: new Date(0), lockedUntil: null, startedAt: null, finishedAt: null, createdAt: new Date(Date.now() + ++counter) }),
     [["idempotencyKey"]],

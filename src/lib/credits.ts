@@ -44,6 +44,7 @@ export async function chargeForJob(tx: Ledger, userId: string, amount: number): 
  * Call it inside a transaction. Returns whether credits were actually returned.
  */
 export async function refundJobCredits(tx: Ledger, job: { id: string; userId: string; cost: number }, reason: string): Promise<boolean> {
+  if (job.cost <= 0) return false;
   const { count } = await tx.creditLedger.createMany({
     data: [{ userId: job.userId, jobId: job.id, amount: job.cost, type: "refund", reason }],
     skipDuplicates: true,

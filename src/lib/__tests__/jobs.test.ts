@@ -115,7 +115,12 @@ describe("accepting a job", () => {
     const result = await acceptJob({ user: admin, deckId, cardId: cardIds[0] });
     expect(result).toMatchObject({ ok: true, created: true });
     expect(balance(admin.id)).toBe(0);
-    expect(entries("charge")).toMatchObject([{ amount: 0 }]);
+    // Nothing to record: the ledger only holds entries that move credits.
+    expect(entries()).toHaveLength(0);
+    // Failing it gives nothing back and doesn't break either.
+    expect(await failJob((result as { job: { id: string } }).job.id, { error: "x", code: "generation" })).toBe(true);
+    expect(balance(admin.id)).toBe(0);
+    expect(entries()).toHaveLength(0);
     // Someone else with no credits is still refused.
     const other = { ...seedUser({ credits: 0 }), email: "someone@example.com" };
     const theirs = seedDeck(other.id);

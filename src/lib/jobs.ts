@@ -121,7 +121,8 @@ export async function acceptJob(input: {
           cost,
           maxAttempts: MAX_ATTEMPTS,
           idempotencyKey: key,
-          ledger: { create: { userId: user.id, amount: cost, type: "charge", reason: `Write a card (${MODES[mode].label})` } },
+          // A free card (an admin's Quick or Standard card) moves no credits, so it has no ledger entry.
+          ...(cost > 0 ? { ledger: { create: { userId: user.id, amount: cost, type: "charge", reason: `Write a card (${MODES[mode].label})` } } } : {}),
         },
       });
       return { ok: true, job, created: true };

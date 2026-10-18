@@ -15,6 +15,8 @@ export interface CompatProvider {
   headers?: Record<string, string>;
   /** OpenAI's newer models take max_completion_tokens and only their default temperature. */
   openai?: boolean;
+  /** Extra request fields the model takes (e.g. Groq's reasoning_effort). */
+  body?: Record<string, unknown>;
 }
 
 /** A provider is at its rate limit; the router moves on to the next one. */
@@ -86,6 +88,7 @@ export async function callCompat<T>(provider: CompatProvider, request: ModelRequ
         ? { max_completion_tokens: 16000 }
         : { temperature: request.role === "check" ? 0 : 0.5, max_tokens: 6000 }),
       response_format: { type: "json_object" },
+      ...provider.body,
     }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   }).catch((error: unknown) => {
