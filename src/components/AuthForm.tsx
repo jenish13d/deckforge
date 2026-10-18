@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import { api } from "@/lib/client";
+import { track } from "@/lib/analytics-client";
+import { ApiError, api } from "@/lib/client";
 import { Captcha } from "./Captcha";
 import { PasswordInput } from "./ui/PasswordInput";
 
@@ -18,6 +19,13 @@ export function AuthForm({ mode, next = "/", captcha = false }: { mode: "login" 
   const [remember, setRemember] = useState(true);
   const signup = mode === "signup";
   const needsCaptcha = signup && captcha;
+  // Funnel: the first time someone starts filling in the sign-up form.
+  const started = useRef(false);
+  const onStart = () => {
+    if (!signup || started.current) return;
+    started.current = true;
+    track("signup_started");
+  };
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -30,11 +38,12 @@ export function AuthForm({ mode, next = "/", captcha = false }: { mode: "login" 
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setBusy(false);
+      if (signup) track("signup_error", { status: e instanceof ApiError ? e.status : 0 });
     }
   }
 
   return (
-    <form className="panel auth-form" onSubmit={submit}>
+    <form className="panel auth-form" onSubmit={submit} onFocus={onStart}>
       <h1 className="auth-form__title">{signup ? "Create your account" : "Welcome back"}</h1>
       {signup && <p className="muted">Free plan: 60 credits every month, no card needed.</p>}
       <label className="field">

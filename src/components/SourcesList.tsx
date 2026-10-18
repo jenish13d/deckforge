@@ -1,6 +1,6 @@
 import { BookOpen } from "lucide-react";
 
-import type { Source } from "@/lib/research";
+import { independentSources, type Source } from "@/lib/research";
 
 const siteOf = (s: Source) =>
   s.kind === "wikipedia" ? "Wikipedia" : s.kind === "file" ? "Your file" : new URL(s.url).hostname.replace(/^www\./, "");
@@ -15,8 +15,13 @@ export function SourcesList({ sources, compact = false }: { sources: Source[]; c
       </h2>
       {!compact && (
         <p className="sources__note">
-          Facts in this deck come from these sources. A number is shown only when two independent sources agree on it
-          {sources.some((s) => s.kind === "file") ? ", except figures from your own files, which are used as given." : "."}
+          Facts in this deck come from these sources.{" "}
+          {independentSources(sources) >= 2
+            ? "A number is shown only when two independent sources agree on it (all Wikipedia articles count as one source)"
+            : independentSources(sources) === 1
+              ? "Only one independent source was found, so numbers are checked against that one alone"
+              : "Figures come from your own files and are used as given"}
+          {independentSources(sources) > 0 && sources.some((s) => s.kind === "file") ? ", except figures from your own files, which are used as given." : "."}
         </p>
       )}
       <ol className="sources__list">

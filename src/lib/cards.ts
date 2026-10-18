@@ -87,12 +87,73 @@ export function isLayout(value: string): value is Layout {
   return (LAYOUTS as readonly string[]).includes(value);
 }
 
+// ---- Presentation style and the deck plan ----------------------------------------------------
+
+/** How a deck reads: short and visual, explained in detail, or chosen by the AI from the topic and audience. */
+export const STYLES = ["auto", "visual", "detailed"] as const;
+export type Style = (typeof STYLES)[number];
+export const DEFAULT_STYLE: Style = "auto";
+export const isStyle = (value: unknown): value is Style => typeof value === "string" && (STYLES as readonly string[]).includes(value);
+/** Anything that isn't a known style (missing, old, malformed) is Auto. */
+export const parseStyle = (value: unknown): Style => (isStyle(value) ? value : DEFAULT_STYLE);
+
+/** How much text a card needs. */
+export const CONTENT_DEPTHS = ["light", "standard", "rich"] as const;
+export type ContentDepth = (typeof CONTENT_DEPTHS)[number];
+export const isContentDepth = (value: unknown): value is ContentDepth => typeof value === "string" && (CONTENT_DEPTHS as readonly string[]).includes(value);
+
+/**
+ * One planned card, as stored with the card (its "brief") and shown in the outline. Only title and
+ * points are required: decks made before the deck plan existed have nothing else, and still work.
+ * The plan fields say what the card is for, so every card is written knowing the whole story.
+ */
+export const CardBriefSchema = z.object({
+  title: z.string(),
+  /** The supporting points: facts, claims or examples the card should make. */
+  points: z.array(z.string()),
+  /** What the card does in the story ("show the problem", "give evidence"). */
+  purpose: z.string().optional(),
+  /** The one sentence the audience should remember from this card. */
+  keyMessage: z.string().optional(),
+  /** Planned layout (validated against the renderer's layouts before cards are written). */
+  layout: z.string().optional(),
+  contentDepth: z.string().optional(),
+  /** What to show beside the text: a photo of something specific, or "none". */
+  visual: z.string().optional(),
+  /** The card states checkable facts (as opposed to explaining an idea, process or example). */
+  evidence: z.boolean().optional(),
+  /** How the card follows from the previous one. */
+  after: z.string().optional(),
+});
+
 export const OutlineSchema = z.object({
   title: z.string(),
-  cards: z.array(z.object({ title: z.string(), points: z.array(z.string()) })),
+  cards: z.array(CardBriefSchema),
 });
 export type Outline = z.infer<typeof OutlineSchema>;
-export type CardBrief = Outline["cards"][number];
+export type CardBrief = z.infer<typeof CardBriefSchema>;
+
+/**
+ * What the model is asked to return for an outline: the same cards with every plan field present
+ * (plain strings, like layout in GeneratedCardSchema, because enums get loosened by structured output).
+ * Missing fields are filled in with defaults for models that skip them, then normalized by planDeck.
+ */
+export const PlannedOutlineSchema = z.object({
+  title: z.string(),
+  cards: z.array(
+    z.object({
+      title: z.string(),
+      purpose: z.string(),
+      keyMessage: z.string(),
+      points: z.array(z.string()),
+      layout: z.string(),
+      contentDepth: z.string(),
+      visual: z.string(),
+      evidence: z.boolean(),
+      after: z.string(),
+    }),
+  ),
+});
 
 const clip = (s: string, max: number) => (s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s);
 
@@ -202,10 +263,32 @@ export function normalizeOutline(raw: Outline, maxCards: number): Outline {
     cards: raw.cards
       .filter((c) => c.title.trim())
       .slice(0, maxCards)
-      .map((c) => ({
-        title: clip(c.title.trim(), 120),
-        points: c.points.map((p) => clip(p.trim(), 200)).filter(Boolean).slice(0, 5),
-      })),
+      .map((c) => cleanBrief(c)),
+  };
+}
+
+const optionalText = (value: unknown, max: number): string | undefined => {
+  const text = typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
+  return text ? clip(text, max) : undefined;
+};
+
+/**
+ * A planned card with its text trimmed and its plan fields checked. Unknown or empty plan fields are
+ * left out (not made up), so a card from an old deck or a hand-written outline stays plain.
+ */
+export function cleanBrief(raw: Partial<CardBrief> & { title?: unknown; points?: unknown }): CardBrief {
+  const points = Array.isArray(raw.points) ? raw.points.filter((p): p is string => typeof p === "string") : [];
+  const depth = typeof raw.contentDepth === "string" ? raw.contentDepth.trim().toLowerCase() : "";
+  return {
+    title: clip(String(raw.title ?? "").trim(), 120),
+    points: points.map((p) => clip(p.trim(), 200)).filter(Boolean).slice(0, 5),
+    ...(optionalText(raw.purpose, 80) ? { purpose: optionalText(raw.purpose, 80) } : {}),
+    ...(optionalText(raw.keyMessage, 240) ? { keyMessage: optionalText(raw.keyMessage, 240) } : {}),
+    ...(optionalText(raw.layout, 20) ? { layout: optionalText(raw.layout, 20)!.toLowerCase() } : {}),
+    ...(isContentDepth(depth) ? { contentDepth: depth } : {}),
+    ...(optionalText(raw.visual, 160) ? { visual: optionalText(raw.visual, 160) } : {}),
+    ...(typeof raw.evidence === "boolean" ? { evidence: raw.evidence } : {}),
+    ...(optionalText(raw.after, 120) ? { after: optionalText(raw.after, 120) } : {}),
   };
 }
 

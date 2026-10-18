@@ -74,7 +74,7 @@ export function PlanningStage({ topic, cardCount, files = 0 }: { topic: string; 
         </ol>
         <p className="planning-stage__note">
           {files > 0
-            ? "Your files lead; every other number is checked against two sources."
+            ? "Your files lead; every other number is checked against the sources found."
             : "Every number is checked against the sources before it reaches a slide."}
         </p>
       </div>

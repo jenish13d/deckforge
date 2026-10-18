@@ -45,8 +45,17 @@ const nextConfig: NextConfig = {
   // The search landing pages live in app/guide/[slug] and are served at the top level, so the
   // address people see is /ai-ppt-maker, and any other unknown address is still a real 404.
   async rewrites() {
-    return [{ source: `/:slug(${SEARCH_PAGES.map((p) => p.slug).join("|")})`, destination: "/guide/:slug" }];
+    return [
+      // Product analytics (PostHog) goes through this site, so it works with the security policy above
+      // and isn't blocked as a third-party tracker. Only used when the visitor allows analytics.
+      { source: "/ingest/static/:path*", destination: "https://us-assets.i.posthog.com/static/:path*" },
+      { source: "/ingest/array/:path*", destination: "https://us-assets.i.posthog.com/array/:path*" },
+      { source: "/ingest/:path*", destination: "https://us.i.posthog.com/:path*" },
+      { source: `/:slug(${SEARCH_PAGES.map((p) => p.slug).join("|")})`, destination: "/guide/:slug" },
+    ];
   },
+  // PostHog's API paths end in a slash; redirecting them would break it.
+  skipTrailingSlashRedirect: true,
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

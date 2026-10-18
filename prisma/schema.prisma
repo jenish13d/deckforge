@@ -75,6 +75,8 @@ model Deck {
   credits    String    @default("slide")
   // How much each card says: "low", "medium" or "high" (see src/lib/ai.ts).
   depth      String    @default("medium")
+  // How the deck reads: "auto", "visual" or "detailed" (see STYLES in src/lib/cards.ts). Older decks are "auto".
+  style      String    @default("auto")
   // The research the deck's facts come from (null for personal or creative decks).
   researchId String?
   research   Research? @relation(fields: [researchId], references: [id], onDelete: SetNull)

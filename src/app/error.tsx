@@ -4,9 +4,12 @@ import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
+import { captureError } from "@/lib/analytics-client";
+
 export default function Error({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
     console.error(error);
+    captureError(error);
   }, [error]);
 
   return (

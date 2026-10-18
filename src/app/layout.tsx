@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Crimson_Pro, Fraunces, Geist, Marcellus } from "next/font/google";
+import { headers } from "next/headers";
 
+import { Analytics } from "@/components/Analytics";
 import { FeedbackButton } from "@/components/FeedbackButton";
+import { consentFrom } from "@/lib/analytics";
 import { getCurrentUser } from "@/lib/auth";
 import { captchaEnabled } from "@/lib/captcha";
 import { SITE } from "@/lib/site";
@@ -38,6 +41,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const user = await getCurrentUser();
+  const consent = consentFrom(await headers());
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable} ${display.variable} ${book.variable}`}>
       <body>
@@ -49,6 +53,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         )}
         {children}
         <FeedbackButton loggedIn={Boolean(user)} captcha={captchaEnabled()} />
+        <Analytics consent={consent} userId={user?.id ?? null} enabled={Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY)} />
       </body>
     </html>
   );

@@ -21,7 +21,7 @@ export const SEARCH_PAGES: UseCase[] = [
       "Slidezza turns a topic, notes or a file into a designed presentation. It researches, lists its sources and checks numbers against two of them. Free to start.",
     intro: [
       "Slidezza is an AI presentation maker. You give it a topic, your notes or a file; it asks two quick questions, drafts an outline you can change, then writes and designs the slides.",
-      "The difference is trust. Facts come from Wikipedia and independent web pages, they are listed with the deck, and a number is only used when two sources agree on it.",
+      "The difference is trust. Facts come from Wikipedia and independent web pages, they are listed with the deck, and numbers are checked against them (two independent sources must agree when two or more are found).",
     ],
     lead: "Type a topic or attach your material. Slidezza plans the story, writes every slide and designs it, and lists what it used.",
     steps: [
@@ -31,7 +31,7 @@ export const SEARCH_PAGES: UseCase[] = [
     ],
     points: [
       { title: "Sources listed", text: "Each factual deck ends with the sources it used, with links." },
-      { title: "Numbers checked", text: "A number appears only when two independent sources agree. Figures from your own files are used as you gave them." },
+      { title: "Numbers checked", text: "Numbers are checked against the sources: two independent ones must agree when two or more are found. Figures from your own files are used as you gave them." },
       { title: "Real, credited photos", text: "Photos come from Wikimedia Commons and Openverse and carry their credit." },
       { title: "You stay in control", text: "Edit the outline first, then every slide. Nothing is locked." },
     ],
@@ -45,7 +45,7 @@ export const SEARCH_PAGES: UseCase[] = [
     limits: "Facts can still be wrong, so read the sources list before presenting. Custom brand themes and logos aren't supported yet.",
     also: ["/templates", "/make/pdf-to-presentation"],
     faq: [
-      { q: "Is the content accurate?", a: "Factual decks are written from the sources the AI found, and numbers need two sources that agree. Mistakes are still possible, so read the sources list and check anything important before you present." },
+      { q: "Is the content accurate?", a: "Factual decks are written from the sources the AI found, and numbers are checked against them (two independent sources must agree when two or more are found). Mistakes are still possible, so read the sources list and check anything important before you present." },
       { q: "Do I need to design anything?", a: "No. Pick one of the themes; layouts such as bullets, columns, big numbers, timelines, tables and quotes are chosen to fit the content." },
       { q: "Is it free?", a: `Yes to start: ${free.monthlyCredits} credits a month, no card needed. See pricing for Pro and Max.` },
     ],
@@ -179,7 +179,7 @@ export const SEARCH_PAGES: UseCase[] = [
     steps: [
       { title: "Questions and outline", text: "Audience, focus, length and detail, then an outline you can reorder and edit. The outline is free." },
       { title: "Research", text: "For factual topics it reads Wikipedia and independent web pages and keeps a source list." },
-      { title: "Writing and checking", text: "Cards are written from the sources. A number is used only when two sources agree; quotes must be word for word." },
+      { title: "Writing and checking", text: "Cards are written from the sources. A number is used only if the sources back it (two independent ones must agree when two or more are found); quotes must be word for word." },
     ],
     points: [
       { title: "Your files lead", text: "When you attach material, the slides follow it and use its figures as given." },
@@ -374,7 +374,7 @@ export const SEARCH_PAGES: UseCase[] = [
     ],
     points: [
       { title: "Sources you can cite", text: "Facts come from Wikipedia articles and web pages, listed with links at the end of the deck." },
-      { title: "Numbers checked", text: "A number appears only when two independent sources agree on it." },
+      { title: "Numbers checked", text: "Numbers are checked against the sources; two independent ones must agree when two or more are found." },
       { title: "Real photos, credited", text: "Photos come from Wikimedia Commons and Openverse with their credits." },
       { title: "Learn, don't copy", text: "Use the outline to understand the structure, and rewrite the slides in your own words where your school expects it." },
     ],
@@ -388,7 +388,7 @@ export const SEARCH_PAGES: UseCase[] = [
     limits: "Your school may limit AI use, so rewrite in your own words and cite your sources. The sources list is not a formatted bibliography.",
     also: ["/research-presentation-maker", "/make/pdf-to-presentation"],
     faq: [
-      { q: "Can I trust the facts?", a: "Factual decks are written only from the sources the AI found, and numbers need two sources that agree. Mistakes are still possible, so check the sources list before you present." },
+      { q: "Can I trust the facts?", a: "Factual decks are written only from the sources the AI found, and numbers are checked against them (two independent sources must agree when two or more are found). Mistakes are still possible, so check the sources list before you present." },
       { q: "Is it allowed at my school?", a: "Rules differ. Many schools allow AI for research and drafting but expect your own words; ask your teacher and say how you used it." },
       { q: "Do I need to pay?", a: `No. The Free plan gives ${free.monthlyCredits} credits every month, enough for about ${standardCards} Standard cards.` },
     ],

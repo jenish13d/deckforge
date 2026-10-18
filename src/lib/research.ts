@@ -8,7 +8,8 @@ import { siteUrl } from "./url";
 // - Wikipedia articles on the subject (free, no key).
 // - Independent web pages from a web search (news, official sites), when TAVILY_API_KEY is set.
 // Facts are then checked against all of them (see factcheck.ts): a number is shown only
-// when two independent sources agree. Personal or creative topics skip research.
+// when two independent sources agree (or, if only one independent source was found, when it says so).
+// Personal or creative topics skip research.
 
 export const SourceSchema = z.object({ title: z.string(), url: z.string(), kind: z.enum(["wikipedia", "web", "file"]).default("wikipedia") });
 export type Source = z.infer<typeof SourceSchema>;
@@ -32,6 +33,20 @@ export const NO_RESEARCH: Research = { sources: [], webTexts: [] };
 // user's own, so they're used as given (no second source needed).
 export const FILE_PREFIX = "file:";
 export const isFileText = (t: { title: string }) => t.title.startsWith(FILE_PREFIX);
+
+/**
+ * How many independent sources a deck has, counted the way fact checking counts them (see requiredAgreement in
+ * factcheck.ts): all Wikipedia articles are one source, each website is one, and the user's own files are not
+ * counted (their figures are used as given).
+ */
+export function independentSources(sources: Source[]): number {
+  const groups = new Set<string>();
+  for (const s of sources) {
+    if (s.kind === "wikipedia") groups.add("wikipedia");
+    else if (s.kind === "web") groups.add(new URL(s.url).hostname.replace(/^www\./, ""));
+  }
+  return groups.size;
+}
 
 export const MAX_SOURCES = 3;
 const MAX_WEB = 6;

@@ -5,6 +5,7 @@ import { useEffect, useId, useState } from "react";
 
 import { Spinner3D } from "@/components/Spinner3D";
 import { api } from "@/lib/client";
+import { DEFAULT_STYLE, type Style } from "@/lib/cards";
 import type { Material } from "@/lib/material";
 
 const NO_MATERIAL: Material[] = [];
@@ -27,6 +28,13 @@ const DEPTHS = [
 ] as const;
 
 type Depth = (typeof DEPTHS)[number]["id"];
+
+// Content style: how the deck reads. Auto lets the AI choose per slide from the topic and audience.
+const STYLES: { id: Style; label: string; note: string }[] = [
+  { id: "auto", label: "Auto", note: "Fits the topic and audience" },
+  { id: "visual", label: "Visual", note: "One idea a slide, short text" },
+  { id: "detailed", label: "Detailed", note: "More explanation and evidence" },
+];
 
 const LENGTHS = [
   { cards: 6, label: "Quick", note: "6 cards" },
@@ -96,6 +104,8 @@ export function SetupStep({
   onCardCount,
   depth,
   onDepth,
+  style = DEFAULT_STYLE,
+  onStyle,
   allowedDepths,
   onBack,
   onContinue,
@@ -107,6 +117,9 @@ export function SetupStep({
   onCardCount: (count: number) => void;
   depth: Depth;
   onDepth: (depth: Depth) => void;
+  /** How the deck reads (Auto unless the person picks another). */
+  style?: Style;
+  onStyle?: (style: Style) => void;
   /** Detail levels the plan includes (Free: Medium). */
   allowedDepths: readonly Depth[];
   onBack: () => void;
@@ -198,6 +211,27 @@ export function SetupStep({
           })}
         </div>
       </fieldset>
+
+      {onStyle && (
+        <fieldset className="setup-q">
+          <legend className="setup-q__title">What style?</legend>
+          <div className="setup-q__options setup-q__options--row" role="radiogroup" aria-label="What style?">
+            {STYLES.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                role="radio"
+                aria-checked={style === s.id}
+                className="setup-option setup-option--length"
+                onClick={() => onStyle(s.id)}
+              >
+                <strong>{s.label}</strong>
+                <span>{s.note}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <button
         type="button"

@@ -1,6 +1,10 @@
+import { after } from "next/server";
+
+import { trackServer } from "@/lib/analytics";
 import { getCurrentUser } from "@/lib/auth";
-import { MAX_CARDS } from "@/lib/cards";
+import { MAX_CARDS, cleanBrief, parseStyle } from "@/lib/cards";
 import { createDeck, deleteDecks } from "@/lib/decks";
+import { planDeck } from "@/lib/plan";
 import { db } from "@/lib/db";
 import { jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { dispatchJobs } from "@/lib/job-dispatch";
@@ -26,13 +30,11 @@ export async function POST(request: Request) {
   const title = str(body?.title, 120) || "Untitled";
   const theme = isThemeId(body?.theme) ? body.theme : "minimal";
   const mode = isModeId(body?.mode) ? body.mode : DEFAULT_MODE;
+  // Each planned card keeps its plan (purpose, key message, layout, depth, visual) when the editor sends one;
+  // cleanBrief checks every field, so nothing unvalidated is stored.
   const outline = Array.isArray(body?.outline)
     ? body.outline
-        .map((c: unknown) => {
-          const card = (c ?? {}) as Record<string, unknown>;
-          const points = Array.isArray(card.points) ? card.points.map((p) => str(p, 200)).filter(Boolean).slice(0, 5) : [];
-          return { title: str(card.title, 120), points };
-        })
+        .map((c: unknown) => cleanBrief((c ?? {}) as Record<string, unknown>))
         .filter((c: { title: string }) => c.title)
         .slice(0, MAX_CARDS)
     : [];
@@ -44,7 +46,11 @@ export async function POST(request: Request) {
   if (!canUseDepth(user.plan, depth)) return jsonError("Low and High detail are part of Pro.", 403);
 
   const researchId = str(body?.researchId, 40) || null;
-  const deck = await createDeck({ userId: user.id, title, prompt, theme, mode, depth, outline, researchId });
+  const style = parseStyle(body?.style);
+  // The person may have added, removed or reordered cards since the plan was made: balance the layouts again
+  // for the cards that will be written. Outlines without a plan (older clients) are stored as they are.
+  const cards = outline.some((c: { layout?: string }) => c.layout) ? planDeck(outline, { style, grounded: Boolean(researchId) }) : outline;
+  const deck = await createDeck({ userId: user.id, title, prompt, theme, mode, depth, style, outline: cards, researchId });
   // Start writing on the server now, so the deck keeps going even if the browser closes at once.
   // The editor asks again when it opens, which is harmless, so a failure here is not fatal.
   try {
@@ -53,6 +59,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Couldn't queue the new deck's cards", error);
   }
+  after(() => trackServer(request, user.id, "deck_created", { cards: cards.length, style, mode, depth, sources: Boolean(researchId) }));
   return Response.json(deck, { status: 201 });
 }
 

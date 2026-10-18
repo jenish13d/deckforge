@@ -73,8 +73,8 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 - **Research and fact checking** (`src/lib/research.ts`, `src/lib/factcheck.ts`): for factual topics the
   outline step plans searches, reads the Wikipedia articles (tables included) and, with `TAVILY_API_KEY`,
   independent web pages, and saves them (`Research`). Cards are written only from these sources. Then every
-  number on a card must appear in two independent sources (all of Wikipedia counts as one) next to words
-  that say what it counts, quotes must appear word for word, and a second AI lists unsupported claims. A
+  number on a card must appear in the sources next to words that say what it counts: in two independent
+  sources when two or more were found (all of Wikipedia counts as one), in the single source otherwise, quotes must appear word for word, and a second AI lists unsupported claims. A
   failing card is rewritten once; whatever still can't be confirmed is removed. Non-factual decks (a pitch,
   a speech) may only use numbers the user gave, with [placeholders] otherwise. Sources are listed under the deck.
 - **Photos of the right subject:** decks with sources take photos from their Wikipedia articles, matched to
@@ -96,6 +96,19 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 
   Outlines are free (Standard model, low effort). Failed cards are refunded.
   Credit charges are atomic, so parallel requests can't overspend.
+- **Presentation style and the deck plan:** the setup step asks "What style?": **Auto** (the default), **Visual**
+  (one idea a slide, short text, shown with photos, figures, timelines and tables) or **Detailed** (explanations,
+  examples, tables, and sources named for important claims). It is separate from Quick/Standard (which model
+  writes) and from the Low/Medium/High detail level (the baseline amount of text; on Medium, the plan decides per
+  card). The style is stored on the deck (`Deck.style`, default `auto`, so older decks and requests without a
+  style are Auto). The outline call, with no extra AI call, plans the whole deck: each card gets a purpose, a key
+  message, supporting points, a layout, a content depth, a visual direction, whether it states checkable facts, and
+  how it follows the previous card (stored with the card's `brief`). `src/lib/plan.ts` then makes the layouts valid
+  and balanced across the whole deck in code, and every card is written with that plan, the audience and the style.
+  A card that comes back weak (`src/lib/quality.ts`: empty, generic filler, off its plan, repeating another card)
+  is sent back for the one rewrite it already had; plain conceptual cards without numbers are not flagged. Fact
+  checking also rejects credits to studies or organisations, and web addresses, that are not in the sources.
+
 - **Plans:** Free (60 credits/month, Quick + Standard) and Pro ($12/month, 1,000 credits, all modes).
   Credits refill every 30 days and don't roll over. Edit plans and prices in `src/lib/plans.ts`.
 - **Payments:** Stripe Checkout subscriptions, customer portal, and webhooks for upgrades, renewals and cancellations.
@@ -208,6 +221,28 @@ All five tools you asked for are connected, each in the safest form that still w
 | **Strix** (`usestrix/strix`) | Manual GitHub workflow `.github/workflows/strix.yml` (Actions → "Strix security scan" → Run workflow). | Needs the `LLM_API_KEY` secret and `STRIX_LLM` variable. Scans this repository's code in a sandbox, never the live site; sends code to your AI provider and costs tokens. Install script hash-checked, version pinned. |
 | **Agent Reach** (`Panniantong/Agent-Reach`) | `scripts/setup-agent-reach.sh` installs reviewed commit `f65526c` (v1.5.0) into its own virtual environment and only runs its status check. Rules for using it are in `AGENTS.md`. | Public pages only. Its login channels (X, Reddit, Instagram, Facebook, LinkedIn, Xiaohongshu…) need your cookies and risk account bans, so we don't set them up. |
 | **FreeLLMAPI** (`tashfeenahmed/freellmapi`) | An optional last-choice AI provider in `src/lib/router.ts`, **development only**. Run FreeLLMAPI yourself, then set `FREELLMAPI_BASE_URL` (e.g. `http://localhost:3001/v1`) and `FREELLMAPI_KEY`. | Its README says "personal experimentation and learning, not production". It is off on Vercel unless `FREELLMAPI_ALLOW_PRODUCTION=1` (then the privacy policy must name it), never used for UK/EU/Swiss visitors, Premium or photo reading, and plain `http` is allowed only to this computer. |
+
+### Analytics (PostHog)
+
+Optional, off until `NEXT_PUBLIC_POSTHOG_KEY` is set (PostHog → Settings → Project → Project API key; public by
+design). It records page views, the sign-up funnel, errors and session replays. Visitors from the EU, EEA, UK,
+Switzerland or an unknown country see a cookie question first and nothing loads until they allow it; everyone can
+change it on `/privacy#analytics`. Replays mask every form field, slide text and all text in the signed-in app.
+Events go through `/ingest` on this site (rewrites in `next.config.ts`), so the security policy stays `'self'`.
+
+| Event | Where | When |
+| --- | --- | --- |
+| `$pageview` | browser | every page, including in-app navigation |
+| `signup_started` | browser | first focus on the sign-up form |
+| `signup_error` | browser | sign-up refused (`status`: 400 invalid/captcha, 409 email taken, 429 too many) |
+| `signed_up` | server | account created |
+| `deck_created` | server | outline sent for writing (`cards`, `style`, `mode`, `depth`, `sources`) |
+| `deck_completed` | browser | every card of a new deck written |
+| `card_failed` | browser | a card couldn't be written (`code`) |
+| `$exception` | both | browser errors, server request errors (`src/instrumentation.ts`), unexpected card-job errors |
+
+Sign-up funnel in PostHog: `$pageview` → `signup_started` → `signed_up` → `deck_created` → `deck_completed`.
+Code: `src/lib/analytics.ts` (server), `src/lib/analytics-client.ts` (browser), `src/lib/consent.ts`, `src/components/Analytics.tsx`.
 
 ### Setting up payments (Stripe)
 

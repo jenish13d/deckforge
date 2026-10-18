@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { Prisma, type GenerationJob } from "@prisma/client";
 
 import { GenerationError } from "./ai";
+import { captureServerError } from "./analytics";
 import { chargeForJob, refundJobCredits } from "./credits";
 import { db } from "./db";
 import { generateDeckCard } from "./decks";
@@ -301,6 +302,7 @@ function judge(error: unknown): Verdict {
   }
   if (error instanceof GenerationError) return { retry: true, delaySeconds: 5, message: error.message, code: "generation" };
   console.error("Card job failed unexpectedly", error);
+  void captureServerError(error, { where: "card_job" });
   return { retry: true, delaySeconds: 5, message: "Couldn't write this card. Try again.", code: "generation" };
 }
 

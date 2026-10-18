@@ -16,7 +16,7 @@ export const QUESTIONS = [
   },
   {
     q: "Are the facts accurate?",
-    a: "For factual topics the AI writes only from the sources it finds (Wikipedia and independent web pages), and a number appears on a slide only when two independent sources agree. The sources are listed with every deck so you can check them. Mistakes are still possible, so review before you present.",
+    a: "For factual topics the AI writes only from the sources it finds (Wikipedia and independent web pages), and numbers are checked against them: when two or more independent sources are found, a number appears only if two agree (with a single source, such as Wikipedia alone, that source is the only check). The sources are listed with every deck so you can check them. Mistakes are still possible, so review before you present.",
   },
   {
     q: "Which mode should I use?",

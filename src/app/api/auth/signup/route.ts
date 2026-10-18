@@ -1,5 +1,7 @@
 import { Prisma } from "@prisma/client";
+import { after } from "next/server";
 
+import { trackServer } from "@/lib/analytics";
 import { startSession } from "@/lib/auth";
 import { CAPTCHA_ERROR, verifyCaptcha } from "@/lib/captcha";
 import { allowance } from "@/lib/credits";
@@ -22,6 +24,7 @@ export async function POST(request: Request) {
       data: { email, passwordHash: await hashPassword(password), plan: "free", ...allowance("free") },
     });
     await startSession(user.id);
+    after(() => trackServer(request, user.id, "signed_up"));
     return Response.json({ ok: true }, { status: 201 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {

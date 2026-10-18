@@ -4,12 +4,14 @@ import { generateCard, GenerationError, isDepth, type Depth } from "./ai";
 import {
   CardContentSchema,
   IMAGE_LAYOUTS,
-  OutlineSchema,
+  CardBriefSchema,
   normalizeCard,
   parseStored,
+  parseStyle,
   type CardBrief,
   type CardContent,
   type CardImage,
+  type Style,
 } from "./cards";
 import { db } from "./db";
 import { findPhoto, photoKey } from "./images";
@@ -18,7 +20,7 @@ import { DEFAULT_MODE, canExportPptx, isModeId, planOf, type ModeId } from "./pl
 import { isCreditsPlace, type CreditsPlace, type DeckLook } from "./slides";
 import type { ThemeId } from "./themes";
 
-const BriefSchema = OutlineSchema.shape.cards.element;
+const BriefSchema = CardBriefSchema;
 
 export interface CardView {
   id: string;
@@ -36,6 +38,8 @@ export interface DeckView {
   theme: string;
   mode: ModeId;
   depth: Depth;
+  /** How the deck reads (Auto for decks made before styles existed). */
+  style: Style;
   /** The owner's plan includes PowerPoint download. */
   pptx: boolean;
   /** Anyone with the link can view it. */
@@ -71,6 +75,7 @@ export async function getDeck(id: string): Promise<DeckView | null> {
     theme: deck.theme,
     mode: isModeId(deck.mode) ? deck.mode : DEFAULT_MODE,
     depth: isDepth(deck.depth) ? deck.depth : "medium",
+    style: parseStyle(deck.style),
     pptx: canExportPptx(deck.user.plan),
     shared: deck.shared,
     sources: parseSources(deck.research?.sources),
@@ -90,6 +95,7 @@ export async function createDeck(input: {
   theme: ThemeId;
   mode: ModeId;
   depth?: Depth;
+  style?: Style;
   outline: CardBrief[];
   /** Research saved with the outline (see saveResearch); ignored unless it's this user's. */
   researchId?: string | null;
@@ -106,6 +112,7 @@ export async function createDeck(input: {
       theme: input.theme,
       mode: input.mode,
       depth: input.depth ?? "medium",
+      style: parseStyle(input.style),
       researchId,
       cards: {
         create: input.outline.map((brief, position) => ({ position, brief: JSON.stringify(brief) })),
@@ -247,6 +254,7 @@ export async function generateDeckCard(
       research,
       region,
       depth: deck.depth,
+      style: deck.style,
       onStage: options.onStage,
     });
     options.onStage?.("photos");
@@ -339,6 +347,7 @@ export async function duplicateDeck(userId: string, deckId: string): Promise<{ i
       endSlide: deck.endSlide,
       credits: deck.credits,
       depth: deck.depth,
+      style: deck.style,
       researchId: deck.researchId,
       cards: {
         // Cards still being written are copied as failed so the copy never spends credits on its own.

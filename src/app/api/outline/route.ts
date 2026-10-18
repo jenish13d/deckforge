@@ -4,7 +4,7 @@ import { canUseDepth } from "@/lib/plans";
 import { saveResearch } from "@/lib/decks";
 import { AiBusyError } from "@/lib/errors";
 import { getCurrentUser } from "@/lib/auth";
-import { MAX_CARDS, MIN_CARDS } from "@/lib/cards";
+import { MAX_CARDS, MIN_CARDS, parseStyle } from "@/lib/cards";
 import { busyResponse, jsonError, readJson, str, unauthorized } from "@/lib/http";
 import { clientCountry, clientKey, limits } from "@/lib/rate-limit";
 
@@ -35,7 +35,13 @@ export async function POST(request: Request) {
   if (!canUseDepth(user.plan, depth)) return jsonError("Low and High detail are part of Pro.", 403);
 
   try {
-    const { research, ...outline } = await generateOutline(prompt, cardCount, defaultCall, { region: clientCountry(request), depth, material });
+    const { research, ...outline } = await generateOutline(prompt, cardCount, defaultCall, {
+      region: clientCountry(request),
+      depth,
+      material,
+      // Requests without a style (older clients) are Auto.
+      style: parseStyle(body?.style),
+    });
     const researchId = await saveResearch(user.id, research);
     return Response.json({ ...outline, sources: research.sources, researchId });
   } catch (error) {

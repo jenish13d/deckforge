@@ -42,7 +42,7 @@ export const USE_CASES: UseCase[] = [
     steps: [
       { title: "Attach your PDF", text: `Click Add files or drop it on the box. ${FILES} work too; up to 5 files per deck.` },
       { title: "Pick who it's for", text: "Answer two quick questions (audience and focus), choose the length and detail, then edit the outline." },
-      { title: "Get the slides", text: "Each slide is written from your file. Figures from your file are used as given; anything added from the web is checked against two sources." },
+      { title: "Get the slides", text: "Each slide is written from your file. Figures from your file are used as given; anything added from the web is checked against the sources found." },
     ],
     points: [
       { title: "Text PDFs and scans", text: "Text is read in your browser. Scanned pages without a text layer are read by an AI model that sees images." },

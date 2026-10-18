@@ -23,6 +23,7 @@ import { Menu } from "@/components/ui/Menu";
 import { PromptDialog } from "@/components/ui/PromptDialog";
 import { useToast } from "@/components/ui/Toast";
 import { emptyCard, plainTitle, type CardContent } from "@/lib/cards";
+import { takeNewDeck, track } from "@/lib/analytics-client";
 import { ApiError, api } from "@/lib/client";
 import type { CardView as CardData, DeckView } from "@/lib/decks";
 import { describeJob, isActive, showsFailure, type JobView } from "@/lib/job-state";
@@ -102,6 +103,7 @@ export function Editor({
       return !isActive(j) && (before?.id !== j.id || isActive(before));
     });
     setJobs((old) => ({ ...old, ...next }));
+    for (const job of finished) if (job.status === "failed") track("card_failed", { code: job.errorCode });
     if (finished.length > 0) void refreshCards(finished.map((j) => j.cardId));
   };
 
@@ -298,7 +300,12 @@ export function Editor({
   const nowWriting = deck.cards.findIndex((c) => c.status === "pending" && jobs[c.id]?.status === "running");
   const retrying = deck.cards.map((c) => notes[c.id]).find((n) => n?.phase === "retrying");
   const themeName = THEMES.find((t) => t.id === deck.theme)?.name ?? "Theme";
-  const bravo = startedWriting && !bravoClosed && deck.cards.length > 0 && deck.cards.every((c) => c.status === "ready");
+  const allWritten = deck.cards.length > 0 && deck.cards.every((c) => c.status === "ready");
+  const bravo = startedWriting && allWritten && !bravoClosed;
+  // Funnel: a deck just made in this tab has every card written (it may finish before the editor opens).
+  useEffect(() => {
+    if (allWritten && takeNewDeck(deck.id)) track("deck_completed", { cards: deck.cards.length });
+  }, [allWritten, deck.id, deck.cards.length]);
 
   return (
     <>

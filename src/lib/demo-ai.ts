@@ -1,5 +1,5 @@
 import type { CallModel, ModelRequest } from "./ai";
-import { AssistSchema, OutlineSchema, SetupSchema, type GeneratedCard, type Outline } from "./cards";
+import { AssistSchema, OutlineSchema, PlannedOutlineSchema, SetupSchema, type GeneratedCard, type Outline } from "./cards";
 
 // Stand-in for the model when DEMO_AI=1: realistic-looking sample content so
 // the whole app can be tried and shown without an API key or any cost.
@@ -109,7 +109,7 @@ export const callDemo: CallModel = async <T,>(request: ModelRequest<T>): Promise
   if (request.role === "vision") {
     return { text: "Demo mode: sample text read from your image.\nQuarterly sales grew in every region, led by online orders." } as T;
   }
-  if ((request.schema as unknown) === OutlineSchema) {
+  if ((request.schema as unknown) === PlannedOutlineSchema || (request.schema as unknown) === OutlineSchema) {
     const count = Number(/exactly (\d+) cards/.exec(request.user)?.[1] ?? 6);
     const prompt = /<request>\n([\s\S]*?)\n<\/request>/.exec(request.user)?.[1] ?? "";
     return demoOutline(prompt, count) as T;

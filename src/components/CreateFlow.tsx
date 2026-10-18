@@ -15,7 +15,8 @@ import { ModePicker } from "@/components/ModePicker";
 import { SourcesList } from "@/components/SourcesList";
 import { TemplateIcon } from "@/components/TemplateIcon";
 import { ThemePicker } from "@/components/ThemePicker";
-import { MAX_CARDS, MIN_CARDS, type Outline } from "@/lib/cards";
+import { DEFAULT_STYLE, MAX_CARDS, MIN_CARDS, type CardBrief, type Outline, type Style } from "@/lib/cards";
+import { markNewDeck } from "@/lib/analytics-client";
 import { api } from "@/lib/client";
 import { MATERIAL_ACCEPT } from "@/lib/material";
 import { DEFAULT_MODE, cardCost, type ModeId } from "@/lib/plans";
@@ -27,6 +28,8 @@ interface EditableCard {
   key: number;
   title: string;
   points: string;
+  /** The planned role, key message, layout, depth and visual of the card: kept as it is while title and points are edited. */
+  plan?: Omit<CardBrief, "title" | "points">;
 }
 
 const SAMPLES = [
@@ -39,7 +42,7 @@ const SAMPLES = [
 
 let nextKey = 0;
 const toEditable = (outline: Outline): EditableCard[] =>
-  outline.cards.map((c) => ({ key: nextKey++, title: c.title, points: c.points.join("\n") }));
+  outline.cards.map(({ title, points, ...plan }) => ({ key: nextKey++, title, points: points.join("\n"), plan }));
 
 export function CreateFlow({
   allowedModes,
@@ -72,6 +75,7 @@ export function CreateFlow({
   const [tab, setTab] = useState<"start" | "templates">("start");
   const [stage, setStage] = useState<"start" | "setup">("start");
   const [depth, setDepth] = useState<"low" | "medium" | "high">("medium");
+  const [style, setStyle] = useState<Style>(DEFAULT_STYLE);
   // The topic plus the chosen audience and focus: what the outline and every card are written from.
   const [brief, setBrief] = useState("");
   const [placeholder, setPlaceholder] = useState("Describe your topic, audience and goal…");
@@ -97,7 +101,7 @@ export function CreateFlow({
     setBusy("outline");
     setError("");
     try {
-      const outline = await api<Outline & { sources: Source[]; researchId: string | null }>("/api/outline", { body: { prompt: full, cardCount, depth, material: attach.material } });
+      const outline = await api<Outline & { sources: Source[]; researchId: string | null }>("/api/outline", { body: { prompt: full, cardCount, depth, style, material: attach.material } });
       setTitle(outline.title);
       setCards(toEditable(outline));
       setResearch({ sources: outline.sources ?? [], id: outline.researchId ?? null });
@@ -115,10 +119,11 @@ export function CreateFlow({
     try {
       const outline = cards
         .filter((c) => c.title.trim())
-        .map((c) => ({ title: c.title, points: c.points.split("\n").map((p) => p.trim()).filter(Boolean) }));
+        .map((c) => ({ ...c.plan, title: c.title, points: c.points.split("\n").map((p) => p.trim()).filter(Boolean) }));
       const { id } = await api<{ id: string }>("/api/decks", {
-        body: { prompt: brief || prompt, title, theme, mode, depth, outline, researchId: research.id },
+        body: { prompt: brief || prompt, title, theme, mode, depth, style, outline, researchId: research.id },
       });
+      markNewDeck(id);
       router.push(`/d/${id}/edit`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -160,6 +165,8 @@ export function CreateFlow({
           onCardCount={setCardCount}
           depth={depth}
           onDepth={setDepth}
+          style={style}
+          onStyle={setStyle}
           allowedDepths={allowedDepths}
           onBack={() => setStage("start")}
           onContinue={(audience, angle) => void makeOutline(audience, angle)}

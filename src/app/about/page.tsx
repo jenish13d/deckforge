@@ -59,7 +59,7 @@ export default function AboutPage() {
       <section className="section use-case__intro" aria-labelledby="sources">
         <h2 id="sources" className="section-heading">Why sources and fact checking matter</h2>
         <p>
-          AI can sound certain and still be wrong. For factual topics, {SITE.name} writes from the sources it finds, such as Wikipedia and independent web pages, and lists them with the deck. A number goes on a slide only when two independent sources agree on it, and quotes must be word for word from a source. Figures in your own files are used exactly as you gave them.
+          AI can sound certain and still be wrong. For factual topics, {SITE.name} writes from the sources it finds, such as Wikipedia and independent web pages, and lists them with the deck. Numbers are checked against those sources: when two or more independent sources are found, a number goes on a slide only when two agree, and quotes must be word for word from a source. Figures in your own files are used exactly as you gave them.
         </p>
         <p>This lowers the risk of mistakes but does not remove it. Review important facts before you present.</p>
       </section>

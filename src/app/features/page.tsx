@@ -55,7 +55,7 @@ const FEATURES: Feature[] = [
   {
     id: "numbers",
     title: "Number checking",
-    text: "A number appears on a slide only when two independent sources agree on it. Quotes must be word for word. Figures from your own files are used as you gave them.",
+    text: "Numbers are checked against the sources: when two or more independent sources are found, a number appears only if two agree. Quotes must be word for word. Figures from your own files are used as you gave them.",
     href: "/ai-presentation-maker",
     link: "AI presentation maker",
   },

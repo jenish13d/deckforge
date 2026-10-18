@@ -2273,6 +2273,39 @@ a {
   gap: 10px;
 }
 
+/* Analytics cookie question: bottom left, clear of the Feedback button. */
+.consent {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 60;
+  width: min(380px, calc(100vw - 32px));
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 12px 32px rgba(15, 28, 46, 0.16);
+}
+
+.consent p {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.consent__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .consent {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+}
+
 .feedback__toggle {
   padding: 10px 16px;
   border: 1px solid var(--border);

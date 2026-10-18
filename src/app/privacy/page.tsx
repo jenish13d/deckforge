@@ -1,11 +1,18 @@
+import { headers } from "next/headers";
+
+import { AnalyticsChoice } from "@/components/Analytics";
 import { LegalPage } from "@/components/LegalPage";
+import { consentFrom } from "@/lib/analytics";
+import { getCurrentUser } from "@/lib/auth";
 import { SITE } from "@/lib/site";
 
 export const metadata = { title: "Privacy policy" };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const user = await getCurrentUser();
+  const consent = consentFrom(await headers());
   return (
-    <LegalPage title="Privacy policy" updated="October 7, 2026">
+    <LegalPage title="Privacy policy" updated="October 13, 2026">
       <p>This policy explains what {SITE.name} collects, why, and the choices you have.</p>
 
       <h2>What we collect</h2>
@@ -15,6 +22,7 @@ export default function PrivacyPage() {
         <li><strong>Billing details:</strong> if you upgrade, payments are handled by our payment provider. We receive your plan status, not your full card number.</li>
         <li><strong>Pro and Max list:</strong> if you ask to hear when paid plans open, we keep your email and chosen plan, send a confirmation and one email when they open, and nothing else. Every email has a link to leave the list, which deletes your entry.</li>
         <li><strong>Technical data:</strong> basic request information such as IP address, used to keep the service secure and prevent abuse.</li>
+        <li><strong>Usage analytics, if you allow it:</strong> see &ldquo;Analytics&rdquo; below.</li>
       </ul>
 
       <h2>How we use it</h2>
@@ -44,12 +52,33 @@ export default function PrivacyPage() {
           web search provider (Tavily) to find sources. The sources are listed with your deck.
         </li>
         <li><strong>Payment provider:</strong> to process subscriptions.</li>
+        <li><strong>Analytics provider:</strong> PostHog, if analytics is on (see below).</li>
         <li><strong>Hosting and database providers:</strong> to run the service.</li>
       </ul>
       <p>These providers process data on our behalf and only for these purposes.</p>
 
       <h2>Cookies</h2>
-      <p>We use one essential cookie to keep you signed in. We don&apos;t use advertising or tracking cookies.</p>
+      <p>
+        We use one essential cookie to keep you signed in, and one to remember your analytics choice. If you allow
+        analytics, PostHog also stores an anonymous id in your browser. We don&apos;t use advertising cookies.
+      </p>
+
+      <h2 id="analytics">Analytics</h2>
+      <p>
+        To see how {SITE.name} is used and to fix what goes wrong, we use PostHog (product analytics, error reports and
+        session replays). It records the pages you visit, steps such as signing up or finishing a deck, errors, and how
+        you move around the page. Replays never show what you type into forms, the text of your decks, or any text in the
+        signed-in app; your account is identified by an id, not your email. Data is processed in the
+        United States and replays are kept for 30 days.
+      </p>
+      <p>
+        Visitors from the EU, EEA, UK and Switzerland are asked first, and nothing is collected until they allow it.
+        Everyone can change their choice here at any time:
+      </p>
+      <AnalyticsChoice initial={consent} userId={user?.id ?? null} enabled={Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY)} />
+      <p>
+        Server errors are reported without any personal details. Turning analytics off stops everything else.
+      </p>
 
       <h2>Shared decks</h2>
       <p>New decks can be viewed by anyone with their link, so only share links with people you trust. You can make any deck private from its Share window; then only you can open it.</p>

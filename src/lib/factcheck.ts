@@ -140,6 +140,49 @@ function fieldsOf(card: CardContent): Field[] {
   return fields;
 }
 
+// Who a slide credits ("According to the WHO", "a study by Stanford University") and any web address it prints
+// must come from the sources: a made-up citation is worse than none. Only named parties are checked; "experts
+// say" names nobody, so there is nothing to verify.
+const NAME = "((?:[A-Z][A-Za-z0-9&'’.-]*)(?:\\s+[A-Z][A-Za-z0-9&'’.-]*){0,4})";
+const ATTRIBUTIONS = [
+  new RegExp(`\\b[Aa]ccording to (?:the )?${NAME}`, "g"),
+  new RegExp(`\\b(?:[Ss]tud(?:y|ies)|[Rr]eports?|[Ss]urveys?|[Aa]nalys[ie]s|[Pp]apers?|[Rr]esearch|[Rr]eviews?|[Tt]rials?)\\s+(?:published\\s+)?(?:by|from)\\s+(?:the\\s+)?${NAME}`, "g"),
+];
+
+const squash = (text: string) => text.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+
+/**
+ * Credits and web addresses on the card that the sources (or the user's own text) don't contain. `labels` are
+ * the sources' names (article titles, websites, files); a credit is fine when it names one of them, or the sources
+ * themselves mention that party.
+ */
+export function attributionProblems(card: CardContent, texts: SourceText[], allowed: string): Problem[] {
+  const haystack = ` ${squash(`${allowed}\n${texts.map((t) => t.text).join("\n")}`)} `;
+  const labels = texts.map((t) => stems(t.title.replace(/^file:/, "")));
+  const wikipedia = texts.some((t) => t.group === "wikipedia");
+  const problems: Problem[] = [];
+  for (const f of fieldsOf(card)) {
+    if (f.field === "quoteAuthor") continue;
+    for (const re of ATTRIBUTIONS) {
+      for (const m of f.text.matchAll(re)) {
+        const name = m[1].replace(/[.,;:]+$/, "").trim();
+        const known = stems(name);
+        if (known.size === 0) continue;
+        const inSources = haystack.includes(` ${squash(name)} `) || (wikipedia && /^wikipedia$/i.test(name));
+        const isSource = labels.some((l) => [...known].every((w) => l.has(w)));
+        if (!inSources && !isSource) {
+          problems.push({ field: f.field, detail: `"${f.text.trim().slice(0, 120)}" credits "${name}", which isn't one of the sources and isn't named in them` });
+        }
+      }
+    }
+    for (const m of f.text.matchAll(/https?:\/\/[^\s)"'<>]+/g)) {
+      const host = squash(new URL(m[0].replace(/[.,;]+$/, ""), "https://x.invalid").hostname.replace(/^www\./, ""));
+      if (host && !haystack.includes(` ${host} `)) problems.push({ field: f.field, detail: `"${m[0].slice(0, 80)}" is a web address that isn't in the sources` });
+    }
+  }
+  return problems;
+}
+
 /** How many independent sources must agree on a number: two when there are two or more. */
 export const requiredAgreement = (groups: number) => Math.min(2, Math.max(1, groups));
 
@@ -176,6 +219,7 @@ export function verifyCard(card: CardContent, texts: SourceText[], allowed: stri
       });
     }
   }
+  problems.push(...attributionProblems(card, texts, allowed));
   const all = texts.map((t) => t.text).join("\n");
   if (card.layout === "quote" && card.quote && !quoteInSource(card.quote, allowed)) {
     if (!quoteInSource(card.quote, all)) {

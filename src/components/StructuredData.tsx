@@ -42,7 +42,7 @@ export function StructuredData() {
       featureList: [
         "Turn a topic, notes or files (PDF, Word, PowerPoint, Excel, photos) into a presentation with AI",
         "Quick setup questions and an editable outline before slides are written",
-        "Research from Wikipedia and the web, with sources listed and numbers checked against two sources",
+        "Research from Wikipedia and the web, with sources listed and numbers checked against them (two independent sources must agree when two or more are found)",
         "Low, Medium and High detail levels",
         `${THEMES.length} themes, 8 slide layouts (including tables, timelines and big numbers), credited stock photos`,
         "An assistant that adds or rewrites slides from a plain request",
