@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { prelaunchOn } from "@/lib/prelaunch";
 import { guidePaths } from "@/lib/search-pages";
 import { TEMPLATE_PAGES } from "@/lib/template-pages";
 import { siteUrl } from "@/lib/url";
@@ -13,7 +14,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl();
   const priority = (path: string) =>
     path === "" ? 1 : SEARCH_ENTRY.has(path) ? 0.9 : path === "/pricing" || path === "/features" || path === "/how-it-works" || path === "/templates" ? 0.8 : path === "/about" ? 0.6 : 0.7;
-  const paths = ["", ...CORE, ...guidePaths(), ...TEMPLATE_PAGES.map((p) => `/templates/${p.slug}`)];
+  // Before launch only the launching-soon home page is public.
+  const paths = prelaunchOn() ? [""] : ["", ...CORE, ...guidePaths(), ...TEMPLATE_PAGES.map((p) => `/templates/${p.slug}`)];
   return paths.map((path) => ({
     url: `${base}${path}`,
     changeFrequency: path === "" ? "weekly" : "monthly",

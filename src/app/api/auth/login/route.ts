@@ -1,4 +1,4 @@
-import { startSession } from "@/lib/auth";
+import { mayUseAccount, startSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { jsonError, readJson } from "@/lib/http";
 import { verifyPassword } from "@/lib/password";
@@ -13,6 +13,11 @@ export async function POST(request: Request) {
   const user = email ? await db.user.findUnique({ where: { email } }) : null;
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return jsonError("Wrong email or password.", 401);
+  }
+  if (!(await mayUseAccount(user))) {
+    return user.expiresAt
+      ? jsonError("This invite account has ended. Thanks for trying it!", 403)
+      : jsonError("We're not open yet. Join the list on the home page to hear when we launch.", 403);
   }
   await startSession(user.id, { remember: body?.remember !== false });
   return Response.json({ ok: true });

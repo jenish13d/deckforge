@@ -1,11 +1,19 @@
 import { notFound, redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app/AppShell";
-import { isAdminEmail } from "@/lib/admin";
+import { DeleteAllAccounts } from "@/components/admin/DeleteAllAccounts";
+import { InviteManager } from "@/components/admin/InviteManager";
+import { OpenEmailButton } from "@/components/admin/OpenEmailButton";
+import { adminEmails, isAdminEmail } from "@/lib/admin";
 import { LaunchEmailButton } from "@/components/LaunchEmailButton";
 import { SendDigestButton } from "@/components/SendDigestButton";
 import { getCurrentUser } from "@/lib/auth";
+import { emailEnabled } from "@/lib/email";
 import { loadHub } from "@/lib/hub";
+import { countAccountsExceptAdmins, listInvites } from "@/lib/invites";
+import { launchListSummary } from "@/lib/launch-list";
+import { prelaunchOn } from "@/lib/prelaunch";
+import { siteUrl } from "@/lib/url";
 
 export const metadata = { title: "Marketing hub", robots: { index: false } };
 
@@ -16,7 +24,11 @@ export default async function AdminPage() {
   if (!user) redirect("/login?next=/admin");
   if (!isAdminEmail(user.email)) notFound();
 
-  const hub = await loadHub();
+  const prelaunch = prelaunchOn();
+  const [hub, invites, launchList, others] = await Promise.all([loadHub(), listInvites(), launchListSummary(), countAccountsExceptAdmins(adminEmails())]);
+  // Fixed for this render, so the server and the browser show the same "hours left".
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
   const when = (d: Date) => d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   const peak = Math.max(1, ...hub.series.flatMap((d) => [d.users, d.decks]));
   const ratings = hub.feedback.filter((f) => f.rating !== null);
@@ -35,6 +47,49 @@ export default async function AdminPage() {
     <AppShell next="/admin">
       <div className="page hub">
         <h1 className="page-title">Marketing hub</h1>
+
+        <h2 id="launch" className="section-title">{prelaunch ? "Before launch" : "Launch"}</h2>
+        <p className="muted">
+          {prelaunch
+            ? "The site is locked: visitors see “launching soon” and can join the list. Only admins and invite codes can sign in. To launch, remove PRELAUNCH in Vercel and redeploy."
+            : "The site is open to everyone. To lock it again before launch, set PRELAUNCH=1 in Vercel and redeploy."}
+        </p>
+
+        <h3 className="section-subtitle">Invite codes</h3>
+        <InviteManager
+          invites={invites.map((i) => ({ id: i.id, code: i.code, note: i.note, expiresAt: i.expiresAt.toISOString(), usedAt: i.usedAt?.toISOString() ?? null, usedBy: i.usedBy }))}
+          origin={siteUrl()}
+          now={now}
+        />
+
+        <h3 className="section-subtitle">Launch list ({launchList.total})</h3>
+        {launchList.recent.length === 0 ? (
+          <p className="muted">Nobody yet. People who leave their email on the launching-soon page appear here.</p>
+        ) : (
+          <ul className="feedback-list">
+            {launchList.recent.map((l) => (
+              <li key={l.email} className="feedback-item row row--between">
+                <a href={`mailto:${l.email}`}>{l.email}</a>
+                <span className="muted small">
+                  {when(l.createdAt)}
+                  {l.notifiedAt ? " · emailed" : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <OpenEmailButton
+          waiting={launchList.waiting}
+          ready={!prelaunch && emailEnabled()}
+          why={prelaunch ? "Available after launch." : !emailEnabled() ? "Set up email (SMTP) first." : ""}
+        />
+
+        {prelaunch && (
+          <>
+            <h3 className="section-subtitle">Start fresh</h3>
+            <DeleteAllAccounts count={others} />
+          </>
+        )}
 
         <h2 className="section-title">To do today</h2>
         <ul className="hub__tasks">

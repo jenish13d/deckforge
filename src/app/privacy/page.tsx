@@ -12,7 +12,7 @@ export default async function PrivacyPage() {
   const user = await getCurrentUser();
   const consent = consentFrom(await headers());
   return (
-    <LegalPage title="Privacy policy" updated="October 13, 2026">
+    <LegalPage title="Privacy policy" updated="October 18, 2026">
       <p>This policy explains what {SITE.name} collects, why, and the choices you have.</p>
 
       <h2>What we collect</h2>
@@ -22,6 +22,7 @@ export default async function PrivacyPage() {
         <li><strong>Billing details:</strong> if you upgrade, payments are handled by our payment provider. We receive your plan status, not your full card number.</li>
         <li><strong>Pro and Max list:</strong> if you ask to hear when paid plans open, we keep your email and chosen plan, send a confirmation and one email when they open, and nothing else. Every email has a link to leave the list, which deletes your entry.</li>
         <li><strong>Technical data:</strong> basic request information such as IP address, used to keep the service secure and prevent abuse.</li>
+        <li><strong>Launch list:</strong> before we open, if you leave your email on the home page we keep it, send a confirmation and one email when we open, and nothing else. Every email has a link to leave the list, which deletes your entry.</li>
         <li><strong>Usage analytics, if you allow it:</strong> see &ldquo;Analytics&rdquo; below.</li>
       </ul>
 
@@ -84,7 +85,7 @@ export default async function PrivacyPage() {
       <p>New decks can be viewed by anyone with their link, so only share links with people you trust. You can make any deck private from its Share window; then only you can open it.</p>
 
       <h2>Keeping and deleting data</h2>
-      <p>We keep your account and decks while your account is open. You can delete decks at any time. On the Account page you can download all your data, or delete your account, which removes it and all its decks for good.</p>
+      <p>Accounts made with an invite code before launch are deleted, with their decks, 24 hours after sign-up. We keep other accounts and decks while the account is open. You can delete decks at any time. On the Account page you can download all your data, or delete your account, which removes it and all its decks for good.</p>
 
       <h2>Your rights</h2>
       <p>Depending on where you live (for example under the GDPR, UK GDPR or California law), you may have the right to access, correct, export or delete your personal data, and to object to some processing. You can export or delete your data yourself from the Account page, or contact us to make a request.</p>

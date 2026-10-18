@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import { Prisma, type GenerationJob } from "@prisma/client";
 
+import { isAdminEmail } from "./admin";
 import { GenerationError } from "./ai";
 import { captureServerError } from "./analytics";
 import { chargeForJob, refundJobCredits } from "./credits";
@@ -75,7 +76,7 @@ const isUniqueViolation = (error: unknown) => error instanceof Prisma.PrismaClie
  * charged. Otherwise the credits are taken and the job is created in one transaction.
  */
 export async function acceptJob(input: {
-  user: { id: string; plan: string };
+  user: { id: string; plan: string; email?: string };
   deckId: string;
   cardId: string;
   mode?: unknown;
@@ -95,7 +96,7 @@ export async function acceptJob(input: {
   if (!canUseMode(user.plan, mode)) return { ok: false, reason: "mode_not_allowed", mode };
   if (mode === "premium" && !premiumAvailable()) return { ok: false, reason: "premium_unavailable", mode };
 
-  const cost = cardCost(mode);
+  const cost = cardCost(mode, 1, { admin: Boolean(input.user.email && isAdminEmail(input.user.email)) });
   // Keys are per user, so one user's key can never match another's job.
   const key = `${user.id}:${input.key ? input.key.slice(0, 120) : `${cardId}:${randomUUID()}`}`;
 
@@ -147,7 +148,7 @@ export interface EnsureResult {
  * Safe to call again and again (on every page load): cards that have a job are left alone, and
  * the key is the same until a card has had a job, so nothing is charged twice.
  */
-export async function ensureDeckJobs(input: { user: { id: string; plan: string }; deckId: string; region?: string | null }): Promise<EnsureResult> {
+export async function ensureDeckJobs(input: { user: { id: string; plan: string; email?: string }; deckId: string; region?: string | null }): Promise<EnsureResult> {
   const cards = await db.card.findMany({
     where: { deckId: input.deckId, status: "pending", deck: { userId: input.user.id } },
     orderBy: { position: "asc" },
@@ -301,6 +302,8 @@ function judge(error: unknown): Verdict {
     return { retry: true, delaySeconds: Math.min(Math.max(error.retryAfterSeconds, 5), 60), message: error.message, code: "ai_busy" };
   }
   if (error instanceof GenerationError) return { retry: true, delaySeconds: 5, message: error.message, code: "generation" };
+  // The card (or its deck or account) was deleted while it was being written: the next attempt sees it is gone and cancels.
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") return { retry: true, delaySeconds: 0, message: "This slide was deleted.", code: "card_missing" };
   console.error("Card job failed unexpectedly", error);
   void captureServerError(error, { where: "card_job" });
   return { retry: true, delaySeconds: 5, message: "Couldn't write this card. Try again.", code: "generation" };

@@ -7367,6 +7367,11 @@ body:has(.assistant) .feedback {
   font-size: 1.35rem;
 }
 
+.coming-soon__links {
+  margin-top: 24px;
+  text-align: center;
+}
+
 .pro-page__perks {
   display: grid;
   gap: 8px;
@@ -7616,4 +7621,34 @@ body:has(.assistant) .feedback {
 
 .guide-groups__list a:hover {
   text-decoration: underline;
+}
+
+/* Admin: before launch */
+.section-subtitle {
+  margin: 20px 0 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.invite-note {
+  flex: 1 1 240px;
+}
+
+.invite-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.04em;
+}
+
+.invite-made {
+  padding: 14px 16px;
+}
+
+.invite-link {
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
+
+.danger-zone {
+  padding: 16px;
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
 }

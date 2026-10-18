@@ -222,6 +222,23 @@ All five tools you asked for are connected, each in the safest form that still w
 | **Agent Reach** (`Panniantong/Agent-Reach`) | `scripts/setup-agent-reach.sh` installs reviewed commit `f65526c` (v1.5.0) into its own virtual environment and only runs its status check. Rules for using it are in `AGENTS.md`. | Public pages only. Its login channels (X, Reddit, Instagram, Facebook, LinkedIn, Xiaohongshu…) need your cookies and risk account bans, so we don't set them up. |
 | **FreeLLMAPI** (`tashfeenahmed/freellmapi`) | An optional last-choice AI provider in `src/lib/router.ts`, **development only**. Run FreeLLMAPI yourself, then set `FREELLMAPI_BASE_URL` (e.g. `http://localhost:3001/v1`) and `FREELLMAPI_KEY`. | Its README says "personal experimentation and learning, not production". It is off on Vercel unless `FREELLMAPI_ALLOW_PRODUCTION=1` (then the privacy policy must name it), never used for UK/EU/Swiss visitors, Premium or photo reading, and plain `http` is allowed only to this computer. |
 
+### Before launch (invite-only)
+
+Set `PRELAUNCH=1` in Vercel and redeploy to lock the site until launch:
+
+- The home page says "opening soon" and collects emails (the launch list). Other public pages send visitors
+  to the home page; shared deck links, sign-in, Privacy and Terms still work. The sitemap lists only the home page.
+- Only admins (`ADMIN_EMAILS` and `NEXT_PUBLIC_CONTACT_EMAIL`) and people with an invite code can sign up or
+  sign in. Other accounts are treated as signed out.
+- In `/admin` → "Before launch": make an invite code (works once, within 24 hours; send the link
+  `/signup?code=XXXX-XXXX`). The account it makes lasts 24 hours, then it is deleted with its decks (when
+  they next visit, and by the daily cron).
+- "Start fresh" deletes every account except the admins' (type `DELETE ALL`). Waitlists and feedback stay.
+- Admins write Quick and Standard cards (the free AI models) without spending credits; Premium still costs credits.
+
+To launch: remove `PRELAUNCH`, redeploy, then use "Tell the list we're open" in `/admin`.
+Code: `src/lib/prelaunch.ts`, `src/lib/invites.ts`, `src/lib/launch-list.ts`, `src/proxy.ts`.
+
 ### Analytics (PostHog)
 
 Optional, off until `NEXT_PUBLIC_POSTHOG_KEY` is set (PostHog → Settings → Project → Project API key; public by

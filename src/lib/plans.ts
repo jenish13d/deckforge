@@ -89,7 +89,9 @@ export function canUseMode(plan: string, mode: ModeId): boolean {
   return PLANS[planOf(plan)].modes.includes(mode);
 }
 
-export function cardCost(mode: ModeId, cards = 1): number {
+export function cardCost(mode: ModeId, cards = 1, { admin = false }: { admin?: boolean } = {}): number {
+  // Admins write Quick and Standard cards (the free AI models) without spending credits.
+  if (admin && mode !== "premium") return 0;
   return MODES[mode].creditsPerCard * cards;
 }
 

@@ -45,6 +45,7 @@ const toEditable = (outline: Outline): EditableCard[] =>
   outline.cards.map(({ title, points, ...plan }) => ({ key: nextKey++, title, points: points.join("\n"), plan }));
 
 export function CreateFlow({
+  admin = false,
   allowedModes,
   allowedDepths = ["medium"],
   comingSoon = [],
@@ -53,6 +54,8 @@ export function CreateFlow({
   initialPrompt = "",
   initialTheme = "milano",
 }: {
+  /** Admins write Quick and Standard decks without spending credits. */
+  admin?: boolean;
   allowedModes: ModeId[];
   allowedDepths?: readonly ("low" | "medium" | "high")[];
   comingSoon?: ModeId[];
@@ -327,7 +330,7 @@ export function CreateFlow({
   }
 
   const usedCards = cards.filter((c) => c.title.trim()).length;
-  const cost = cardCost(mode, usedCards);
+  const cost = cardCost(mode, usedCards, { admin });
 
   return (
     <div className="outline-step">
@@ -400,7 +403,7 @@ export function CreateFlow({
           </p>
         )}
         <div className="outline-step__go">
-          <CostLine cost={cost} credits={credits} />
+          {admin && cost === 0 ? <p className="cost-line">Free for admins in this mode.</p> : <CostLine cost={cost} credits={credits} />}
           <button
             type="button"
             className="button button--primary button--large"

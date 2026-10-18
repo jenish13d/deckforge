@@ -23,6 +23,8 @@ model User {
   stripeSubscriptionId String?
   // When the user asked to upgrade while payments weren't set up yet (the Pro waitlist).
   proWaitlistAt        DateTime?
+  // Accounts made with an invite code before launch end here and are deleted with their decks.
+  expiresAt            DateTime?
   createdAt            DateTime        @default(now())
   sessions             Session[]
   decks                Deck[]
@@ -31,6 +33,8 @@ model User {
   research             Research[]
   generationJobs       GenerationJob[]
   creditLedger         CreditLedger[]
+
+  @@index([expiresAt])
 }
 
 model PasswordReset {
@@ -215,4 +219,32 @@ model CreditLedger {
 
   @@unique([jobId, type])
   @@index([userId, createdAt])
+}
+
+// Before launch, only admins and people with an invite code can sign up. An admin makes a code;
+// it can be used once, within a day, and the account it makes lasts a day (User.expiresAt).
+model Invite {
+  id        String    @id @default(cuid())
+  // Shown as XXXX-XXXX.
+  code      String    @unique
+  // Who it is for, as the admin wrote it.
+  note      String    @default("")
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+  // The account made with it (a plain string: the account is deleted after a day).
+  userId    String?
+  usedBy    String?
+
+  @@index([createdAt])
+}
+
+// People who asked to hear when the site opens (the "launching soon" page). One confirmation
+// now and one email when it opens; the token lets them leave the list from any email.
+model LaunchWaitlist {
+  id         String    @id @default(cuid())
+  email      String    @unique
+  token      String    @unique
+  createdAt  DateTime  @default(now())
+  notifiedAt DateTime?
 }

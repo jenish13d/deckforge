@@ -2,6 +2,7 @@ import { BadgeCheck, Download, FileUp, ImageIcon, Languages, LayoutPanelTop, Lin
 import Link from "next/link";
 
 import { AppShell } from "@/components/app/AppShell";
+import { ComingSoon } from "@/components/ComingSoon";
 import { CreateFlow } from "@/components/CreateFlow";
 import { DeckLibrary } from "@/components/DeckLibrary";
 import { BuildStory } from "@/components/landing/BuildStory";
@@ -16,7 +17,10 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StructuredData } from "@/components/StructuredData";
 import { TemplateIcon } from "@/components/TemplateIcon";
+import { isAdminEmail } from "@/lib/admin";
 import { getCurrentUser } from "@/lib/auth";
+import { captchaEnabled } from "@/lib/captcha";
+import { prelaunchOn } from "@/lib/prelaunch";
 import { listDecks } from "@/lib/decks";
 import { PLANS, planOf } from "@/lib/plans";
 import { availableModes, premiumAvailable } from "@/lib/providers";
@@ -70,6 +74,7 @@ export default async function Home(props: PageProps<"/">) {
       <AppShell>
         <div className="create-page">
           <CreateFlow
+            admin={isAdminEmail(user.email)}
             allowedModes={availableModes(user.plan)}
             allowedDepths={PLANS[planOf(user.plan)].depths}
             comingSoon={premiumAvailable() ? [] : ["premium"]}
@@ -91,6 +96,8 @@ export default async function Home(props: PageProps<"/">) {
       </AppShell>
     );
   }
+
+  if (prelaunchOn()) return <ComingSoon captcha={captchaEnabled()} />;
 
   return (
     <>

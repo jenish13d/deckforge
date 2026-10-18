@@ -108,6 +108,21 @@ describe("accepting a job", () => {
     expect(entries()).toHaveLength(0);
   });
 
+  it("lets admins write free-model cards without credits, and charges them for Premium as usual", async () => {
+    vi.stubEnv("ADMIN_EMAILS", "owner@example.com");
+    const admin = { ...seedUser({ credits: 0 }), email: "owner@example.com" };
+    const { deckId, cardIds } = seedDeck(admin.id);
+    const result = await acceptJob({ user: admin, deckId, cardId: cardIds[0] });
+    expect(result).toMatchObject({ ok: true, created: true });
+    expect(balance(admin.id)).toBe(0);
+    expect(entries("charge")).toMatchObject([{ amount: 0 }]);
+    // Someone else with no credits is still refused.
+    const other = { ...seedUser({ credits: 0 }), email: "someone@example.com" };
+    const theirs = seedDeck(other.id);
+    expect(await acceptJob({ user: other, deckId: theirs.deckId, cardId: theirs.cardIds[0] })).toMatchObject({ ok: false, reason: "insufficient_credits" });
+    vi.unstubAllEnvs();
+  });
+
   it("keeps plan gating and ownership", async () => {
     const user = seedUser({ credits: 50 });
     const other = seedUser({ credits: 50 });
