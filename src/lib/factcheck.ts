@@ -9,6 +9,8 @@ export interface Problem {
   /** Where on the card: "title", "subtitle", "eyebrow", "items.2", "stats.0", "table.1", "quote", or "claim". */
   field: string;
   detail: string;
+  /** The exact words that failed (a number, a credited name, a web address), so only the sentence holding them is removed. */
+  needle?: string;
 }
 
 const NUMBER_WORDS: Record<string, string> = {
@@ -171,13 +173,13 @@ export function attributionProblems(card: CardContent, texts: SourceText[], allo
         const inSources = haystack.includes(` ${squash(name)} `) || (wikipedia && /^wikipedia$/i.test(name));
         const isSource = labels.some((l) => [...known].every((w) => l.has(w)));
         if (!inSources && !isSource) {
-          problems.push({ field: f.field, detail: `"${f.text.trim().slice(0, 120)}" credits "${name}", which isn't one of the sources and isn't named in them` });
+          problems.push({ field: f.field, needle: m[0], detail: `"${f.text.trim().slice(0, 120)}" credits "${name}", which isn't one of the sources and isn't named in them` });
         }
       }
     }
     for (const m of f.text.matchAll(/https?:\/\/[^\s)"'<>]+/g)) {
       const host = squash(new URL(m[0].replace(/[.,;]+$/, ""), "https://x.invalid").hostname.replace(/^www\./, ""));
-      if (host && !haystack.includes(` ${host} `)) problems.push({ field: f.field, detail: `"${m[0].slice(0, 80)}" is a web address that isn't in the sources` });
+      if (host && !haystack.includes(` ${host} `)) problems.push({ field: f.field, needle: m[0], detail: `"${m[0].slice(0, 80)}" is a web address that isn't in the sources` });
     }
   }
   return problems;
@@ -212,6 +214,7 @@ export function verifyCard(card: CardContent, texts: SourceText[], allowed: stri
       if (agreeing >= required) continue;
       problems.push({
         field: f.field,
+        needle: n,
         detail:
           agreeing === 0
             ? `"${n}" in "${f.text.trim().slice(0, 120)}" isn't in the sources`
@@ -243,12 +246,21 @@ export const describeProblems = (problems: Problem[]) => problems.map((p) => `- 
 export function stripUnverified(card: CardContent, problems: Problem[], fallbackTitle: string): CardContent {
   const bad = new Set(problems.map((p) => p.field));
   const keep = <T,>(list: T[], prefix: string) => list.filter((_, i) => !bad.has(`${prefix}.${i}`));
+  const failed = (field: string) => problems.filter((p) => p.field === field);
+  // A point keeps its other sentences: only the ones holding what failed go, and the point goes only if too little is left.
+  const items = card.items.flatMap((item, i) => {
+    const issues = failed(`items.${i}`);
+    if (issues.length === 0) return [item];
+    if (holds(item.heading, issues)) return [];
+    const text = withoutSentences(item.text, issues);
+    return text !== null && words(text) >= 4 ? [{ ...item, text }] : [];
+  });
   const out: CardContent = {
     ...card,
     title: bad.has("title") ? fallbackTitle.replace(/\d[\d.,]*/g, "").replace(/\s+/g, " ").trim() || card.title : card.title,
-    subtitle: bad.has("subtitle") ? "" : card.subtitle,
+    subtitle: bad.has("subtitle") ? (withoutSentences(card.subtitle, failed("subtitle")) ?? "") : card.subtitle,
     eyebrow: bad.has("eyebrow") ? "" : card.eyebrow,
-    items: keep(card.items, "items"),
+    items,
     stats: keep(card.stats, "stats"),
     table: { columns: card.table.columns, rows: keep(card.table.rows, "table") },
     quoteAuthor: bad.has("quoteAuthor") ? "" : card.quoteAuthor,
@@ -273,4 +285,21 @@ export function stripUnverified(card: CardContent, problems: Problem[], fallback
   if (out.layout === "table" && out.table.rows.length < 2) return asSection();
   if (["bullets", "columns", "timeline"].includes(out.layout) && out.items.length < 2) return asSection();
   return out;
+}
+
+const words = (text: string) => text.split(/\s+/).filter(Boolean).length;
+
+/** Whether this text contains something that failed. */
+function holds(text: string, issues: Problem[]): boolean {
+  return issues.some((p) => p.needle !== undefined && (/^\d/.test(p.needle) ? numbersIn(text).includes(p.needle) : text.includes(p.needle)));
+}
+
+/** The text without the sentences that hold what failed; null when a failure can't be traced to a sentence. */
+function withoutSentences(text: string, issues: Problem[]): string | null {
+  if (issues.some((p) => p.needle === undefined)) return null;
+  return text
+    .split(/(?<=[.!?;])\s+/)
+    .filter((sentence) => !holds(sentence, issues))
+    .join(" ")
+    .trim();
 }

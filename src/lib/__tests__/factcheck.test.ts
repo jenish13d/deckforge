@@ -69,6 +69,35 @@ describe("number checks", () => {
     expect(verifyCard({ ...real, quoteAuthor: "Lionel Messi" }, src, "")[0].field).toBe("quote");
   });
 
+  it("removes only the sentence with an unconfirmed number, and keeps the rest of the point", () => {
+    const c = card({
+      layout: "bullets",
+      items: [
+        { heading: "Top scorer", text: "He left as the club's all-time top scorer with 450 goals. He also scored 777 headers there." },
+        { heading: "Champions League", text: "He won four Champions League titles with the club, a run few players match." },
+        { heading: "1999 debut", text: "He first played for the club as a teenager, long before his transfer." },
+      ],
+    });
+    const stripped = stripUnverified(c, verifyCard(c, texts, ""), "Real Madrid");
+    expect(stripped.layout).toBe("bullets");
+    expect(stripped.items.map((i) => i.heading)).toEqual(["Top scorer", "Champions League"]);
+    expect(stripped.items[0].text).toBe("He left as the club's all-time top scorer with 450 goals.");
+    expect(JSON.stringify(stripped)).not.toMatch(/777|1999/);
+  });
+
+  it("removes a made-up credit's sentence, not the whole point", () => {
+    const c = card({
+      layout: "bullets",
+      items: [
+        { heading: "Goals", text: "He scored 450 goals in all competitions. According to the Madrid Football Institute, no one will match it." },
+        { heading: "Titles", text: "He won four Champions League titles with the club." },
+      ],
+    });
+    const stripped = stripUnverified(c, verifyCard(c, texts, ""), "Real Madrid");
+    expect(stripped.items[0].text).toBe("He scored 450 goals in all competitions.");
+    expect(stripped.items).toHaveLength(2);
+  });
+
   it("drops what can't be confirmed and falls back to a simpler layout", () => {
     const c = card({ stats: [{ value: "900+", label: "goals" }], subtitle: "A record 900 goals." });
     const stripped = stripUnverified(c, verifyCard(c, texts, ""), "Real Madrid");
