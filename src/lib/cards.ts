@@ -240,7 +240,7 @@ export function normalizeCard(raw: CardInput): CardContent {
       .map((i) => ({ heading: clip(i.heading.trim(), 80), text: clip(i.text.trim(), 360) })),
     stats: raw.stats
       .slice(0, 4)
-      .map((s) => ({ value: clip(s.value.trim(), 16), label: clip(s.label.trim(), 80) })),
+      .map((s) => ({ value: clip(s.value.trim(), 16), label: clipAtBreak(s.label.trim(), 90) })),
     quote: clip(raw.quote.trim(), 300),
     quoteAuthor: clip(raw.quoteAuthor.trim(), 80),
     table,

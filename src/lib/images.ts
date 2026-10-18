@@ -103,7 +103,7 @@ async function searchOpenverse(query: string, perPage: number): Promise<PhotoRes
     return [];
   }
   const data = (await response.json()) as { results?: OpenverseImage[] };
-  return (data.results ?? []).map((r) => {
+  return (data.results ?? []).filter((r) => !looksLikeFigure(r.title ?? "")).map((r) => {
     const license = [LICENSE_LABELS[r.license] ?? r.license.toUpperCase(), r.license === "by" ? r.license_version : null]
       .filter(Boolean)
       .join(" ");
@@ -161,6 +161,10 @@ const stripTags = (html: string) => decodeEntities(html.replace(/<[^>]*>/g, ""))
  * boilerplate ("No machine-readable author provided. X assumed (based on copyright claims).",
  * "Original uploaded by X (Transferred by Y)"): keep the name only.
  */
+/** A chart, diagram, map or scan rather than a photo: it would be cropped into a photo frame and lose its meaning. */
+export const looksLikeFigure = (text: string) =>
+  /\.svg\b|\b(graphs?|charts?|diagrams?|plots?|maps?|schemes?|schematics?|curves?|figures?|fig\.|tables?|infographics?|logos?|x-?rays?|radiographs?)\b/i.test(text.replace(/[_-]/g, " "));
+
 export function cleanArtist(text: string): string {
   return text
     .replace(/no machine-readable author provided\.?\s*/i, "")
@@ -263,7 +267,7 @@ export async function findWikiPhoto(
     .filter((m) => (cover ? m.score > -2 : m.score >= 1) && !used.has(photoKey(m.file.replace(/^File:/, ""))))
     .sort((a, b) => b.score - a.score || a.i - b.i)
     .slice(0, 30);
-  const infos = await fileInfo(ranked.map((m) => m.file));
+  const infos = await fileInfo(ranked.filter((m) => !looksLikeFigure(`${m.file} ${m.caption}`)).map((m) => m.file));
   for (const m of ranked) {
     const info = infos.get(m.file);
     if (!info || used.has(photoKey(info.url)) || info.width < 700 || info.height < 450) continue;

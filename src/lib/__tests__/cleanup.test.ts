@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { CardContentSchema, clipAtBreak, removeCitations, type CardContent } from "../cards";
-import { cleanArtist } from "../images";
+import { CardContentSchema, clipAtBreak, normalizeCard, removeCitations, type CardContent } from "../cards";
+import { cleanArtist, looksLikeFigure } from "../images";
+import { stripUnverified, verifyCard } from "../factcheck";
+import type { SourceText } from "../research";
 
 const card = (patch: Partial<CardContent>): CardContent =>
   CardContentSchema.parse({ layout: "bullets", icon: "", title: "Plaque", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "", ...patch });
@@ -55,5 +57,39 @@ describe("photo credits", () => {
     expect(cleanArtist("Original uploaded by DRosenbach (Transfered by wikiLeon)")).toBe("DRosenbach");
     expect(cleanArtist("Suyash.dwivedi")).toBe("Suyash.dwivedi");
     expect(cleanArtist("Own work")).toBe("");
+  });
+});
+
+describe("photos", () => {
+  it("skip charts, diagrams and scans, which a photo frame would crop", () => {
+    expect(looksLikeFigure("File:Sugar consumption and caries graph.png")).toBe(true);
+    expect(looksLikeFigure("File:Tooth_anatomy_diagram.svg")).toBe(true);
+    expect(looksLikeFigure("Bitewing radiograph showing caries")).toBe(true);
+    expect(looksLikeFigure("File:Dentist examining a patient.jpg")).toBe(false);
+  });
+});
+
+describe("stat labels", () => {
+  it("end at a break, never mid-sentence with an ellipsis", () => {
+    const c = normalizeCard({
+      layout: "stats", icon: "", title: "t", subtitle: "", items: [], quote: "", quoteAuthor: "",
+      stats: [{ value: "20%", label: "of children in the United States and Europe, who carry most of the disease burden, across all income groups studied" }],
+    });
+    expect(c.stats[0].label).toBe("of children in the United States and Europe, who carry most of the disease burden");
+  });
+});
+
+describe("removing a failed sentence", () => {
+  it("keeps whole sentences and starts the rest with a capital", () => {
+    const texts: SourceText[] = [{ title: "a.org", text: "Fluoride toothpaste reduces caries. Sealants protect grooves.", group: "a.org" }];
+    const c = CardContentSchema.parse({
+      layout: "bullets", icon: "", title: "Fluoride", subtitle: "", stats: [], quote: "", quoteAuthor: "",
+      items: [
+        { heading: "Toothpaste", text: "A 9999 ppm paste is standard; higher concentrations add protection. Fluoride toothpaste reduces caries." },
+        { heading: "Sealants", text: "Sealants protect grooves in the back teeth." },
+      ],
+    });
+    const out = stripUnverified(c, verifyCard(c, texts, ""), "Fluoride");
+    expect(out.items[0].text).toBe("Fluoride toothpaste reduces caries.");
   });
 });

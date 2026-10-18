@@ -139,7 +139,7 @@ function buildBlocks(card: CardContent, style: ThemeStyle, colors: Colors, x: nu
   const boxedOnBg = panelBody && (card.layout === "columns" || card.layout === "timeline" || (card.layout === "bullets" && !hasPhoto && items.length >= 4));
 
   // --- Head: icon, label, title
-  if (card.icon && !style.hideIcon) add(inch(4.2), (s, y) => s.addText(card.icon, { x, y, w: 1, h: inch(4.2), fontSize: pt(4.2), margin: 0 }), inch(1.2));
+  // Emoji icons aren't shown on slides (they read as clip art), so the PowerPoint leaves them out too.
   if (card.eyebrow) {
     const size = pt(1.5);
     const label = card.eyebrow.toUpperCase();

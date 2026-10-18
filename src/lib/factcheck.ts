@@ -297,9 +297,10 @@ function holds(text: string, issues: Problem[]): boolean {
 /** The text without the sentences that hold what failed; null when a failure can't be traced to a sentence. */
 function withoutSentences(text: string, issues: Problem[]): string | null {
   if (issues.some((p) => p.needle === undefined)) return null;
-  return text
-    .split(/(?<=[.!?;])\s+/)
+  const kept = text
+    .split(/(?<=[.!?])\s+/)
     .filter((sentence) => !holds(sentence, issues))
     .join(" ")
     .trim();
+  return kept.charAt(0).toUpperCase() + kept.slice(1);
 }

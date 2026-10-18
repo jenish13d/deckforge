@@ -58,7 +58,7 @@ export function CardView({
   /** Thumbnail inside a link or button: the photo credit is plain text, not a nested link. */
   preview?: boolean;
 }) {
-  const { layout, eyebrow, icon, title, subtitle, items, stats, quote, quoteAuthor, table } = content;
+  const { layout, eyebrow, title, subtitle, items, stats, quote, quoteAuthor, table } = content;
   const photo = showsImage(content) ? content.image : null;
   const ref = useFitText(content);
 
@@ -101,7 +101,6 @@ export function CardView({
     <article ref={ref} className={classes} data-variant={index % 3}>
       <div className="card__inner">
         <header className="card__head">
-          {icon && <div className="card__icon" aria-hidden="true">{icon}</div>}
           {eyebrow && <p className="card__eyebrow">{eyebrow}</p>}
           {layout !== "quote" && <h2 className="card__title"><Title text={title} /></h2>}
         </header>
