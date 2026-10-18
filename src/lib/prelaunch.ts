@@ -1,9 +1,24 @@
-// Pre-launch mode (PRELAUNCH=1): the home page says "launching soon" and collects emails, and
+// Pre-launch mode (PRELAUNCH=1 for everyone, or PRELAUNCH_COUNTRIES=IN for visitors from some countries only):
+// for them the home page says "launching soon" and collects emails, and
 // only admins and people with an invite code can sign up or sign in. An invite code works once,
 // within a day, and the account it makes is deleted with its decks a day after sign-up.
 // Turn it off on launch day by removing PRELAUNCH in Vercel and redeploying.
 
+/** The whole site is locked (PRELAUNCH=1). */
 export const prelaunchOn = () => process.env.PRELAUNCH === "1";
+
+/** Countries still before launch while the rest of the world is open, e.g. PRELAUNCH_COUNTRIES=IN (ISO codes, comma separated). */
+export const lockedCountries = () =>
+  (process.env.PRELAUNCH_COUNTRIES ?? "")
+    .split(",")
+    .map((c) => c.trim().toUpperCase())
+    .filter(Boolean);
+
+/**
+ * Whether a visitor from this country sees the site before launch (Vercel's x-vercel-ip-country). An unknown
+ * country is only locked when the whole site is.
+ */
+export const lockedFor = (country: string | null | undefined) => prelaunchOn() || (Boolean(country) && lockedCountries().includes(country!.toUpperCase()));
 
 /** What the admin types to delete every non-admin account. */
 export const WIPE_CONFIRM = "DELETE ALL";

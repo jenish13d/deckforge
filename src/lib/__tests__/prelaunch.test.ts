@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { proxy } from "../../proxy";
 import { cardCost } from "../plans";
-import { accountAllowed, inviteAccountExpiry, inviteExpiry, makeCode, normalizeCode, openBeforeLaunch } from "../prelaunch";
+import { accountAllowed, inviteAccountExpiry, inviteExpiry, lockedFor, makeCode, normalizeCode, openBeforeLaunch } from "../prelaunch";
 
 describe("invite codes", () => {
   it("are XXXX-XXXX from letters and digits that can't be confused", () => {
@@ -91,5 +91,30 @@ describe("admin credits", () => {
     expect(cardCost("standard", 10, { admin: true })).toBe(0);
     expect(cardCost("premium", 2, { admin: true })).toBe(cardCost("premium", 2));
     expect(cardCost("standard", 3)).toBeGreaterThan(0);
+  });
+});
+
+describe("locking some countries only", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  const visit = (path: string, country: string | null) =>
+    proxy(new NextRequest(`https://slidezza.test${path}`, { headers: country ? { "x-vercel-ip-country": country } : {} }));
+
+  it("locks visitors from the listed countries and opens the site to everyone else", () => {
+    vi.stubEnv("PRELAUNCH", "");
+    vi.stubEnv("PRELAUNCH_COUNTRIES", "IN, pk");
+    expect(lockedFor("IN")).toBe(true);
+    expect(lockedFor("pk")).toBe(true);
+    expect(lockedFor("US")).toBe(false);
+    expect(lockedFor(null)).toBe(false);
+    expect(visit("/pricing", "IN").headers.get("location")).toBe("https://slidezza.test/");
+    expect(visit("/pricing", "US").headers.get("location")).toBeNull();
+    expect(visit("/pricing", null).headers.get("location")).toBeNull();
+  });
+
+  it("locks everyone, unknown countries included, when the whole site is locked", () => {
+    vi.stubEnv("PRELAUNCH", "1");
+    vi.stubEnv("PRELAUNCH_COUNTRIES", "IN");
+    expect(lockedFor("US")).toBe(true);
+    expect(lockedFor(null)).toBe(true);
   });
 });

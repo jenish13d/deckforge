@@ -12,7 +12,7 @@ import { emailEnabled } from "@/lib/email";
 import { loadHub } from "@/lib/hub";
 import { countAccountsExceptAdmins, listInvites } from "@/lib/invites";
 import { launchListSummary } from "@/lib/launch-list";
-import { prelaunchOn } from "@/lib/prelaunch";
+import { lockedCountries, prelaunchOn } from "@/lib/prelaunch";
 import { siteUrl } from "@/lib/url";
 
 export const metadata = { title: "Marketing hub", robots: { index: false } };
@@ -25,6 +25,7 @@ export default async function AdminPage() {
   if (!isAdminEmail(user.email)) notFound();
 
   const prelaunch = prelaunchOn();
+  const countries = lockedCountries();
   const [hub, invites, launchList, others] = await Promise.all([loadHub(), listInvites(), launchListSummary(), countAccountsExceptAdmins(adminEmails())]);
   // Fixed for this render, so the server and the browser show the same "hours left".
   // eslint-disable-next-line react-hooks/purity
@@ -52,7 +53,9 @@ export default async function AdminPage() {
         <p className="muted">
           {prelaunch
             ? "The site is locked: visitors see “launching soon” and can join the list. Only admins and invite codes can sign in. To launch, remove PRELAUNCH in Vercel and redeploy."
-            : "The site is open to everyone. To lock it again before launch, set PRELAUNCH=1 in Vercel and redeploy."}
+            : countries.length
+              ? `The site is open everywhere except ${countries.join(", ")}: visitors from there see “launching soon”, and only admins and invite codes can sign in. To open there too, remove PRELAUNCH_COUNTRIES in Vercel and redeploy.`
+              : "The site is open to everyone. To lock it again before launch, set PRELAUNCH=1 (or PRELAUNCH_COUNTRIES for some countries only) in Vercel and redeploy."}
         </p>
 
         <h3 className="section-subtitle">Invite codes</h3>

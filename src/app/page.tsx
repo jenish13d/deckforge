@@ -20,7 +20,7 @@ import { TemplateIcon } from "@/components/TemplateIcon";
 import { isAdminEmail } from "@/lib/admin";
 import { getCurrentUser } from "@/lib/auth";
 import { captchaEnabled } from "@/lib/captcha";
-import { prelaunchOn } from "@/lib/prelaunch";
+import { lockedHere } from "@/lib/prelaunch-server";
 import { listDecks } from "@/lib/decks";
 import { PLANS, planOf } from "@/lib/plans";
 import { availableModes, premiumAvailable } from "@/lib/providers";
@@ -97,7 +97,7 @@ export default async function Home(props: PageProps<"/">) {
     );
   }
 
-  if (prelaunchOn()) return <ComingSoon captcha={captchaEnabled()} />;
+  if (await lockedHere()) return <ComingSoon captcha={captchaEnabled()} />;
 
   return (
     <>

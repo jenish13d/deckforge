@@ -10,7 +10,7 @@ import { db } from "@/lib/db";
 import { signUpWithInvite } from "@/lib/invites";
 import { jsonError, readJson } from "@/lib/http";
 import { hashPassword, validateCredentials } from "@/lib/password";
-import { prelaunchOn } from "@/lib/prelaunch";
+import { lockedFor } from "@/lib/prelaunch";
 import { clientKey, limits } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   if (!(await verifyCaptcha(body?.altcha))) return jsonError(CAPTCHA_ERROR, 400);
 
   // Before launch only admins sign up freely; everyone else needs an invite code, and gets a one-day account.
-  const invited = prelaunchOn() && !isAdminEmail(email);
+  const invited = lockedFor(request.headers.get("x-vercel-ip-country")) && !isAdminEmail(email);
   if (invited && !body?.code) return jsonError("We're not open yet. You need an invite code to sign up.", 403);
 
   try {

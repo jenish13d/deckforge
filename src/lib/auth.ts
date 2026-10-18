@@ -7,7 +7,7 @@ import type { User } from "@prisma/client";
 import { isAdminEmail } from "./admin";
 import { refreshCredits } from "./credits";
 import { db } from "./db";
-import { accountAllowed, prelaunchOn } from "./prelaunch";
+import { accountAllowed, lockedFor } from "./prelaunch";
 
 const COOKIE = "df_session";
 const SESSION_DAYS = 30;
@@ -52,8 +52,8 @@ export async function endSession(): Promise<void> {
  * Whether this account may be signed in now (see prelaunch.ts). An invite account that has ended
  * is deleted here, with its decks, so it is gone at once rather than at the next daily clean-up.
  */
-export async function mayUseAccount(user: User, now = new Date()): Promise<boolean> {
-  if (accountAllowed(user, { admin: isAdminEmail(user.email), prelaunch: prelaunchOn(), now })) return true;
+export async function mayUseAccount(user: User, country: string | null, now = new Date()): Promise<boolean> {
+  if (accountAllowed(user, { admin: isAdminEmail(user.email), prelaunch: lockedFor(country), now })) return true;
   if (user.expiresAt && user.expiresAt <= now) await db.user.deleteMany({ where: { id: user.id } });
   return false;
 }
@@ -64,6 +64,6 @@ export async function getCurrentUser(): Promise<User | null> {
   if (!token) return null;
   const session = await db.session.findUnique({ where: { id: hashToken(token) }, include: { user: true } });
   if (!session || session.expiresAt < new Date()) return null;
-  if (!(await mayUseAccount(session.user))) return null;
+  if (!(await mayUseAccount(session.user, (await headers()).get("x-vercel-ip-country")))) return null;
   return refreshCredits(session.user);
 }

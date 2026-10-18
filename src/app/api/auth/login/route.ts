@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return jsonError("Wrong email or password.", 401);
   }
-  if (!(await mayUseAccount(user))) {
+  if (!(await mayUseAccount(user, request.headers.get("x-vercel-ip-country")))) {
     return user.expiresAt
       ? jsonError("This invite account has ended. Thanks for trying it!", 403)
       : jsonError("We're not open yet. Join the list on the home page to hear when we launch.", 403);

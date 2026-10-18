@@ -243,6 +243,11 @@ Set `PRELAUNCH=1` in Vercel and redeploy to lock the site until launch:
 - Admins write Quick and Standard cards (the free AI models) without spending credits; Premium still costs credits.
 
 To launch: remove `PRELAUNCH`, redeploy, then use "Tell the list we're open" in `/admin`.
+
+To open the site in most of the world first, use `PRELAUNCH_COUNTRIES=IN` (comma-separated ISO codes) instead of
+`PRELAUNCH=1`: visitors whose IP is in those countries (Vercel's `x-vercel-ip-country`) get the locked site; everyone
+else, and search engines, get the open one. Country by IP is approximate (a VPN changes it). "Start fresh" only works
+under the full lock, so it can't delete real users from the open countries.
 Code: `src/lib/prelaunch.ts`, `src/lib/invites.ts`, `src/lib/launch-list.ts`, `src/proxy.ts`.
 
 ### Analytics (PostHog)

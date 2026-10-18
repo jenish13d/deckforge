@@ -3,7 +3,7 @@ import Link from "next/link";
 import { isAdminEmail } from "@/lib/admin";
 import { getCurrentUser } from "@/lib/auth";
 import { PLANS, planOf } from "@/lib/plans";
-import { prelaunchOn } from "@/lib/prelaunch";
+import { lockedHere } from "@/lib/prelaunch-server";
 import { Logo } from "./Logo";
 import { LogoutButton } from "./LogoutButton";
 import { SITE } from "@/lib/site";
@@ -23,7 +23,7 @@ export async function SiteHeader() {
             </Link>
             <LogoutButton />
           </>
-        ) : prelaunchOn() ? (
+        ) : (await lockedHere()) ? (
           <Link href="/login">Log in</Link>
         ) : (
           <>

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AuthForm } from "@/components/AuthForm";
-import { prelaunchOn } from "@/lib/prelaunch";
+import { lockedHere } from "@/lib/prelaunch-server";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getCurrentUser } from "@/lib/auth";
 import { captchaEnabled } from "@/lib/captcha";
@@ -17,7 +17,7 @@ export default async function Page(props: PageProps<"/login">) {
     <>
       <SiteHeader />
       <main id="main" className="page page--auth">
-        <AuthForm mode="login" next={next} captcha={captchaEnabled()} invite={prelaunchOn() ? { code: "" } : null} />
+        <AuthForm mode="login" next={next} captcha={captchaEnabled()} invite={(await lockedHere()) ? { code: "" } : null} />
       </main>
     </>
   );
