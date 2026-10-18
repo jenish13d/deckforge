@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app/AppShell";
 import { DeleteAllAccounts } from "@/components/admin/DeleteAllAccounts";
+import { ExampleManager } from "@/components/admin/ExampleManager";
 import { InviteManager } from "@/components/admin/InviteManager";
 import { OpenEmailButton } from "@/components/admin/OpenEmailButton";
 import { adminEmails, isAdminEmail } from "@/lib/admin";
@@ -9,6 +10,7 @@ import { LaunchEmailButton } from "@/components/LaunchEmailButton";
 import { SendDigestButton } from "@/components/SendDigestButton";
 import { getCurrentUser } from "@/lib/auth";
 import { emailEnabled } from "@/lib/email";
+import { ownDecksForExamples } from "@/lib/examples";
 import { loadHub } from "@/lib/hub";
 import { countAccountsExceptAdmins, listInvites } from "@/lib/invites";
 import { launchListSummary } from "@/lib/launch-list";
@@ -26,7 +28,7 @@ export default async function AdminPage() {
 
   const prelaunch = prelaunchOn();
   const countries = lockedCountries();
-  const [hub, invites, launchList, others] = await Promise.all([loadHub(), listInvites(), launchListSummary(), countAccountsExceptAdmins(adminEmails())]);
+  const [hub, invites, launchList, others, decks] = await Promise.all([loadHub(), listInvites(), launchListSummary(), countAccountsExceptAdmins(adminEmails()), ownDecksForExamples(user.id)]);
   // Fixed for this render, so the server and the browser show the same "hours left".
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
@@ -93,6 +95,12 @@ export default async function AdminPage() {
             <DeleteAllAccounts count={others} />
           </>
         )}
+
+        <h2 id="examples" className="section-title">Example pages</h2>
+        <p className="muted">
+          Publish your own finished decks at /examples so people searching for “[topic] presentation” find them. Make decks on topics people search for (school subjects, history, science), check them, then publish. Unpublished decks stay private.
+        </p>
+        <ExampleManager decks={decks} />
 
         <h2 className="section-title">To do today</h2>
         <ul className="hub__tasks">

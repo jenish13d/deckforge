@@ -106,8 +106,8 @@ export default async function Home(props: PageProps<"/">) {
       <main id="main">
         <section className="hero3d">
           <div className="hero3d__copy">
-            <p className="eyebrow">AI presentation maker</p>
-            <h1 className="landing-top__title">Create stunning presentations <em>with AI</em></h1>
+            <h1 className="eyebrow">{`${SITE.name}: AI presentation maker`}</h1>
+            <p className="landing-top__title">Create stunning presentations <em>with AI</em></p>
             <p className="landing-top__subtitle">
               {SITE.name} is an AI presentation maker that turns your ideas, prompts and files into designed slides in minutes. Sources are listed and numbers are checked.
             </p>

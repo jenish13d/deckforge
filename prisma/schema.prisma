@@ -84,6 +84,9 @@ model Deck {
   // The research the deck's facts come from (null for personal or creative decks).
   researchId String?
   research   Research? @relation(fields: [researchId], references: [id], onDelete: SetNull)
+  // Set when an admin publishes the deck as a public example page: /examples/<example>.
+  example    String?   @unique
+  exampleAt  DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   cards      Card[]
