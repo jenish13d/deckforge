@@ -9,6 +9,12 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 ## Features
 
 - **Prompt → outline → deck.** The outline step lets the user fix the structure before anything is written.
+- **Charts:** when the research gives 3-8 comparable figures in one unit, a slide can show them as a bar chart
+  (comparing groups) or a line chart (change over time), drawn in the theme's colours (`src/components/ChartView.tsx`)
+  and exported to PowerPoint as a real, editable chart. Every value is fact-checked like any other number; with fewer
+  than three confirmed points the slide shows big numbers instead.
+- **Web research:** Perplexity's Search API when `PERPLEXITY_API_KEY` is set (paid), Tavily otherwise or as its
+  fallback (`TAVILY_API_KEY`, free tier), plus Wikipedia.
 - **Build from files:** attach up to 5 files (PDF, scanned PDF, Word .docx, PowerPoint .pptx, Excel .xlsx, CSV,
   text/Markdown, photos). Documents are read in the browser (`src/lib/read-file.ts`; pdf.js's worker is copied
   to `public/` on install); photos and scanned pages go to `/api/extract`, where a vision model reads them.

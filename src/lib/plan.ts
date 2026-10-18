@@ -68,6 +68,10 @@ const SYNONYMS: Record<string, Layout> = {
   grid: "table",
   divider: "section",
   chapter: "section",
+  graph: "chart",
+  "bar chart": "chart",
+  "line chart": "chart",
+  trend: "chart",
 };
 
 const SEQUENCE = /\b(step|steps|process|stage|stages|phase|phases|timeline|history|evolution|roadmap|workflow|journey|sequence|chronolog\w*|milestone\w*|how it works|lifecycle)\b/i;
@@ -126,6 +130,8 @@ export function planDeck(cards: CardBrief[], { style, grounded }: PlanOptions): 
       if (layout === "title") layout = null;
       if (layout === "section" && (total < 10 || card.points.length >= 2 || i === total - 1)) layout = null;
       if (layout === "quote" && (!grounded || quotes >= 1)) layout = null;
+      // A chart needs published figures: only in decks with sources (or the user's files).
+      if (layout === "chart" && !grounded) layout = null;
       layout ??= inferLayout(card);
       if (layout === "quote") quotes++;
     }

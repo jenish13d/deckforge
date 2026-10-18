@@ -1,4 +1,4 @@
-import type { CardContent } from "./cards";
+import { MIN_CHART_POINTS, formatChartValue, type CardContent } from "./cards";
 import { stems, type SourceText } from "./research";
 
 // Fact checking: every number on a slide must appear in the sources (or in the user's
@@ -138,6 +138,10 @@ function fieldsOf(card: CardContent): Field[] {
     fields.push({ field: `stats.${i}`, text: `${stat.value} ${stat.label}`, context: stat.label || `${card.title} ${card.subtitle}` }),
   );
   card.table.rows.forEach((row, i) => fields.push({ field: `table.${i}`, text: row.join(" "), context: `${row.join(" ")} ${card.table.columns.join(" ")}` }));
+  // Each chart point is a figure like any other: its value must be in the sources next to what it measures.
+  card.chart?.points.forEach((p, i) =>
+    fields.push({ field: `chart.${i}`, text: `${p.label} ${formatChartValue(p.value, card.chart!.unit).replace(/,/g, "")}`, context: `${p.label} ${card.chart!.unit} ${card.title}` }),
+  );
   if (card.layout === "quote") fields.push({ field: "quoteAuthor", text: card.quoteAuthor, context: card.quoteAuthor });
   return fields;
 }
@@ -263,6 +267,7 @@ export function stripUnverified(card: CardContent, problems: Problem[], fallback
     items,
     stats: keep(card.stats, "stats"),
     table: { columns: card.table.columns, rows: keep(card.table.rows, "table") },
+    ...(card.chart ? { chart: { ...card.chart, points: keep(card.chart.points, "chart") } } : {}),
     quoteAuthor: bad.has("quoteAuthor") ? "" : card.quoteAuthor,
   };
 
@@ -283,6 +288,12 @@ export function stripUnverified(card: CardContent, problems: Problem[], fallback
   if (bad.has("quote")) return asSection();
   if (out.layout === "stats" && out.stats.length === 0) return asSection();
   if (out.layout === "table" && out.table.rows.length < 2) return asSection();
+  // A chart with too few confirmed points shows the ones left as big numbers.
+  if (out.layout === "chart" && (out.chart?.points.length ?? 0) < MIN_CHART_POINTS) {
+    const left = out.chart?.points ?? [];
+    if (left.length === 0) return asSection();
+    return { ...out, layout: "stats", chart: undefined, stats: left.map((p) => ({ value: formatChartValue(p.value, out.chart!.unit).slice(0, 16), label: p.label })) };
+  }
   if (["bullets", "columns", "timeline"].includes(out.layout) && out.items.length < 2) return asSection();
   return out;
 }

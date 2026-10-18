@@ -42,7 +42,7 @@ const MIN_WORDS_PER_ITEM: Record<ContentDepth, number> = { light: 4, standard: 8
 const LIST_LAYOUTS = ["bullets", "columns", "timeline"];
 
 function cardText(card: CardContent): string {
-  return [card.title, card.subtitle, ...card.items.flatMap((i) => [i.heading, i.text]), ...card.stats.map((s) => `${s.value} ${s.label}`), ...card.table.rows.flat(), card.quote]
+  return [card.title, card.subtitle, ...card.items.flatMap((i) => [i.heading, i.text]), ...card.stats.map((s) => `${s.value} ${s.label}`), ...card.table.rows.flat(), ...(card.chart?.points ?? []).map((p) => `${p.label} ${p.value}`), card.quote]
     .filter(Boolean)
     .join(" ");
 }
@@ -66,7 +66,7 @@ export function qualityIssues(card: CardContent, ctx: QualityContext): QualityIs
   if (index === 0) return { hard, soft }; // the cover can say very little
 
   const isLast = index === total - 1;
-  const hasContent = card.items.length >= 2 || card.stats.length > 0 || card.table.rows.length >= 2 || Boolean(card.quote);
+  const hasContent = card.items.length >= 2 || card.stats.length > 0 || card.table.rows.length >= 2 || (card.chart?.points.length ?? 0) >= 3 || Boolean(card.quote);
   // A chapter divider is fine in a long deck, and a closing card may sum up in a sentence or two.
   const dividerOk = card.layout === "section" && total >= 10;
   const closingOk = isLast && words(`${card.subtitle} ${card.items.map((i) => `${i.heading} ${i.text}`).join(" ")}`).length >= 12;
@@ -104,7 +104,7 @@ export function qualityIssues(card: CardContent, ctx: QualityContext): QualityIs
   }
 
   // Only a card that is meant to state checkable facts needs concrete details.
-  const detail = [card.subtitle, ...card.items.flatMap((i) => [i.heading, i.text]), ...card.stats.map((st) => `${st.value} ${st.label}`), ...card.table.rows.flat()];
+  const detail = [card.subtitle, ...card.items.flatMap((i) => [i.heading, i.text]), ...card.stats.map((st) => `${st.value} ${st.label}`), ...card.table.rows.flat(), ...(card.chart?.points ?? []).map((p) => `${p.label} ${p.value}`)];
   if (brief?.evidence === true && card.layout !== "quote" && !hasSpecifics(detail)) {
     soft.push("The card is meant to state facts but gives no names, dates or figures.");
   }

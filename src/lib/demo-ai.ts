@@ -40,7 +40,7 @@ export function demoOutline(prompt: string, cardCount: number): Outline {
   };
 }
 
-const LAYOUT_CYCLE = ["bullets", "stats", "timeline", "table", "columns", "quote"] as const;
+const LAYOUT_CYCLE = ["bullets", "stats", "chart", "timeline", "table", "columns", "quote"] as const;
 const ICONS = ["💡", "🧭", "📊", "🗓️", "💬", "✅"];
 
 export function demoCard(cardTitle: string, _deckTitle: string, index: number, total: number): GeneratedCard {
@@ -60,6 +60,12 @@ export function demoCard(cardTitle: string, _deckTitle: string, index: number, t
       return { ...base, layout, icon, title: cardTitle, subtitle: "Illustrative comparison for the demo.", table: {
         columns: ["Option", "Cost", "Time", "Best for"],
         rows: [["Do it yourself", "Low", "Slow", "Small teams"], ["Hire help", "Medium", "Fast", "Busy teams"], ["Buy a tool", "Monthly", "Fastest", "Growing teams"]],
+      } };
+    case "chart":
+      return { ...base, layout, icon, title: cardTitle, subtitle: "Illustrative figures for the demo: adoption more than doubled in four years.", chart: {
+        kind: index % 2 ? "line" : "bar",
+        unit: "%",
+        points: [{ label: "2021", value: 18 }, { label: "2022", value: 24 }, { label: "2023", value: 31 }, { label: "2024", value: 39 }],
       } };
     case "columns":
       return { ...base, layout, icon, title: cardTitle, items: [

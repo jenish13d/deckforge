@@ -2,6 +2,7 @@
 
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
+import { ChartView } from "./ChartView";
 import { SITE } from "@/lib/site";
 import { FRAME_ASPECT, imageSrc, photoFit, plainTitle, showsImage, titleParts, type CardContent, type CardImage } from "@/lib/cards";
 
@@ -58,7 +59,7 @@ export function CardView({
   /** Thumbnail inside a link or button: the photo credit is plain text, not a nested link. */
   preview?: boolean;
 }) {
-  const { layout, eyebrow, title, subtitle, items, stats, quote, quoteAuthor, table } = content;
+  const { layout, eyebrow, title, subtitle, items, stats, quote, quoteAuthor, table, chart } = content;
   const photo = showsImage(content) ? content.image : null;
   const ref = useFitText(content);
 
@@ -94,6 +95,7 @@ export function CardView({
     (isList && items.length > 0) ||
     (layout === "stats" && stats.length > 0) ||
     (layout === "table" && table.rows.length > 0) ||
+    (layout === "chart" && Boolean(chart?.points.length)) ||
     layout === "title" ||
     layout === "section";
 
@@ -163,6 +165,8 @@ export function CardView({
                 </tbody>
               </table>
             )}
+
+            {layout === "chart" && chart && chart.points.length > 0 && <ChartView chart={chart} />}
           </div>
         )}
       </div>

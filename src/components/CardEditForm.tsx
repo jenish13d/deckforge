@@ -2,7 +2,23 @@
 
 import { useState } from "react";
 
-import { IMAGE_LAYOUTS, LAYOUTS, MAX_ITEMS, MAX_TABLE_COLUMNS, MAX_TABLE_ROWS, imageSrc, type CardContent, type CardImage, type CardTable, type Layout } from "@/lib/cards";
+import {
+  EMPTY_CHART,
+  IMAGE_LAYOUTS,
+  LAYOUTS,
+  MAX_CHART_POINTS,
+  MAX_ITEMS,
+  MAX_TABLE_COLUMNS,
+  MAX_TABLE_ROWS,
+  MIN_CHART_POINTS,
+  chartNumber,
+  imageSrc,
+  type CardChart,
+  type CardContent,
+  type CardImage,
+  type CardTable,
+  type Layout,
+} from "@/lib/cards";
 import { api } from "@/lib/client";
 
 const LAYOUT_NAMES: Record<Layout, string> = {
@@ -14,6 +30,7 @@ const LAYOUT_NAMES: Record<Layout, string> = {
   quote: "Quote",
   timeline: "Timeline / steps",
   table: "Table",
+  chart: "Chart",
 };
 
 export function CardEditForm({
@@ -166,6 +183,7 @@ export function CardEditForm({
       )}
 
       {c.layout === "table" && <TableFields table={c.table} onChange={(table) => set({ table })} />}
+      {c.layout === "chart" && <ChartFields chart={c.chart ?? EMPTY_CHART} onChange={(chart) => set({ chart })} />}
 
       {photosEnabled && <PhotoPicker card={c} onChange={(image) => set({ image })} />}
 
@@ -204,6 +222,53 @@ function TableFields({ table, onChange }: { table: CardTable; onChange: (table: 
         <span className="field__label">Rows (one per line)</span>
         <textarea className="input input--small" rows={5} value={body} placeholder={"2014 | Final | 0-1\n2022 | Champions | 3-3"} onChange={(e) => update(header, e.target.value)} />
       </label>
+    </fieldset>
+  );
+}
+
+/** Chart data as plain text: one point per line, "label | value". */
+function ChartFields({ chart, onChange }: { chart: CardChart; onChange: (chart: CardChart) => void }) {
+  const [body, setBody] = useState(chart.points.map((p) => `${p.label} | ${p.value}`).join("\n"));
+  const points = (text: string) =>
+    text
+      .split("\n")
+      .map((line) => line.split("|").map((cell) => cell.trim()))
+      .filter(([label, value]) => label && value !== undefined && Number.isFinite(chartNumber(value)))
+      .map(([label, value]) => ({ label, value: chartNumber(value) }))
+      .slice(0, MAX_CHART_POINTS);
+
+  return (
+    <fieldset className="fieldset">
+      <legend className="field__label">Chart</legend>
+      <div className="row">
+        <label className="field">
+          <span className="field__label">Kind</span>
+          <select className="input" value={chart.kind} onChange={(e) => onChange({ ...chart, kind: e.target.value === "line" ? "line" : "bar" })}>
+            <option value="bar">Bars (compare groups)</option>
+            <option value="line">Line (change over time)</option>
+          </select>
+        </label>
+        <label className="field">
+          <span className="field__label">Unit</span>
+          <input className="input" value={chart.unit} maxLength={16} placeholder="%, ppm, million…" onChange={(e) => onChange({ ...chart, unit: e.target.value })} />
+        </label>
+      </div>
+      <label className="field">
+        <span className="field__label">Points (one per line: label | number)</span>
+        <textarea
+          className="input input--small"
+          rows={5}
+          value={body}
+          placeholder={"2000 | 31\n2010 | 27\n2020 | 22"}
+          onChange={(e) => {
+            setBody(e.target.value);
+            onChange({ ...chart, points: points(e.target.value) });
+          }}
+        />
+      </label>
+      <p className="muted small">
+        {MIN_CHART_POINTS} to {MAX_CHART_POINTS} points. With fewer than {MIN_CHART_POINTS}, the slide shows them as big numbers instead.
+      </p>
     </fieldset>
   );
 }

@@ -5,6 +5,7 @@ import {
   DEFAULT_STYLE,
   GeneratedCardSchema,
   MAX_ITEMS,
+  MAX_CHART_POINTS,
   MAX_TABLE_COLUMNS,
   MAX_TABLE_ROWS,
   PlannedOutlineSchema,
@@ -152,7 +153,7 @@ For every card give:
 - purpose: what the card does in the story, in a few words ("show the problem", "give evidence", "compare options", "warn about risks", "tell the audience what to do").
 - keyMessage: the one sentence the audience should remember from this card.
 - points: POINTS supporting points, each a specific fact, claim or example.
-- layout: how the card is shown. One of: title (the cover only), bullets (a list of points), columns (2-3 parallel options or pillars), stats (1-4 key figures), timeline (ordered steps or dates), table (a comparison or record in a grid), quote (a real quote from the sources), section (a chapter divider, only in decks of 10 or more cards). Pick what shows this content best; vary layouts when the content allows it, and repeat one only when the content is the same kind.
+- layout: how the card is shown. One of: title (the cover only), bullets (a list of points), columns (2-3 parallel options or pillars), stats (1-4 key figures), timeline (ordered steps or dates), table (a comparison or record in a grid), chart (3-8 figures in one unit from the sources: a trend over time or a comparison across groups; only when the topic has published figures), quote (a real quote from the sources), section (a chapter divider, only in decks of 10 or more cards). Pick what shows this content best; vary layouts when the content allows it, and repeat one only when the content is the same kind.
 - contentDepth: "light", "standard" or "rich": how much text the card needs.
 - visual: what the card shows beside its text: a photo of something specific (name it), or "none" when nothing concrete can be shown.
 - evidence: true when the card states facts that can be checked (figures, names, dates, findings), false when it explains an idea, a process or an example.
@@ -341,6 +342,7 @@ Pick the layout that best fits the card's content:
 - "stats": 1-4 big figures, each a short value ("4-0", "72%", "18 years") and a label of at most 8 words that says exactly what the figure counts; put any context in the subtitle. A single stat becomes one big highlight number.
 - "timeline": 3-${MAX_ITEMS} steps or dates in order; each heading is the date or step.
 - "table": a comparison or record with 2-${MAX_TABLE_COLUMNS} columns and 3-${MAX_TABLE_ROWS} rows (for example Year | Result | Score). Use it when the content is naturally a grid.
+- "chart": 3-${MAX_CHART_POINTS} figures in the same unit, drawn as a chart. chart.kind is "line" for change over time (points in time order, labels are years or dates) or "bar" to compare groups; chart.unit says what the values are in ("%", "ppm", "million people"); each point has a short label (at most 4 words) and its value as a plain number, exactly as the sources give it. Use it only when the SOURCES (or the user's own text) give the figures; otherwise use another layout. Put the takeaway in the subtitle ("Rates fell by half in twenty years").
 - "quote": one memorable quote or key statement, with its real author (else empty).
 
 Rules:
@@ -351,7 +353,7 @@ Rules:
 - Titles: at most about 8 words. Item length follows the card's content depth.
 - Sentence case for titles, item headings and table headers ("When conservative care beats a filling", not "When Conservative Care Beats A Filling"); keep capitals only for names and acronyms.
 - icon: one emoji that fits the card.
-- Fill only the fields the layout uses; leave the others as "" or [] (and the table as empty columns and rows).
+- Fill only the fields the layout uses; leave the others as "" or [] (the table as empty columns and rows, the chart with no points).
 - imageQuery: for title, section, bullets, stats, timeline and quote cards, 2-6 English keywords for a real photo of something this card actually talks about: the person's full name plus the club, place, event or year (for example "Cristiano Ronaldo Juventus 2019" or "Lusail Stadium Qatar"), a named place, or a concrete object. Follow the card plan's visual direction; if it says "none", or the card is about an idea with nothing specific to photograph (a strategy, a lesson, a summary), use "". Use "" for columns and table cards. For health, medicine or the human body, ask for a clean, professional scene (a clinician at work, instruments, a model, a healthy example), never a close-up of disease, decay, wounds or surgery.
 - A card with a photo has a little over half the width: use the smaller item counts and at most 3 stats.
 - Match the language of the deck. Keep the deck's tone consistent.
@@ -433,6 +435,7 @@ async function checkClaims(
     items: card.items,
     stats: card.stats,
     table: card.table.rows.length ? card.table : undefined,
+    chart: card.chart?.points.length ? card.chart : undefined,
     quote: card.quote ? `${card.quote} — ${card.quoteAuthor}` : undefined,
   };
   try {

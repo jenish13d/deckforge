@@ -25,4 +25,6 @@ AI presentation builder (prompt → outline → themed cards). See README.md for
 - **Agent Reach** (read-only research): install with `scripts/setup-agent-reach.sh` (pinned commit). Use it only to read
   public pages. Never run `agent-reach configure`, never pass `--channels` or `--system`, never give it cookies, logins
   or accounts, and never post, comment, message or follow anything. Slidezza's marketing work only prepares text.
+- **pplx** (Perplexity's CLI, project skill `pplx-cli`): live web search from the terminal for research. Needs your own
+  `PERPLEXITY_API_KEY` in the environment; never paste the key into chat.
 - **FreeLLMAPI** is a development-only AI provider (see `src/lib/router.ts`, `freeLlmApiBase`). Don't enable it for production.

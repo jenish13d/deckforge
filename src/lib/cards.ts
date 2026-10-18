@@ -3,12 +3,14 @@ import { z } from "zod";
 // Zod would otherwise probe for eval() support, which the site's security policy (CSP) blocks.
 z.config({ jitless: true });
 
-export const LAYOUTS = ["title", "bullets", "columns", "stats", "quote", "timeline", "section", "table"] as const;
+export const LAYOUTS = ["title", "bullets", "columns", "stats", "quote", "timeline", "section", "table", "chart"] as const;
 export type Layout = (typeof LAYOUTS)[number];
 
 export const MAX_ITEMS = 5;
 export const MAX_TABLE_COLUMNS = 4;
 export const MAX_TABLE_ROWS = 7;
+export const MIN_CHART_POINTS = 3;
+export const MAX_CHART_POINTS = 8;
 export const MIN_CARDS = 3;
 export const MAX_CARDS = 12;
 
@@ -30,6 +32,26 @@ export type CardImage = z.infer<typeof CardImageSchema>;
 const TableSchema = z.object({ columns: z.array(z.string()), rows: z.array(z.array(z.string())) });
 export type CardTable = z.infer<typeof TableSchema>;
 
+/**
+ * A simple chart of figures in one unit: "bar" compares groups, "line" shows change over time (points in order).
+ * Every value is a figure from the sources, checked like any other number on a slide.
+ */
+const ChartSchema = z.object({
+  kind: z.enum(["bar", "line"]),
+  /** What the values are in: "%", "ppm", "million people". Shown with each value. */
+  unit: z.string(),
+  points: z.array(z.object({ label: z.string(), value: z.number() })),
+});
+export type CardChart = z.infer<typeof ChartSchema>;
+export const EMPTY_CHART: CardChart = { kind: "bar", unit: "", points: [] };
+
+/** The chart as the model writes it: values may come back as text ("72%", "1,000"). */
+const GeneratedChartSchema = z.object({
+  kind: z.string(),
+  unit: z.string(),
+  points: z.array(z.object({ label: z.string(), value: z.union([z.number(), z.string()]) })),
+});
+
 const textFields = {
   icon: z.string(),
   title: z.string(),
@@ -47,6 +69,8 @@ export const CardContentSchema = z.object({
   /** Small label above the title, e.g. "2014 · Brazil". Missing in older cards. */
   eyebrow: z.string().default(""),
   table: TableSchema.default({ columns: [], rows: [] }),
+  /** Only on chart cards (missing on others and in older cards). */
+  chart: ChartSchema.optional(),
   image: CardImageSchema.nullable().optional(),
 });
 export type CardContent = z.infer<typeof CardContentSchema>;
@@ -62,6 +86,7 @@ export const GeneratedCardSchema = z.object({
   eyebrow: z.string(),
   ...textFields,
   table: TableSchema,
+  chart: GeneratedChartSchema.optional(),
   imageQuery: z.string(),
 });
 export type GeneratedCard = z.infer<typeof GeneratedCardSchema>;
@@ -199,11 +224,35 @@ export function removeCitations(card: CardContent, labels: string[]): CardConten
   };
 }
 
-type CardInput = Omit<GeneratedCard, "imageQuery" | "eyebrow" | "table"> & {
+type CardInput = Omit<GeneratedCard, "imageQuery" | "eyebrow" | "table" | "chart"> & {
   eyebrow?: string;
   table?: CardTable;
+  chart?: { kind: string; unit: string; points: { label: string; value: number | string }[] };
   image?: CardImage | null;
 };
+
+/** A number from a chart value the model wrote: 72, "72%", "1,000", "0.7". NaN when it isn't one. */
+export function chartNumber(value: number | string): number {
+  if (typeof value === "number") return value;
+  const m = /-?\d[\d,]*(?:\.\d+)?|-?\.\d+/.exec(value.replace(/[\u2212]/g, "-"));
+  return m ? Number(m[0].replace(/,/g, "")) : Number.NaN;
+}
+
+function normalizeChart(chart: { kind: string; unit: string; points: { label: string; value: number | string }[] } | undefined): CardChart {
+  if (!chart) return EMPTY_CHART;
+  const points = chart.points
+    .map((p) => ({ label: clip(p.label.trim(), 28), value: chartNumber(p.value) }))
+    .filter((p) => p.label && Number.isFinite(p.value))
+    .slice(0, MAX_CHART_POINTS);
+  return { kind: chart.kind.trim().toLowerCase() === "line" ? "line" : "bar", unit: clip(chart.unit.trim(), 16), points };
+}
+
+/** How a chart value reads on the slide and in the fact check: "72%", "1,450 ppm". */
+export function formatChartValue(value: number, unit: string): string {
+  const n = value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  if (!unit) return n;
+  return /^[%°]/.test(unit) ? `${n}${unit}` : `${n} ${unit}`;
+}
 
 function normalizeTable(table: CardTable | undefined): CardTable {
   const columns = (table?.columns ?? []).slice(0, MAX_TABLE_COLUMNS).map((c) => clip(c.trim(), 40));
@@ -227,10 +276,15 @@ export function normalizeCard(raw: CardInput): CardContent {
       }
     : null;
   const table = normalizeTable(raw.table);
+  const chart = normalizeChart(raw.chart);
   const known = isLayout(layout) ? layout : "bullets";
+  const stats = raw.stats.slice(0, 4).map((s) => ({ value: clip(s.value.trim(), 16), label: clipAtBreak(s.label.trim(), 90) }));
+  // A chart needs at least three points; with fewer, its figures are shown as big numbers instead.
+  const thinChart = known === "chart" && chart.points.length < MIN_CHART_POINTS;
+  const statsFromChart = thinChart && stats.length === 0 ? chart.points.map((p) => ({ value: clip(formatChartValue(p.value, chart.unit), 16), label: p.label })) : stats;
   return {
     // A table card needs a table; without one it falls back to a list.
-    layout: known === "table" && table.rows.length === 0 ? "bullets" : known,
+    layout: known === "table" && table.rows.length === 0 ? "bullets" : thinChart ? (statsFromChart.length ? "stats" : "bullets") : known,
     eyebrow: clip((raw.eyebrow ?? "").trim(), 40),
     icon: [...raw.icon.trim()].slice(0, 2).join(""),
     title: tidyHighlight(clip(raw.title.trim(), 120)),
@@ -238,12 +292,11 @@ export function normalizeCard(raw: CardInput): CardContent {
     items: raw.items
       .slice(0, MAX_ITEMS)
       .map((i) => ({ heading: clip(i.heading.trim(), 80), text: clip(i.text.trim(), 360) })),
-    stats: raw.stats
-      .slice(0, 4)
-      .map((s) => ({ value: clip(s.value.trim(), 16), label: clipAtBreak(s.label.trim(), 90) })),
+    stats: statsFromChart,
     quote: clip(raw.quote.trim(), 300),
     quoteAuthor: clip(raw.quoteAuthor.trim(), 80),
     table,
+    ...(known === "chart" && !thinChart ? { chart } : {}),
     image,
   };
 }

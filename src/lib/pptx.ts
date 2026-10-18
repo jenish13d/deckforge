@@ -319,6 +319,45 @@ function buildBlocks(card: CardContent, style: ThemeStyle, colors: Colors, x: nu
     );
   }
 
+  // A real PowerPoint chart (editable in PowerPoint), in the theme's accent colour.
+  if (card.layout === "chart" && card.chart && card.chart.points.length) {
+    const chart = card.chart;
+    const line = chart.kind === "line";
+    const height = Math.min(3.6, 0.55 * chart.points.length + 0.9) + (line ? 0.6 : 0);
+    const name = chart.unit || "Value";
+    // PowerPoint draws horizontal bars bottom-up: reverse them so they read top-down as on screen.
+    const points = line ? chart.points : [...chart.points].reverse();
+    addBody(height, (s, y) =>
+      s.addChart(
+        (line ? "line" : "bar") as PptxGenJS.CHART_NAME,
+        [{ name, labels: points.map((p) => p.label), values: points.map((p) => p.value) }],
+        {
+          x: bx,
+          y,
+          w: bw,
+          h: height,
+          barDir: "bar",
+          chartColors: [style.accent],
+          showLegend: false,
+          showValue: true,
+          dataLabelColor: colors.text,
+          dataLabelFontFace: body,
+          dataLabelFontSize: pt(1.6),
+          dataLabelFormatCode: /^%/.test(chart.unit) ? '0.##"%"' : "#,##0.##",
+          catAxisLabelColor: colors.muted,
+          catAxisLabelFontFace: body,
+          catAxisLabelFontSize: pt(1.6),
+          catAxisLineShow: line,
+          valAxisHidden: true,
+          valGridLine: { style: "none" },
+          lineSize: 3,
+          lineDataSymbol: "circle",
+          lineDataSymbolSize: 8,
+        },
+      ),
+    );
+  }
+
   // Panel themes: the body sits on a panel (except boxed lists, whose boxes are the panels).
   const bodyHeight = bodyBlocks.reduce((sum, b) => sum + b.height, 0) - (bodyBlocks.length ? inch(2) : 0);
   if (bodyBlocks.length) {

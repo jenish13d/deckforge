@@ -6,7 +6,8 @@ import { siteUrl } from "./url";
 
 // Research: factual decks are written from published sources instead of the AI's memory.
 // - Wikipedia articles on the subject (free, no key).
-// - Independent web pages from a web search (news, official sites), when TAVILY_API_KEY is set.
+// - Independent web pages from a web search (news, official sites): Perplexity when PERPLEXITY_API_KEY is set,
+//   Tavily when TAVILY_API_KEY is set (and as Perplexity's fallback).
 // Facts are then checked against all of them (see factcheck.ts): a number is shown only
 // when two independent sources agree (or, if only one independent source was found, when it says so).
 // Personal or creative topics skip research.
@@ -171,8 +172,54 @@ export function mergeResearch(...parts: Research[]): Research {
   return { sources, webTexts };
 }
 
-/** Independent web pages about the topic (needs TAVILY_API_KEY; none without it). */
+const notASource = (url: string) => {
+  const host = new URL(url).hostname.replace(/^www\./, "");
+  return NOT_SOURCES.some((d) => host === d || host.endsWith(`.${d}`));
+};
+
+function pagesToResearch(pages: { title: string; url: string; text: string }[]): Research {
+  return {
+    sources: pages.map((p) => ({ title: (p.title || new URL(p.url).hostname).slice(0, 200), url: p.url, kind: "web" as const })),
+    webTexts: pages.map((p) => ({ title: new URL(p.url).hostname.replace(/^www\./, ""), text: p.text.slice(0, 15_000) })),
+  };
+}
+
+/** Perplexity's Search API: ranked pages with the text most relevant to the query (needs PERPLEXITY_API_KEY). */
+async function perplexitySearch(query: string, key: string): Promise<Research> {
+  try {
+    const response = await fetch("https://api.perplexity.ai/search", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({ query: query.slice(0, 300), max_results: 10, max_tokens_per_page: 2048 }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!response.ok) throw new Error(`Perplexity ${response.status}`);
+    const data = (await response.json()) as { results?: { title?: string; url?: string; snippet?: string | null }[] };
+    const pages = (data.results ?? [])
+      .filter((r) => r.url?.startsWith("https://") && !notASource(r.url) && (r.snippet?.length ?? 0) > 300)
+      .slice(0, MAX_WEB)
+      .map((r) => ({ title: r.title ?? "", url: r.url!, text: r.snippet! }));
+    return pagesToResearch(pages);
+  } catch (error) {
+    console.error("Perplexity search failed", error);
+    return NO_RESEARCH;
+  }
+}
+
+/**
+ * Independent web pages about the topic. Perplexity first when PERPLEXITY_API_KEY is set, Tavily when
+ * TAVILY_API_KEY is set (or Perplexity finds nothing); none without either.
+ */
 export async function webSearch(query: string): Promise<Research> {
+  const perplexity = process.env.PERPLEXITY_API_KEY;
+  if (perplexity) {
+    const found = await perplexitySearch(query, perplexity);
+    if (found.webTexts.length) return found;
+  }
+  return tavilySearch(query);
+}
+
+async function tavilySearch(query: string): Promise<Research> {
   const key = process.env.TAVILY_API_KEY;
   if (!key) return NO_RESEARCH;
   try {
