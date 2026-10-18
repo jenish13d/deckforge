@@ -74,10 +74,15 @@ const SYNONYMS: Record<string, Layout> = {
   trend: "chart",
 };
 
-const SEQUENCE = /\b(step|steps|process|stage|stages|phase|phases|timeline|history|evolution|roadmap|workflow|journey|sequence|chronolog\w*|milestone\w*|how it works|lifecycle)\b/i;
+const SEQUENCE = /\b(step|steps|process|stage|stages|phase|phases|timeline|history|evolution|roadmap|workflow|journey|sequence|chronolog\w*|milestone\w*|how it works|how to|procedures?|protocols?|lifecycle)\b/i;
 const COMPARE = /\b(compare|compares|comparison|versus|vs\.?|difference|differences|options?|trade-?offs?|pros|cons|alternatives?)\b/i;
 
 const textOf = (card: CardBrief) => [card.purpose, card.keyMessage, card.title, ...card.points].filter(Boolean).join(" ");
+
+/** Whether a card's points follow an order: steps, stages, dates or a process. */
+export function inOrder(card: CardBrief): boolean {
+  return SEQUENCE.test(textOf(card)) || card.points.filter((p) => /\b(1[5-9]\d\d|20\d\d)\b|\b(first|then|next|finally|after|before|day|week|month|year)\b/i.test(p)).length >= 2;
+}
 
 /** The layout that shows a card's planned content best, from the words of the plan (used when the plan's layout is missing or unusable). */
 export function inferLayout(card: CardBrief): Layout {
@@ -128,7 +133,11 @@ export function planDeck(cards: CardBrief[], { style, grounded }: PlanOptions): 
     if (i === 0) layout = "title";
     else {
       if (layout === "title") layout = null;
-      if (layout === "section" && (total < 10 || card.points.length >= 2 || i === total - 1)) layout = null;
+      // A chapter divider carries no content of its own: a card with points to make is a content card.
+      const divider = card.points.length === 0 || /\b(divid|chapter|section|transition|part \w+)/i.test(card.purpose ?? "");
+      if (layout === "section" && (total < 10 || !divider || i === total - 1)) layout = null;
+      // Numbered steps imply an order: parallel points (risks, factors, options) are a list, not a timeline.
+      if (layout === "timeline" && !inOrder(card)) layout = null;
       if (layout === "quote" && (!grounded || quotes >= 1)) layout = null;
       // A chart needs published figures: only in decks with sources (or the user's files).
       if (layout === "chart" && !grounded) layout = null;

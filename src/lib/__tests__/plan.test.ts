@@ -53,7 +53,7 @@ describe("planning the cards", () => {
 
   it("keeps only layouts the renderer supports, and plans the cover as the title card", () => {
     const plan = planDeck(
-      [brief("Cover", { layout: "bullets" }), brief("A", { layout: "carousel" }), brief("B", { layout: "STATS" }), brief("C", { layout: "steps", points: ["a", "b", "c"] }), brief("End")],
+      [brief("Cover", { layout: "bullets" }), brief("A", { layout: "carousel" }), brief("B", { layout: "STATS" }), brief("C", { layout: "steps", points: ["First, plan", "Then build", "Finally, launch"] }), brief("End")],
       options,
     );
     for (const card of plan) expect(LAYOUTS as readonly string[]).toContain(card.layout);
@@ -103,7 +103,7 @@ describe("planning the cards", () => {
     const plain = planDeck([brief("Cover"), brief("A", { layout: "bullets", points: ["alpha", "beta", "gamma", "delta"] }), brief("B", { layout: "bullets", points: ["alpha", "beta", "gamma", "delta"] }), brief("End", { layout: "columns" })], options);
     expect(layoutsOf(plain).slice(1, 3)).toEqual(["bullets", "bullets"]);
     const timelines = planDeck(
-      [brief("Cover"), brief("Early years", { layout: "timeline", points: ["1", "2", "3"] }), brief("Later years", { layout: "timeline", points: ["1", "2", "3"] }), brief("End")],
+      [brief("Cover"), brief("Early years", { layout: "timeline", points: ["1998 debut", "2001 move", "2003 first title"] }), brief("Later years", { layout: "timeline", points: ["2009 transfer", "2014 record", "2018 exit"] }), brief("End")],
       options,
     );
     expect(layoutsOf(timelines).slice(1, 3)).toEqual(["timeline", "timeline"]);
@@ -179,5 +179,23 @@ describe("outline schemas", () => {
   it("keeps the plan through normalizeOutline", () => {
     const outline = normalizeOutline({ title: "x", cards: [{ title: "A", points: [], purpose: "show the problem", keyMessage: "Time is lost", visual: "none", evidence: true, after: "" }] }, 3);
     expect(outline.cards[0]).toMatchObject({ purpose: "show the problem", keyMessage: "Time is lost", visual: "none", evidence: true });
+  });
+});
+
+describe("layouts that need the right content", () => {
+  const options = { style: "auto" as const, grounded: true };
+  const many = (extra: Parameters<typeof brief>[1]) =>
+    planDeck([brief("Cover"), ...Array.from({ length: 9 }, (_, i) => brief(`Card ${i}`, { points: ["x", "y"] })), brief("Middle", extra), brief("End", { points: ["a", "b"] })], options);
+
+  it("uses a timeline only for points in an order", () => {
+    const parallel = planDeck([brief("Cover"), brief("Risks of removal", { layout: "timeline", points: ["Blood levels rise", "No health gains", "Vapour exposure"] }), brief("End")], options);
+    expect(parallel[1].layout).not.toBe("timeline");
+    const steps = planDeck([brief("Cover"), brief("Safe removal, step by step", { layout: "timeline", purpose: "walk through the removal procedure", points: ["Isolate the tooth", "Cut out the filling", "Place the new one"] }), brief("End")], options);
+    expect(steps[1].layout).toBe("timeline");
+  });
+
+  it("keeps a chapter divider free of content: a card with points to make stays a content card", () => {
+    expect(many({ layout: "section", points: ["High oxygen use makes brain cells vulnerable"] }).at(-2)?.layout).not.toBe("section");
+    expect(many({ layout: "section", points: [] }).at(-2)?.layout).toBe("section");
   });
 });

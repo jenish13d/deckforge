@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import { CardContentSchema, clipAtBreak, normalizeCard, removeCitations, type CardContent } from "../cards";
-import { cleanArtist, looksLikeFigure } from "../images";
+import { cleanArtist, looksGraphic, looksLikeFigure } from "../images";
 import { stripUnverified, verifyCard } from "../factcheck";
 import type { SourceText } from "../research";
 
@@ -91,5 +91,15 @@ describe("removing a failed sentence", () => {
     });
     const out = stripUnverified(c, verifyCard(c, texts, ""), "Fluoride");
     expect(out.items[0].text).toBe("Fluoride toothpaste reduces caries.");
+  });
+});
+
+describe("graphic photos", () => {
+  it("are recognised from captions and file names", () => {
+    expect(looksGraphic("Mercury poisoning victim, 1890s")).toBe(true);
+    expect(looksGraphic("File:Severe_tooth_decay.jpg")).toBe(true);
+    expect(looksGraphic("Patients with facial deformity")).toBe(true);
+    expect(looksGraphic("Dentist examining a child's teeth")).toBe(false);
+    expect(looksGraphic("Dental amalgam capsules")).toBe(false);
   });
 });

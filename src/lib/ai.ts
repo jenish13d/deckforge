@@ -140,7 +140,7 @@ const OUTLINE_INSTRUCTIONS = `You plan presentations. Given a topic, an audience
 The story:
 - Card 1 is the cover: its title is the presentation's title, and its key message says what the audience will learn, decide or do.
 - Give the deck a beginning (why this matters, what is at stake), a middle (the substance: one distinct idea per card, each following from the one before) and an end (the last card is a meaningful takeaway: what to remember or do, never just "Conclusion").
-- Every card has its own purpose and its own key message. Never make the same point under two headings.
+- Every card has its own purpose and its own key message. Never make the same point under two headings, and give each subject one card: don't spread one subject (say, research gaps or pregnancy) over several cards, and don't end by repeating earlier cards.
 - Fit the number of cards asked for: fewer cards means fewer ideas, not smaller ones.
 - Choose the content for the audience and the focus. Use concrete examples when the topic or the sources offer them.
 - Titles are specific headlines that state a point, not labels like "Introduction" or "Overview".
@@ -340,7 +340,7 @@ Pick the layout that best fits the card's content:
 - "bullets": 3-${MAX_ITEMS} items, each a short bold heading and its explanation.
 - "columns": 2-3 items side by side (options, pillars, lessons, before/after).
 - "stats": 1-4 big figures, each a short value ("4-0", "72%", "18 years") and a label of at most 8 words that says exactly what the figure counts; put any context in the subtitle. A single stat becomes one big highlight number.
-- "timeline": 3-${MAX_ITEMS} steps or dates in order; each heading is the date or step.
+- "timeline": 3-${MAX_ITEMS} steps or dates in order; each heading is the date or step. Never for points that have no order (risks, factors, options): use "bullets" or "columns".
 - "table": a comparison or record with 2-${MAX_TABLE_COLUMNS} columns and 3-${MAX_TABLE_ROWS} rows (for example Year | Result | Score). Use it when the content is naturally a grid.
 - "chart": 3-${MAX_CHART_POINTS} figures in the same unit, drawn as a chart. chart.kind is "line" for change over time (points in time order, labels are years or dates) or "bar" to compare groups; chart.unit says what the values are in ("%", "ppm", "million people"); each point has a short label (at most 4 words) and its value as a plain number, exactly as the sources give it. Use it only when the SOURCES (or the user's own text) give the figures; otherwise use another layout. Put the takeaway in the subtitle ("Rates fell by half in twenty years").
 - "quote": one memorable quote or key statement, with its real author (else empty).
@@ -349,7 +349,7 @@ Rules:
 - Be specific: names, dates, places, numbers and outcomes beat general statements.
 - In the title, wrap the 1-3 most important words in *asterisks* to highlight them, once per title (for example "The numbers *say it first*").
 - eyebrow: a short topic label shown above the title (1-3 words), such as "Risk assessment", "2014 · Brazil" or "The problem". Never a step or card number. Use "" if nothing useful fits.
-- Table cells: short phrases (at most about 10 words each), not sentences.
+- Table cells: short phrases (at most about 10 words each), not sentences. Every row is a real entry: leave a row out rather than filling a cell with "—" or "N/A" for something that has no name.
 - Titles: at most about 8 words. Item length follows the card's content depth.
 - Sentence case for titles, item headings and table headers ("When conservative care beats a filling", not "When Conservative Care Beats A Filling"); keep capitals only for names and acronyms.
 - icon: one emoji that fits the card.
