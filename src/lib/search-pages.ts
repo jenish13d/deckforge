@@ -106,7 +106,7 @@ export const SEARCH_PAGES: UseCase[] = [
       { title: "Generate and refine", text: "Cards are written one by one. Ask the assistant to change a slide, or edit the text yourself." },
     ],
     points: [
-      { title: "Eight layouts", text: "Title, section, bullets, columns, big numbers, timeline, table and quote, chosen to suit each slide." },
+      { title: "Nine layouts", text: "Title, section, bullets, columns, big numbers, timeline, table, quote and chart, chosen to suit each slide." },
       { title: "Outline is free", text: "You only spend credits when cards are written, and failed cards are refunded." },
       { title: "Any language", text: "Write the prompt in your language and the deck follows." },
       { title: "Photos with credits", text: "Where a photo helps, a real one is added and credited." },
@@ -284,7 +284,7 @@ export const SEARCH_PAGES: UseCase[] = [
     title: "AI slide generator: layouts and edits",
     heading: "An AI slide generator you can talk to slide by slide",
     description:
-      "Generate slides with AI, then change any one by asking: make it a timeline, shorten it, add an example. Eight layouts, nine themes, credited photos.",
+      "Generate slides with AI, then change any one by asking: make it a timeline, shorten it, add an example. Nine layouts including charts, nine themes, credited photos.",
     intro: [
       "Generating the deck is half the job. Most of the work is changing a slide, and Slidezza has an assistant in the editor for that.",
       "Ask in plain words, for example \"turn slide 4 into a timeline\" or \"add a slide about costs\", and the slide changes.",
@@ -296,7 +296,7 @@ export const SEARCH_PAGES: UseCase[] = [
       { title: "Ask the assistant", text: "Rewrite, shorten, add a slide, change layout or switch theme from a plain request." },
     ],
     points: [
-      { title: "Eight layouts", text: "Title, section, bullets, columns, big numbers, timeline, table and quote." },
+      { title: "Nine layouts", text: "Title, section, bullets, columns, big numbers, timeline, table, quote and chart." },
       { title: "Nine themes", text: "Change the look of every slide at once." },
       { title: "Photos that fit", text: "Photos are never cropped awkwardly; mismatched shapes show whole." },
       { title: "Per-slide control", text: "Rewrite one card without regenerating the deck." },
@@ -649,11 +649,11 @@ export const SEARCH_PAGES: UseCase[] = [
     ],
     who: "Marketers, agencies, founders doing their own marketing and students of marketing.",
     makes: "Marketing plans, campaign recaps, audience overviews and launch plans.",
-    limits: "No charts yet: figures appear as big numbers and tables. It doesn't connect to analytics tools, so bring your export. Any market-size claims need sources you can show.",
+    limits: "Charts are simple bar and line charts, drawn only from figures in your file or in sources it found. It doesn't connect to analytics tools, so bring your export. Any market-size claims need sources you can show.",
     also: ["/business-presentation-maker", "/make/business-report-presentation", "/templates/business-report"],
     faq: [
       { q: "Can I attach analytics exports?", a: "Yes. CSV and Excel files are read, and their figures are used as given." },
-      { q: "Does it make charts?", a: "Not yet. Results appear as big-number slides and tables." },
+      { q: "Does it make charts?", a: "Yes, simple bar and line charts with 3 to 8 values, when the figures come from your file or from sources it found. Other results appear as big numbers and tables." },
       { q: "Will it make up market statistics?", a: "For topics without sources, the AI is told not to invent statistics. Where a fact is missing, add it from a source you trust." },
     ],
   },
@@ -687,12 +687,164 @@ export const SEARCH_PAGES: UseCase[] = [
     ],
     who: "Researchers, graduate students and anyone presenting findings.",
     makes: "Conference talks, lab-meeting updates, thesis overviews and journal-club slides.",
-    limits: "Figures, charts and equations inside a PDF are not copied onto slides. The sources list isn't a formatted bibliography. Always check results against the paper.",
+    limits: "Figures, charts and equations inside a PDF are not copied onto slides as images. The sources list isn't a formatted bibliography. Always check results against the paper.",
     also: ["/make/pdf-to-presentation", "/presentation-maker-for-students", "/document-to-presentation"],
     faq: [
       { q: "Will it change my results?", a: "No. Numbers and findings from your file are used as given. Check the slides against the paper anyway, since summarising can still drop context." },
       { q: "Can it include figures from the paper?", a: "Not yet. Figures and equations in PDFs aren't copied onto slides, so add them where you need them." },
       { q: "Does it format citations?", a: "No. It lists the sources it used, but it doesn't produce citation styles such as APA or Vancouver." },
+    ],
+  },
+  {
+    slug: "science-presentation-maker",
+    name: "Science presentation maker",
+    title: "Science presentation maker with sources",
+    heading: "A science presentation maker for class, labs and science fairs",
+    description:
+      "Make a science presentation from a topic or your lab notes: sourced facts, credited photos, timelines and charts. Edit every slide, then present or download. Free to start.",
+    intro: [
+      "Type a science topic or attach your lab report, and Slidezza drafts an outline, then writes and designs the slides. Factual decks are researched from Wikipedia and independent web pages and list their sources.",
+      "Numbers are checked against those sources, and simple bar or line charts are drawn only from figures it found or that you gave it.",
+    ],
+    lead: "From a science topic or lab notes to slides you can present in class, with the sources listed at the end.",
+    steps: [
+      { title: "Give it the topic or your notes", text: `Type the topic, or attach ${FILES}.` },
+      { title: "Set the audience", text: "A middle-school class, a lab group and a science fair judge need different depth. Edit the outline before anything is written." },
+      { title: "Check, then present", text: "Read the sources list, fix anything by hand or with the assistant, then present full screen or download a PDF." },
+    ],
+    points: [
+      { title: "Sources listed", text: "Each factual deck ends with the pages it used, with links, so you can cite them." },
+      { title: "Charts from real figures", text: "Bar and line charts appear only when the numbers come from your notes or from sources it found." },
+      { title: "Credited photos", text: "Photos come from Wikimedia Commons and Openverse and carry their credit." },
+      { title: "Timelines and tables", text: "Discoveries become timelines and comparisons become tables." },
+    ],
+    prompts: [
+      "How photosynthesis works, for a 7th grade class",
+      "The water cycle with a diagram-style walkthrough of each stage",
+      "My science fair project: does salt change how fast ice melts? Here are my results",
+    ],
+    who: "Students, science teachers and anyone explaining a science topic.",
+    makes: "Class presentations, lab report summaries, science fair talks and lesson slides.",
+    limits: "It doesn't draw labelled diagrams; photos and charts are the visuals. Equations aren't typeset. Check facts against the sources before presenting.",
+    also: ["/presentation-maker-for-students", "/research-presentation-maker"],
+    faq: [
+      { q: "Can I use it for a school project?", a: "Yes, but follow your teacher's rules on AI tools. The sources list helps you check and cite what the slides say." },
+      { q: "Will it make up numbers?", a: "Numbers are checked against the sources it found; when two or more independent sources are found, two must agree. Figures from your own results are used as you gave them." },
+      { q: "Does it make diagrams?", a: "No labelled diagrams yet. It adds credited photos and, where the numbers allow, simple bar and line charts." },
+    ],
+  },
+  {
+    slug: "history-presentation-maker",
+    name: "History presentation maker",
+    title: "History presentation maker with timelines",
+    heading: "A history presentation maker that builds timelines from sources",
+    description:
+      "Turn any history topic into a presentation with dated timelines, credited photos and a sources list. Edit every slide, present it in class or download a PDF.",
+    intro: [
+      "History decks need dates in order, real images and facts you can check. Slidezza researches the topic, puts events on timeline slides in the right order and lists every source it used.",
+      "Photos come from Wikimedia Commons and Openverse, where many historical images are free to use, and each one is credited.",
+    ],
+    lead: "Name an event, era or person and get a deck with the key dates on a timeline and the sources listed.",
+    steps: [
+      { title: "Name the topic", text: "An event, a period, a person or a question such as why something happened." },
+      { title: "Choose the angle", text: "Causes, key figures, daily life or legacy. Edit the outline before anything is written." },
+      { title: "Check and present", text: "Read the sources list, change any slide, then present or download." },
+    ],
+    points: [
+      { title: "Timelines in order", text: "Events become timeline slides only when they have a real order." },
+      { title: "Quotes word for word", text: "Quotes must match a source exactly, or they are left out." },
+      { title: "Historical photos, credited", text: "Free-licence images with the artist or source named." },
+      { title: "Sources listed", text: "Every factual deck ends with the pages it used." },
+    ],
+    prompts: [
+      "Causes of the American Revolution, for a high school class",
+      "The Apollo program from 1961 to 1972",
+      "The life of Harriet Tubman in 10 slides",
+    ],
+    who: "Students, history teachers and anyone presenting a historical topic.",
+    makes: "Class presentations, lesson slides, book and documentary companions and history talks.",
+    limits: "Research uses public sources, so niche local history may have few. Dates and interpretations can still be wrong: check them against the sources.",
+    also: ["/presentation-maker-for-students", "/presentation-maker-for-teachers"],
+    faq: [
+      { q: "Where do the facts come from?", a: "Wikipedia and independent web pages found for your topic. They are listed with the deck." },
+      { q: "Are the quotes real?", a: "Quotes are kept only when they appear word for word in a source. Check the source before you rely on one." },
+      { q: "Can my teacher see the sources?", a: "Yes. The sources slide lists the pages with links, and you can share a view-only link to the deck." },
+    ],
+  },
+  {
+    slug: "book-report-presentation",
+    name: "Book report presentation",
+    title: "Book report presentation maker",
+    heading: "Make a book report presentation from your own notes",
+    description:
+      "Build a book report presentation: plot, characters, themes and your opinion, laid out on designed slides. Start from the title or your notes and edit everything.",
+    intro: [
+      "A book report presentation covers the story, the characters, the themes and what you thought. Slidezza lays those out as slides from the book's title and, better, from your own notes.",
+      "Your notes are used as written, so the opinions on the slides are yours. For well-known books it can add background from public sources, listed at the end.",
+    ],
+    lead: "Give it the book and your notes; get a clean deck covering plot, characters, themes and your take.",
+    steps: [
+      { title: "Name the book", text: "Add the title and author, and paste your reading notes or attach them." },
+      { title: "Pick what to cover", text: "Plot, characters, themes, setting, favourite quotes, your opinion. Change the outline before anything is written." },
+      { title: "Make it yours", text: "Rewrite any slide in your own words, then present or download a PDF." },
+    ],
+    points: [
+      { title: "Your notes come first", text: "What you wrote is used as given, so the report reflects your reading." },
+      { title: "Clear structure", text: "Plot, characters, themes and opinion, each on its own slide." },
+      { title: "Quotes checked", text: "Quotes are kept only when they match your notes or a source word for word." },
+      { title: "Edit everything", text: "Change any slide by hand or by asking the assistant." },
+    ],
+    prompts: [
+      "Book report on To Kill a Mockingbird: characters, themes and my opinion",
+      "Presentation on The Giver for my 8th grade class, using my notes",
+      "Compare the book and the film of The Hunger Games",
+    ],
+    who: "Students writing book reports and teachers preparing reading lessons.",
+    makes: "Book reports, novel studies, author overviews and book-versus-film comparisons.",
+    limits: "It hasn't read the book: plot details come from your notes or public summaries, so check them. Follow your teacher's rules on AI tools.",
+    also: ["/presentation-maker-for-students", "/presentation-maker-for-teachers"],
+    faq: [
+      { q: "Does it read the whole book?", a: "No. It works from your notes and from public sources about the book, which can miss details. Your notes make the report much better." },
+      { q: "Is using it allowed for homework?", a: "That depends on your school. Use it to organise your own ideas, and rewrite slides in your own words." },
+      { q: "Can I add quotes?", a: "Yes. Paste them in your notes and they are used word for word." },
+    ],
+  },
+  {
+    slug: "presentation-with-charts",
+    name: "Presentation with charts",
+    title: "AI presentation with charts from real data",
+    heading: "An AI presentation maker that draws charts only from real figures",
+    description:
+      "Make a presentation with bar and line charts built from your spreadsheet or from checked sources. Charts stay editable in PowerPoint on Pro. Free to start.",
+    intro: [
+      "Slidezza adds a chart slide when a point is really a set of numbers: a bar chart to compare groups, a line chart to show change over time. Charts are drawn only from figures in your files or in sources it found and checked.",
+      "If there aren't enough real figures, the slide shows big numbers or a table instead of a made-up chart.",
+    ],
+    lead: "Attach a spreadsheet or name a topic, and numbers turn into clean bar and line charts in your theme's colours.",
+    steps: [
+      { title: "Add the data or topic", text: `Attach a spreadsheet or document (${FILES}), or name a topic to research.` },
+      { title: "Shape the deck", text: "Pick the audience and length, and edit the outline before anything is written." },
+      { title: "Review the charts", text: "Check each value against the file or the sources list, then present or download." },
+    ],
+    points: [
+      { title: "Bar and line charts", text: "3 to 8 values with one unit, in your theme's colours." },
+      { title: "No invented data", text: "Chart values must come from your files or from sources the numbers were checked against." },
+      { title: "Editable in PowerPoint", text: "On Pro and Max the .pptx download has real PowerPoint charts you can edit." },
+      { title: "Fallback to numbers", text: "Too few figures for a chart become big-number slides or a table." },
+    ],
+    prompts: [
+      "Quarterly sales update from this spreadsheet, with a chart of revenue by month",
+      "US renewable energy growth since 2010",
+      "Survey results from this CSV for the team meeting",
+    ],
+    who: "Students, analysts, managers and anyone who needs a few clear charts in a deck.",
+    makes: "Results updates, reports, research summaries and data-backed lessons.",
+    limits: "Only bar and line charts, up to 8 values each, one unit per chart. No pie charts, scatter plots or dashboards. Check every value before presenting.",
+    also: ["/marketing-presentation-maker", "/business-presentation-maker", "/document-to-presentation"],
+    faq: [
+      { q: "Which charts can it make?", a: "Bar charts to compare groups and line charts for change over time, with 3 to 8 values and one unit." },
+      { q: "Can I change a chart?", a: "Yes. Edit the labels and values in the editor. On Pro and Max, the PowerPoint download keeps the chart editable." },
+      { q: "Where do the numbers come from?", a: "From your files as given, or from research sources the numbers were checked against. Without enough real figures, no chart is drawn." },
     ],
   },
 ];
@@ -706,11 +858,11 @@ export const findSearchPage = (slug: string) => SEARCH_PAGES.find((p) => p.slug 
 export const CLUSTERS: { name: string; paths: string[] }[] = [
   {
     name: "AI presentation makers",
-    paths: ["/ai-presentation-maker", "/ai-presentation-generator", "/ai-slide-generator", "/presentation-maker", "/presentation-from-prompt", "/ai-presentation-maker-free"],
+    paths: ["/ai-presentation-maker", "/ai-presentation-generator", "/ai-slide-generator", "/presentation-maker", "/presentation-from-prompt", "/ai-presentation-maker-free", "/presentation-with-charts"],
   },
   { name: "PowerPoint and PPT", paths: ["/ai-ppt-maker", "/ai-powerpoint-generator", "/ppt-generator", "/text-to-ppt"] },
   { name: "From your files", paths: ["/document-to-presentation", "/make/pdf-to-presentation", "/make/word-to-powerpoint"] },
-  { name: "Students and teachers", paths: ["/presentation-maker-for-students", "/presentation-maker-for-teachers", "/research-presentation-maker"] },
+  { name: "Students and teachers", paths: ["/presentation-maker-for-students", "/presentation-maker-for-teachers", "/research-presentation-maker", "/science-presentation-maker", "/history-presentation-maker", "/book-report-presentation"] },
   {
     name: "Business",
     paths: ["/business-presentation-maker", "/sales-presentation-maker", "/marketing-presentation-maker", "/pitch-deck-generator", "/make/business-report-presentation"],

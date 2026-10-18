@@ -38,7 +38,7 @@ Students, teachers, researchers, managers, sales and marketing teams, founders a
 - Research for factual topics: Wikipedia articles plus independent web pages, listed as sources with the deck. Personal, creative and planning topics are written without web research
 - Number checking: numbers are checked against the sources found. When two or more independent sources are found, a number appears on a slide only when two agree (all Wikipedia articles count as one source, each website as one); with a single source, that source is the only check. Figures from the user's own files are used as given; quotes must be word for word from a source
 - Detail levels: Low (short), Medium (presentation-ready), High (more facts per slide, wider research)
-- ${THEMES.length} themes (${THEMES.map((t) => t.name).join(", ")}) and 8 layouts: title, section, bullets, columns, big numbers, timeline, table and quote
+- ${THEMES.length} themes (${THEMES.map((t) => t.name).join(", ")}) and 9 layouts: title, section, bullets, columns, big numbers, timeline, table, quote and chart (simple bar and line charts, drawn only from figures in the user's files or in checked sources)
 - Real photos from Wikimedia Commons and Openverse, credited on the slide or on a credits slide, shown whole rather than cropped awkwardly
 - Editing: change any slide by hand, or use the assistant in the editor ("Ask ${SITE.name}") to add or rewrite slides and change the theme from a plain request; reorder, add or delete slides
 - Present full screen, share a view-only link (or keep a deck private), download PDF (all plans) or an editable PowerPoint .pptx (${PLANS.pro.label} and ${PLANS.max.label})
@@ -61,7 +61,7 @@ Students, teachers, researchers, managers, sales and marketing teams, founders a
 ## Limitations
 - AI output can contain mistakes even with sources and number checks; users should review important facts before presenting
 - Research uses public sources (Wikipedia and web pages); niche topics may have few sources
-- Figures, charts and equations inside uploaded documents are not copied onto slides; there is no chart layout yet
+- Figures, charts and equations inside uploaded documents are not copied onto slides as images; chart slides are limited to bar and line charts with 3 to 8 values
 - Text is limited to about 20,000 characters per file and 40,000 per deck
 - No live co-editing, and no custom brand themes, fonts or logos yet
 - PowerPoint (.pptx) download is a paid-plan feature; fonts and spacing can differ slightly in other apps

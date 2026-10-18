@@ -65,13 +65,14 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
   The site always uses its light design, whatever the device's dark-mode setting.
 - **Search engines and AI assistants:** schema.org data on the home page (product, prices, FAQ), `/llms.txt`
   (a plain-text summary for AI tools), sitemap, robots.txt open to AI crawlers, and optional Google/Bing
-  ownership codes (`GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`).
+  ownership codes (`GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`). After a deploy, `npm run indexnow` sends every sitemap page
+  to Bing and the other IndexNow engines (the public key is the 32-character `.txt` file in `public/`).
 - **Bot protection:** an "I'm not a robot" checkbox ([ALTCHA](https://altcha.org), self-hosted proof-of-work,
   no third-party service or key) on sign-up, forgot password and feedback from visitors. It takes about
   1–3 seconds in the background; each answer works once and expires after 10 minutes. `CAPTCHA=off` disables it.
 - **Feedback:** a "💬 Feedback" button on every page (mood + message, optional email for visitors). Feedback is
   saved, emailed to `NEXT_PUBLIC_CONTACT_EMAIL` when email is set up, and listed on **/admin** with site stats
-  (users, decks, cards, Pro users). Admins are `NEXT_PUBLIC_CONTACT_EMAIL` plus `ADMIN_EMAILS`.
+  (users, decks, cards, Pro users). Admins are `NEXT_PUBLIC_CONTACT_EMAIL` plus `ADMIN_EMAILS` (or `ADMIN_EMAIL`).
 - **AI team** (`src/lib/router.ts`): Gemini, Groq, OpenRouter's free models, Z.ai GLM Flash, and (paid)
   Claude and OpenAI, each used for the job it does best (research planning, outline, writing, fact checking),
   with automatic fallback when one is busy. Visitors from the EEA, UK and Switzerland (Vercel's

@@ -11,7 +11,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "postinstall": "prisma generate && node scripts/copy-pdf-worker.mjs",
     "db:migrate": "prisma migrate deploy",
-    "vercel-build": "prisma migrate deploy && next build"
+    "vercel-build": "prisma migrate deploy && next build",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

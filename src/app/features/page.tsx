@@ -62,7 +62,7 @@ const FEATURES: Feature[] = [
   {
     id: "layouts",
     title: "Smart slide layouts",
-    text: "Eight layouts: title, section, bullets, columns, big numbers, timeline, table and quote. Photos are credited and shown whole, never cut awkwardly.",
+    text: "Nine layouts: title, section, bullets, columns, big numbers, timeline, table, quote and chart. Photos are credited and shown whole, never cut awkwardly.",
     href: "/ai-slide-generator",
     link: "AI slide generator",
   },
