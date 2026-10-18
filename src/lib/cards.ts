@@ -157,6 +157,48 @@ export const PlannedOutlineSchema = z.object({
 
 const clip = (s: string, max: number) => (s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s);
 
+/** Shortens text at its last sentence or clause break that fits, so a long table cell reads as complete; a word cut is the fallback. */
+export function clipAtBreak(s: string, max: number): string {
+  if (s.length <= max) return s;
+  const head = s.slice(0, max);
+  const stop = Math.max(head.lastIndexOf(". "), head.lastIndexOf("; "), head.lastIndexOf(", "), head.lastIndexOf(" — "));
+  if (stop >= max * 0.4) return head.slice(0, stop).replace(/[,;\s—]+$/, "") + (head[stop] === "." ? "." : "");
+  return clip(s, max);
+}
+
+// Source labels the AI may copy into slide text ("[who.int]", "[Tooth decay]", "(Source: WHO)").
+const BRACKETED = /\s*\[([^\]\n]{2,80})\]/g;
+const SOURCE_NOTE = /\s*\((?:source|sources|via|ref\.?|see)\s*:?\s[^)]{1,80}\)/gi;
+
+/**
+ * Removes citations of the deck's sources from a card's text: a bracket holding a source's name or a web
+ * address goes; a [placeholder] for the user to fill in stays. The deck lists its sources separately.
+ */
+export function removeCitations(card: CardContent, labels: string[]): CardContent {
+  const known = new Set(labels.map((l) => l.toLowerCase().replace(/^file:/, "").replace(/^www\./, "").trim()).filter(Boolean));
+  const isSource = (inside: string) =>
+    inside
+      .split(/[,;]\s*/)
+      .every((part) => {
+        const p = part.toLowerCase().replace(/^www\./, "").trim();
+        return known.has(p) || /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/.test(p) || /wikipedia/.test(p);
+      });
+  const clean = (text: string) =>
+    text
+      .replace(BRACKETED, (whole, inside: string) => (isSource(inside) ? "" : whole))
+      .replace(SOURCE_NOTE, "")
+      .replace(/\s+([.,;:!?])/g, "$1")
+      .trim();
+  return {
+    ...card,
+    title: clean(card.title),
+    subtitle: clean(card.subtitle),
+    items: card.items.map((i) => ({ heading: clean(i.heading), text: clean(i.text) })),
+    stats: card.stats.map((s) => ({ value: s.value, label: clean(s.label) })),
+    table: { columns: card.table.columns, rows: card.table.rows.map((row) => row.map(clean)) },
+  };
+}
+
 type CardInput = Omit<GeneratedCard, "imageQuery" | "eyebrow" | "table"> & {
   eyebrow?: string;
   table?: CardTable;
@@ -167,7 +209,7 @@ function normalizeTable(table: CardTable | undefined): CardTable {
   const columns = (table?.columns ?? []).slice(0, MAX_TABLE_COLUMNS).map((c) => clip(c.trim(), 40));
   if (!columns.some(Boolean)) return { columns: [], rows: [] };
   const rows = (table?.rows ?? [])
-    .map((row) => columns.map((_, i) => clip((row[i] ?? "").trim(), 80)))
+    .map((row) => columns.map((_, i) => clipAtBreak((row[i] ?? "").trim(), 110)))
     .filter((row) => row.some(Boolean))
     .slice(0, MAX_TABLE_ROWS);
   return { columns, rows };

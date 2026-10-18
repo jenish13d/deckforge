@@ -52,7 +52,7 @@ export function CreateFlow({
   credits,
   greetingName,
   initialPrompt = "",
-  initialTheme = "milano",
+  initialTheme = "paper",
 }: {
   /** Admins write Quick and Standard decks without spending credits. */
   admin?: boolean;

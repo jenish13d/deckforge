@@ -156,6 +156,23 @@ interface FileInfo {
 
 const stripTags = (html: string) => decodeEntities(html.replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
 
+/**
+ * A photographer's name as a person would write it. Commons often fills the author field with
+ * boilerplate ("No machine-readable author provided. X assumed (based on copyright claims).",
+ * "Original uploaded by X (Transferred by Y)"): keep the name only.
+ */
+export function cleanArtist(text: string): string {
+  return text
+    .replace(/no machine-readable author provided\.?\s*/i, "")
+    .replace(/\s+assumed\s*\(based on copyright claims?\)\.?/i, "")
+    .replace(/^original uploaded by\s+/i, "")
+    .replace(/\s*\((?:transferr?ed|moved|uploaded) (?:by|to|from)[^)]*\)/gi, "")
+    .replace(/^\s*(?:own work|unknown(?: author)?)\.?\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 60);
+}
+
 /** URL, size and credit of free Commons files (non-free and local files are left out). */
 async function fileInfo(files: string[]): Promise<Map<string, FileInfo>> {
   const params = new URLSearchParams({
@@ -204,7 +221,7 @@ async function fileInfo(files: string[]): Promise<Map<string, FileInfo>> {
     if (meta?.NonFree?.value && meta.NonFree.value !== "false") continue;
     const license = stripTags(meta?.LicenseShortName?.value ?? "");
     if (!/^(cc[ -]by|cc0|public domain|pd)/i.test(license)) continue;
-    const artist = stripTags(meta?.Artist?.value ?? "").slice(0, 80);
+    const artist = cleanArtist(stripTags(meta?.Artist?.value ?? ""));
     // Tracking parameters aren't needed and would make the same photo look like a different one.
     const bare = (url: string) => url.split("?")[0];
     const thumb = info.thumburl && info.thumbwidth && info.thumbheight ? bare(info.thumburl) : null;
