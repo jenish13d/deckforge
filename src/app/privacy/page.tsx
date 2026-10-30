@@ -50,7 +50,7 @@ export default async function PrivacyPage() {
         </li>
         <li>
           <strong>Research:</strong> for factual topics, search terms based on your topic are sent to Wikipedia and to our
-          web search providers (Perplexity and Tavily) to find sources. The sources are listed with your deck.
+          web search providers (Perplexity and Tavily), and for health and science topics to Europe PMC (a free library of research papers), to find sources. The sources are listed with your deck.
         </li>
         <li><strong>Payment provider:</strong> to process subscriptions.</li>
         <li><strong>Analytics provider:</strong> PostHog, if analytics is on (see below).</li>

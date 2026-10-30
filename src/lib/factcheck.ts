@@ -143,6 +143,8 @@ function fieldsOf(card: CardContent): Field[] {
     fields.push({ field: `chart.${i}`, text: `${p.label} ${formatChartValue(p.value, card.chart!.unit).replace(/,/g, "")}`, context: `${p.label} ${card.chart!.unit} ${card.title}` }),
   );
   if (card.layout === "quote") fields.push({ field: "quoteAuthor", text: card.quoteAuthor, context: card.quoteAuthor });
+  // Speaker notes are held to the same rules: the presenter says them out loud.
+  if (card.notes) fields.push({ field: "notes", text: card.notes, context: card.notes });
   return fields;
 }
 
@@ -269,6 +271,7 @@ export function stripUnverified(card: CardContent, problems: Problem[], fallback
     table: { columns: card.table.columns, rows: keep(card.table.rows, "table") },
     ...(card.chart ? { chart: { ...card.chart, points: keep(card.chart.points, "chart") } } : {}),
     quoteAuthor: bad.has("quoteAuthor") ? "" : card.quoteAuthor,
+    ...(card.notes ? { notes: bad.has("notes") ? (withoutSentences(card.notes, failed("notes")) ?? "") : card.notes } : {}),
   };
 
   const asSection = (): CardContent => {

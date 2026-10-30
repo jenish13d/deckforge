@@ -45,7 +45,7 @@ const ICONS = ["💡", "🧭", "📊", "🗓️", "💬", "✅"];
 
 export function demoCard(cardTitle: string, _deckTitle: string, index: number, total: number): GeneratedCard {
   // Photos are looked up from the card title when a Pexels key is set.
-  const base: GeneratedCard = { layout: "", eyebrow: "", title: cardTitle, icon: "", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "", table: { columns: [], rows: [] }, imageQuery: cardTitle };
+  const base: GeneratedCard = { layout: "", eyebrow: "", title: cardTitle, icon: "", subtitle: "", items: [], stats: [], quote: "", quoteAuthor: "", table: { columns: [], rows: [] }, imageQuery: cardTitle, notes: `Demo speaker notes for "${cardTitle}": with an AI key connected, this is where the presenter gets a short script that explains the slide in more depth and leads into the next one.` };
   if (index === 0) {
     return { ...base, layout: "title", icon: "🚀", title: cardTitle, subtitle: "Demo content: connect an AI key (Gemini or Claude) to have the AI write real slides for this topic." };
   }

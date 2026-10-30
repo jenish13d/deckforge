@@ -187,6 +187,11 @@ export function CardEditForm({
 
       {photosEnabled && <PhotoPicker card={c} onChange={(image) => set({ image })} />}
 
+      <label className="field">
+        <span className="field__label">Speaker notes <span className="muted small">(only you see these when presenting; also in the PowerPoint notes)</span></span>
+        <textarea className="input" rows={4} value={c.notes ?? ""} maxLength={1200} placeholder="What to say while this slide is shown" onChange={(e) => set({ notes: e.target.value })} />
+      </label>
+
       <div className="row row--end">
         <button type="button" className="button" onClick={onCancel} disabled={saving}>Cancel</button>
         <button type="submit" className="button button--primary" disabled={saving}>{saving ? "Saving…" : "Save"}</button>

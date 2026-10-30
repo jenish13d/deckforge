@@ -32,7 +32,7 @@ import { effectiveDensity, planDeck, splitBrief } from "./plan";
 import { describeQuality, issueScore, needsRepair, qualityIssues } from "./quality";
 import { geminiModel, textProvider, type Provider } from "./providers";
 import { materialGist, materialResearch, spreadExcerpt, type Material } from "./material";
-import { NO_RESEARCH, findResearch, isFileText, mergeResearch, relevantExcerpt, researchTexts, webSearch, type Research, type SourceText } from "./research";
+import { NO_RESEARCH, findResearch, isFileText, mergeResearch, relevantExcerpt, researchTexts, stems, webSearch, wikiSearch, wikiText, wikiUrl, type Research, type SourceText } from "./research";
 import { routeCall } from "./router";
 
 export { GenerationError, buildParams, callClaude };
@@ -353,6 +353,7 @@ Rules:
 - Titles: at most about 8 words. Item length follows the card's content depth.
 - Sentence case for titles, item headings and table headers ("When conservative care beats a filling", not "When Conservative Care Beats A Filling"); keep capitals only for names and acronyms.
 - icon: one emoji that fits the card.
+- notes: speaker notes, what the presenter says out loud while this slide is shown, so a student or professional can present the deck without preparing a script. 3-5 natural spoken sentences (about 60-110 words; 2-3 sentences for a light card or the cover) that go a step beyond the slide: why the point matters, how it works, an example, and a link to the next card. Same rules as the slide: only facts on the card or in the SOURCES, numbers exactly as the sources give them, no citations. No stage directions, and don't start with "This slide" or "In this slide". Match the deck's language.
 - Fill only the fields the layout uses; leave the others as "" or [] (the table as empty columns and rows, the chart with no points).
 - imageQuery: for title, section, bullets, stats, timeline and quote cards, 2-6 English keywords for a real photo of something this card actually talks about: the person's full name plus the club, place, event or year (for example "Cristiano Ronaldo Juventus 2019" or "Lusail Stadium Qatar"), a named place, or a concrete object. Follow the card plan's visual direction; if it says "none", or the card is about an idea with nothing specific to photograph (a strategy, a lesson, a summary), use "". Use "" for columns and table cards. For health, medicine or the human body, ask for a clean, professional scene (a clinician at work, instruments, a model, a healthy example), never a close-up of disease, decay, wounds or surgery.
 - A card with a photo has a little over half the width: use the smaller item counts and at most 3 stats.
@@ -415,6 +416,29 @@ export function varyLayout(card: CardContent, previousLayout: string | undefined
   return next ? { ...card, layout: next } : card;
 }
 
+/**
+ * The Wikipedia article on one card's subject, when it isn't one the deck already reads and it is about the deck's
+ * subject (a search for "Dental caries: acid attacks" must not bring back an article on assaults). Never throws.
+ */
+async function cardArticle(subject: string, deckTitle: string, known: Set<string>): Promise<{ title: string; text: string } | null> {
+  try {
+    const title = await wikiSearch(subject);
+    if (!title || known.has(title)) return null;
+    const text = await wikiText(title);
+    return text.length > 500 && aboutSubject(text, deckTitle) ? { title, text } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Whether a text's opening mentions most of the deck title's words (stems), i.e. is about the same subject. */
+export function aboutSubject(text: string, deckTitle: string): boolean {
+  const want = [...stems(deckTitle)];
+  if (want.length === 0) return true;
+  const have = stems(text.slice(0, 4000));
+  return want.filter((w) => have.has(w)).length >= Math.ceil(want.length / 2);
+}
+
 const ClaimCheckSchema = z.object({ problems: z.array(z.object({ claim: z.string(), issue: z.string() })) });
 
 const CHECK_INSTRUCTIONS = `You are a meticulous fact-checker for presentation slides.
@@ -437,6 +461,7 @@ async function checkClaims(
     table: card.table.rows.length ? card.table : undefined,
     chart: card.chart?.points.length ? card.chart : undefined,
     quote: card.quote ? `${card.quote} — ${card.quoteAuthor}` : undefined,
+    notes: card.notes || undefined,
   };
   try {
     const result = await call({
@@ -493,18 +518,29 @@ export async function generateCard(
   args.onStage?.(args.research?.sources.length ? "researching" : "writing");
   const cardQuery = `${brief.title} ${brief.keyMessage ?? ""} ${brief.points.join(" ")}`;
   let texts: SourceText[] = args.research?.sources.length ? await researchTexts(args.research) : [];
-  const room = depth === "high" ? 8000 : 5000;
+  const room = depth === "high" ? 8000 : 6000;
   let excerpt = texts.length ? relevantExcerpt(texts, cardQuery, room) : "";
-  // Not much on this card's subject in the deck's sources: search the web for it too.
-  let found: Research | undefined;
-  // High detail always looks wider for each card.
+  // Deep research: each card also looks up its own subject, so a slide on "fluoride" reads about fluoride, not
+  // only the deck's overview articles. The Wikipedia article on the card's subject is free, so every card looks;
+  // the web is searched when the deck's sources say little on it (and always on High detail).
   // Decks made only from the user's files (a report, notes) stay on them.
+  let found: Research | undefined;
   const onlyFiles = texts.length > 0 && texts.every(isFileText);
-  if (texts.length && !onlyFiles && (excerpt.length < 2000 || depth === "high") && args.index > 0) {
-    const extra = await webSearch(`${args.deckTitle} ${brief.title}`);
-    if (extra.webTexts.length) {
+  if (texts.length && !onlyFiles && args.index > 0) {
+    const known = new Set((args.research?.sources ?? []).filter((s) => s.kind === "wikipedia").map((s) => s.title));
+    const subject = `${args.deckTitle} ${brief.title.replace(/\*/g, "")}`;
+    const [article, web] = await Promise.all([
+      cardArticle(subject, args.deckTitle, known),
+      excerpt.length < 2000 || depth === "high" ? webSearch(subject) : Promise.resolve(NO_RESEARCH),
+    ]);
+    const extra = mergeResearch(article ? { sources: [{ title: article.title, url: wikiUrl(article.title), kind: "wikipedia" }], webTexts: [] } : NO_RESEARCH, web);
+    if (extra.sources.length) {
       found = extra;
-      texts = [...texts, ...extra.webTexts.map((t) => ({ ...t, group: t.title }))];
+      texts = [
+        ...texts,
+        ...(article ? [{ title: article.title, text: article.text, group: "wikipedia" }] : []),
+        ...extra.webTexts.map((t) => ({ ...t, group: t.title })),
+      ];
       excerpt = relevantExcerpt(texts, cardQuery, room);
     }
   }

@@ -9,6 +9,8 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
 ## Features
 
 - **Prompt → outline → deck.** The outline step lets the user fix the structure before anything is written.
+- **Speaker notes:** every slide comes with a short spoken script (fact-checked like the slide), shown in the
+  presenter (Notes button or N), editable in the editor, and saved in the PowerPoint's notes.
 - **Charts:** when the research gives 3-8 comparable figures in one unit, a slide can show them as a bar chart
   (comparing groups) or a line chart (change over time), drawn in the theme's colours (`src/components/ChartView.tsx`)
   and exported to PowerPoint as a real, editable chart. Every value is fact-checked like any other number; with fewer
@@ -78,8 +80,11 @@ with instructions, reorder, switch themes in one click, present full-screen, sha
   with automatic fallback when one is busy. Visitors from the EEA, UK and Switzerland (Vercel's
   `x-vercel-ip-country`) never go to Gemini's free tier (Google's terms) or to China-hosted models.
 - **Research and fact checking** (`src/lib/research.ts`, `src/lib/factcheck.ts`): for factual topics the
-  outline step plans searches, reads the Wikipedia articles (tables included) and, with `TAVILY_API_KEY`,
-  independent web pages, and saves them (`Research`). Cards are written only from these sources. Then every
+  outline step plans searches, reads the Wikipedia articles (tables included), with `TAVILY_API_KEY`
+  independent web pages, and for health and science decks at an advanced level the most-cited recent review
+  papers on Europe PMC (free, no key; read through their abstracts), and saves them (`Research`). Each card then
+  looks deeper on its own subject: the Wikipedia article on it (kept only if it is about the deck's subject) and,
+  when the deck's sources say little, a web search. Cards are written only from these sources. Then every
   number on a card must appear in the sources next to words that say what it counts: in two independent
   sources when two or more were found (all of Wikipedia counts as one), in the single source otherwise, quotes must appear word for word, and a second AI lists unsupported claims. A
   failing card is rewritten once; whatever still can't be confirmed is removed. Non-factual decks (a pitch,

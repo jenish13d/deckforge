@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, NotebookText, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { imageSrc, showsImage, type CardContent } from "@/lib/cards";
@@ -29,6 +29,9 @@ export function Presenter({
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [idle, setIdle] = useState(false);
+  // Speaker notes stay hidden until the presenter asks for them (the audience may see this screen).
+  const [showNotes, setShowNotes] = useState(false);
+  const hasNotes = cards.some((c) => c.notes);
   const root = useRef<HTMLDivElement>(null);
   const touchX = useRef<number | null>(null);
   const idleTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -79,6 +82,7 @@ export function Presenter({
       else if (e.key === "Home") go(0);
       else if (e.key === "End") go(last);
       else if (e.key === "Escape") onClose();
+      else if (e.key === "n" || e.key === "N") setShowNotes((v) => !v);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -130,6 +134,11 @@ export function Presenter({
           <CardView content={cards[index]} index={index} badge={badge} />
         </div>
       </div>
+      {showNotes && (
+        <aside className="presenter__notes" aria-label="Speaker notes">
+          {cards[index].notes ? <p>{cards[index].notes}</p> : <p className="presenter__notes-empty">No notes for this slide.</p>}
+        </aside>
+      )}
       <p className="presenter__hint">Tip: turn your phone sideways for bigger slides</p>
       <div className="presenter__bar">
         <button type="button" onClick={prev} disabled={index === 0} aria-label="Previous slide">
@@ -139,6 +148,11 @@ export function Presenter({
         <button type="button" onClick={next} disabled={index === last} aria-label="Next slide">
           <ChevronRight size={20} aria-hidden="true" />
         </button>
+        {hasNotes && (
+          <button type="button" className="presenter__notes-toggle" aria-pressed={showNotes} onClick={() => setShowNotes((v) => !v)} title="Speaker notes (N)">
+            <NotebookText size={18} aria-hidden="true" /> Notes
+          </button>
+        )}
         <button type="button" className="presenter__exit" onClick={onClose} aria-label="Exit presentation">
           <X size={18} aria-hidden="true" /> Exit
         </button>

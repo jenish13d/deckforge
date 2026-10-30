@@ -4,6 +4,7 @@ import { ArrowUp, Palette, Plus, Sparkles, WandSparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react";
 
 import { Spinner3D } from "@/components/Spinner3D";
+import { WorkTicker } from "@/components/WorkTicker";
 import type { Assist } from "@/lib/cards";
 import { api } from "@/lib/client";
 import { THEMES } from "@/lib/themes";
@@ -127,7 +128,7 @@ export function AssistantPanel({
         ))}
         {thinking && (
           <li className="assistant__msg assistant__msg--ai assistant__msg--thinking">
-            <Spinner3D size={16} /> Thinking…
+            <Spinner3D size={16} /> <WorkTicker lines={["Reading your request", "Looking at the slides in your deck", "Planning the changes", "Writing the new slides"]} />
           </li>
         )}
       </ol>

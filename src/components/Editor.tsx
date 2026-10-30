@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Spinner3D } from "@/components/Spinner3D";
 import { CardEditForm } from "@/components/CardEditForm";
 import { CardPlaceholder, CardView } from "@/components/CardView";
+import { WorkTicker, stageLines } from "@/components/WorkTicker";
 import { BrandMark } from "@/components/BrandMark";
 import { DownloadMenu } from "@/components/DownloadMenu";
 import { AssistantPanel } from "@/components/editor/AssistantPanel";
@@ -392,7 +393,7 @@ export function Editor({
               <span>
                 {nowWriting >= 0 ? (
                   <>
-                    Writing slide {nowWriting + 1}: <strong>{plainTitle(deck.cards[nowWriting].brief.title)}</strong>
+                    {jobs[deck.cards[nowWriting].id]?.stage === "researching" ? "Researching" : jobs[deck.cards[nowWriting].id]?.stage === "checking" ? "Fact-checking" : jobs[deck.cards[nowWriting].id]?.stage === "photos" ? "Finding a photo for" : "Writing"} slide {nowWriting + 1}: <strong>{plainTitle(deck.cards[nowWriting].brief.title)}</strong>
                   </>
                 ) : retrying ? (
                   retrying.label
@@ -471,6 +472,11 @@ export function Editor({
               ) : card.content ? (
                 <div className={busy[card.id] ? "is-busy" : undefined}>
                   <CardView content={deck.look.credits === "end" ? slides[readyCards.indexOf(card.content)] ?? card.content : card.content} index={i} badge={deck.look.badge} />
+                  {busy[card.id] && notes[card.id]?.phase === "working" && (
+                    <div className="busy-overlay" role="status">
+                      <WorkTicker lines={stageLines(jobs[card.id]?.stage, card.brief.title)} />
+                    </div>
+                  )}
                 </div>
               ) : (
                 <CardPlaceholder
@@ -478,6 +484,7 @@ export function Editor({
                   failed={card.status === "failed" && !busy[card.id]}
                   note={notes[card.id]?.label ?? (outOfCredits && card.status === "pending" ? "Not written yet: you're out of credits." : undefined)}
                   active={Boolean(busy[card.id]) && notes[card.id]?.phase !== "queued"}
+                  stage={jobs[card.id]?.stage}
                 />
               )}
               {card.content && (notes[card.id]?.phase === "queued" || notes[card.id]?.phase === "retrying") && (

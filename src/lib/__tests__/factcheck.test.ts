@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { generateCard, type CallModel, type ModelRequest } from "../ai";
 import { CardContentSchema, photoFit, FRAME_ASPECT, type CardContent } from "../cards";
@@ -119,7 +119,8 @@ describe("generateCard fact checking", () => {
       const d = drafts[requests.filter((r) => r.role === "card").length - 1];
       return { layout: "stats", eyebrow: "", icon: "⚽", title: "Goals", subtitle: "", items: [], quote: "", quoteAuthor: "", table: { columns: [], rows: [] }, imageQuery: "", ...d };
     }) as CallModel;
-    // Stand-in research: the Wikipedia text is passed as a stored web page so nothing is fetched.
+    // Stand-in research: the Wikipedia text is passed as a stored web page, and nothing else can be fetched.
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("offline", { status: 503 })));
     const research = { sources: [{ title: "t", url: "https://espn.com/x", kind: "web" as const }], webTexts: [{ title: "espn.com", text: NEWS }, { title: "bbc.com", text: WIKI }] };
     const { card: result } = await generateCard(
       { deckTitle: "Ronaldo", prompt: "Ronaldo at Real Madrid", outline: [{ title: "Cover", points: [] }, { title: "Goals", points: [] }], index: 1, mode: "quick", research, factCheck: true },
@@ -129,6 +130,7 @@ describe("generateCard fact checking", () => {
     expect(cardCalls).toHaveLength(2);
     expect(cardCalls[1].user).toContain("fact-checker rejected");
     expect(result.stats).toEqual([{ value: "450", label: "goals for Real Madrid" }]);
+    vi.unstubAllGlobals();
   });
 });
 

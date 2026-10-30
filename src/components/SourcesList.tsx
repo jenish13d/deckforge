@@ -3,7 +3,7 @@ import { BookOpen } from "lucide-react";
 import { independentSources, type Source } from "@/lib/research";
 
 const siteOf = (s: Source) =>
-  s.kind === "wikipedia" ? "Wikipedia" : s.kind === "file" ? "Your file" : new URL(s.url).hostname.replace(/^www\./, "");
+  s.kind === "wikipedia" ? "Wikipedia" : s.kind === "file" ? "Your file" : s.kind === "paper" ? "Research paper" : new URL(s.url).hostname.replace(/^www\./, "");
 
 /** The sources a deck's facts were checked against, with links. */
 export function SourcesList({ sources, compact = false }: { sources: Source[]; compact?: boolean }) {

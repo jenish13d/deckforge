@@ -35,7 +35,7 @@ Students, teachers, researchers, managers, sales and marketing teams, founders a
 ## What it does
 - Topic or files → quick choices (audience, focus, length, detail) → editable outline → finished deck, card by card
 - Builds decks from a prompt in any language, or from the user's own files: ${MATERIAL_TYPES}. Up to ${MAX_FILES} files per deck, ${MAX_FILE_MB} MB each. Documents are read in the browser; photos and scans are read by an AI vision model
-- Research for factual topics: Wikipedia articles plus independent web pages, listed as sources with the deck. Personal, creative and planning topics are written without web research
+- Research for factual topics: Wikipedia articles plus independent web pages (and, for advanced health and science decks, highly cited review papers from Europe PMC), listed as sources with the deck. Each slide also looks up its own subject Personal, creative and planning topics are written without web research
 - Number checking: numbers are checked against the sources found. When two or more independent sources are found, a number appears on a slide only when two agree (all Wikipedia articles count as one source, each website as one); with a single source, that source is the only check. Figures from the user's own files are used as given; quotes must be word for word from a source
 - Detail levels: Low (short), Medium (presentation-ready), High (more facts per slide, wider research)
 - ${THEMES.length} themes (${THEMES.map((t) => t.name).join(", ")}) and 9 layouts: title, section, bullets, columns, big numbers, timeline, table, quote and chart (simple bar and line charts, drawn only from figures in the user's files or in checked sources)

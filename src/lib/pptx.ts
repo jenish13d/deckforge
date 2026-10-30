@@ -378,7 +378,9 @@ function buildBlocks(card: CardContent, style: ThemeStyle, colors: Colors, x: nu
 
 const total = (blocks: Block[]) => blocks.reduce((sum, b) => sum + b.height, 0);
 
-export async function buildPptx(cards: CardContent[], theme: string, title: string, options: { badge?: boolean } = {}): Promise<PptxGenJS> {
+type PptxOptions = { badge?: boolean; /** Called after each slide is built: (done, total). */ onProgress?: (done: number, total: number) => void };
+
+export async function buildPptx(cards: CardContent[], theme: string, title: string, options: PptxOptions = {}): Promise<PptxGenJS> {
   const { default: Pptx } = await import("pptxgenjs");
   const pptx = new Pptx();
   pptx.layout = "LAYOUT_WIDE";
@@ -390,6 +392,7 @@ export async function buildPptx(cards: CardContent[], theme: string, title: stri
 
   for (const [index, card] of cards.entries()) {
     const slide = pptx.addSlide();
+    if (card.notes) slide.addNotes(card.notes);
     const variant = style.variants?.[index % style.variants.length];
     slide.background = variant ? { color: variant.bg } : background ? { data: background } : { color: style.bg[0] };
 
@@ -451,6 +454,7 @@ export async function buildPptx(cards: CardContent[], theme: string, title: stri
       y += block.height;
     }
     if (options.badge) addBadge(slide, pptx.ShapeType);
+    options.onProgress?.(index + 1, cards.length);
   }
   return pptx;
 }
@@ -471,7 +475,7 @@ function addBadge(slide: PptxGenJS.Slide, shapes: typeof PptxGenJS.prototype.Sha
   );
 }
 
-export async function downloadPptx(cards: CardContent[], theme: string, title: string, options: { badge?: boolean } = {}): Promise<void> {
+export async function downloadPptx(cards: CardContent[], theme: string, title: string, options: PptxOptions = {}): Promise<void> {
   const pptx = await buildPptx(cards, theme, title, options);
   const safe = title.replace(/[^\p{L}\p{N} _-]+/gu, "").trim().slice(0, 80) || "deck";
   await pptx.writeFile({ fileName: `${safe}.pptx` });

@@ -71,6 +71,8 @@ export const CardContentSchema = z.object({
   table: TableSchema.default({ columns: [], rows: [] }),
   /** Only on chart cards (missing on others and in older cards). */
   chart: ChartSchema.optional(),
+  /** Speaker notes, shown to the presenter and in the PowerPoint notes (missing in older cards). */
+  notes: z.string().optional(),
   image: CardImageSchema.nullable().optional(),
 });
 export type CardContent = z.infer<typeof CardContentSchema>;
@@ -87,6 +89,8 @@ export const GeneratedCardSchema = z.object({
   ...textFields,
   table: TableSchema,
   chart: GeneratedChartSchema.optional(),
+  /** Speaker notes: what the presenter says while the slide is shown. */
+  notes: z.string(),
   imageQuery: z.string(),
 });
 export type GeneratedCard = z.infer<typeof GeneratedCardSchema>;
@@ -221,11 +225,13 @@ export function removeCitations(card: CardContent, labels: string[]): CardConten
     items: card.items.map((i) => ({ heading: clean(i.heading), text: clean(i.text) })),
     stats: card.stats.map((s) => ({ value: s.value, label: clean(s.label) })),
     table: { columns: card.table.columns, rows: card.table.rows.map((row) => row.map(clean)) },
+    ...(card.notes ? { notes: clean(card.notes) } : {}),
   };
 }
 
-type CardInput = Omit<GeneratedCard, "imageQuery" | "eyebrow" | "table" | "chart"> & {
+type CardInput = Omit<GeneratedCard, "imageQuery" | "eyebrow" | "table" | "chart" | "notes"> & {
   eyebrow?: string;
+  notes?: string;
   table?: CardTable;
   chart?: { kind: string; unit: string; points: { label: string; value: number | string }[] };
   image?: CardImage | null;
@@ -297,6 +303,7 @@ export function normalizeCard(raw: CardInput): CardContent {
     quoteAuthor: clip(raw.quoteAuthor.trim(), 80),
     table,
     ...(known === "chart" && !thinChart ? { chart } : {}),
+    ...(raw.notes?.trim() ? { notes: clip(raw.notes.trim(), 1200) } : {}),
     image,
   };
 }

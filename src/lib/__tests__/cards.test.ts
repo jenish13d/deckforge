@@ -13,6 +13,7 @@ const base: GeneratedCard = {
   quote: "",
   quoteAuthor: "",
   table: { columns: [], rows: [] },
+  notes: "",
   imageQuery: "",
 };
 

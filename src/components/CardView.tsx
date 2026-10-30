@@ -5,6 +5,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { ChartView } from "./ChartView";
 import { SITE } from "@/lib/site";
 import { FRAME_ASPECT, imageSrc, photoFit, plainTitle, showsImage, titleParts, type CardContent, type CardImage } from "@/lib/cards";
+import { WorkTicker, stageLines } from "./WorkTicker";
 
 /** A title with its *highlighted* words in the accent colour. */
 function Title({ text }: { text: string }) {
@@ -239,12 +240,15 @@ export function CardPlaceholder({
   failed,
   note,
   active = true,
+  stage,
 }: {
   title: string;
   failed?: boolean;
   note?: string;
   /** Being written right now (false: waiting for its turn). */
   active?: boolean;
+  /** The job's stage while it's being written, for the live line of what it's doing. */
+  stage?: string;
 }) {
   const status = failed ? "This card couldn't be written. Try regenerating it." : note || (active ? "Writing and checking the facts…" : "Waiting for its turn…");
   return (
@@ -252,6 +256,7 @@ export function CardPlaceholder({
       <div className="card__inner">
         <h2 className="card__title">{plainTitle(title)}</h2>
         <p className="card__subtitle">{status}</p>
+        {!failed && active && <WorkTicker className="card__ticker" lines={stageLines(stage, title)} />}
         {!failed && (
           <div className="skeleton" aria-hidden="true">
             <span />

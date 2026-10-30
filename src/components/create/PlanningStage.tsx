@@ -4,25 +4,35 @@ import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Spinner3D } from "@/components/Spinner3D";
+import { WorkTicker } from "@/components/WorkTicker";
+
+// What the outline call itself produces for every card (see PlannedOutlineSchema and planDeck).
+const SHAPING = [
+  "Writing a key message for each card",
+  "Choosing a layout for each card",
+  "Spreading tables, timelines and charts across the deck",
+  "Deciding which cards need a photo",
+  "Checking the story flows from card to card",
+];
 
 // What the planner does, in the order it really happens (see generateOutline): read the
 // topic, decide what to look up, search and read, then write the outline. Topics that need
 // no research finish early, before the search steps would show.
 const STEPS = [
-  { at: 0, text: "Reading your topic" },
-  { at: 1500, text: "Deciding what to look up" },
-  { at: 3500, text: "Searching Wikipedia and the web" },
-  { at: 7500, text: "Reading the sources" },
-  { at: 12000, text: "Shaping your cards" },
+  { at: 0, text: "Reading your topic", work: ["Finding the main subject", "Noting who it's for and the focus"] },
+  { at: 1500, text: "Deciding what to look up", work: ["Choosing Wikipedia articles to read", "Planning web searches", "Checking whether review papers would help"] },
+  { at: 3500, text: "Searching Wikipedia and the web", work: ["Searching Wikipedia", "Searching the web for independent pages", "Looking for highly cited review papers", "Skipping forums and social media"] },
+  { at: 7500, text: "Reading the sources", work: ["Reading the articles, tables included", "Picking the passages that fit your topic", "Collecting facts with dates and numbers"] },
+  { at: 12000, text: "Shaping your cards", work: SHAPING },
 ];
 
 // With files attached, the planner reads them first.
 const FILE_STEPS = [
-  { at: 0, text: "Reading your files" },
-  { at: 2000, text: "Finding the key facts" },
-  { at: 5000, text: "Checking what else to look up" },
-  { at: 9000, text: "Planning the story" },
-  { at: 13000, text: "Shaping your cards" },
+  { at: 0, text: "Reading your files", work: ["Reading every page of your files", "Keeping your tables and figures"] },
+  { at: 2000, text: "Finding the key facts", work: ["Finding the main points", "Noting names, numbers and dates"] },
+  { at: 5000, text: "Checking what else to look up", work: ["Searching Wikipedia for background", "Searching the web for independent pages"] },
+  { at: 9000, text: "Planning the story", work: ["Ordering the points into a story", "Deciding what each card must say"] },
+  { at: 13000, text: "Shaping your cards", work: SHAPING },
 ];
 
 /** The planning screen: drifting colour, slides assembling in 3D, and a live list of steps. */
@@ -38,6 +48,8 @@ export function PlanningStage({ topic, cardCount, files = 0 }: { topic: string; 
   }, []);
 
   const current = steps.filter((s) => elapsed >= s.at).length - 1;
+  // Never reaches the end on its own: it slows down instead of stopping, so the screen keeps moving.
+  const progress = 0.95 * (1 - Math.exp(-elapsed / 14000));
   return (
     <div className="planning-stage" role="status" aria-live="polite">
       <div className="planning-stage__glow" aria-hidden="true">
@@ -72,6 +84,10 @@ export function PlanningStage({ topic, cardCount, files = 0 }: { topic: string; 
             );
           })}
         </ol>
+        <div className="progress planning-stage__progress" aria-hidden="true">
+          <span style={{ transform: `scaleX(${progress})` }} />
+        </div>
+        <WorkTicker className="planning-stage__ticker" lines={steps[current].work} />
         <p className="planning-stage__note">
           {files > 0
             ? "Your files lead; every other number is checked against the sources found."

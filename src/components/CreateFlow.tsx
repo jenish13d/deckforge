@@ -411,7 +411,7 @@ export function CreateFlow({
             disabled={busy !== null || usedCards === 0 || cost > credits}
           >
             {busy === "deck" ? <Spinner3D size={18} /> : <Sparkles size={18} aria-hidden="true" />}
-            {busy === "deck" ? "Creating…" : `Generate ${usedCards} cards`}
+            {busy === "deck" ? "Setting up your deck…" : `Generate ${usedCards} cards`}
           </button>
         </div>
         {error && <p className="error" role="alert">{error}</p>}

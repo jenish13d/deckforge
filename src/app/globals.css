@@ -427,8 +427,52 @@ a {
 }
 
 .is-busy {
-  opacity: 0.5;
+  position: relative;
   pointer-events: none;
+}
+
+.is-busy > .card {
+  opacity: 0.55;
+}
+
+/* A slide being rewritten: a light sweep across it and a line saying what's happening. */
+.is-busy::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-card, 20px);
+  background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--primary) 14%, transparent) 50%, transparent 70%);
+  background-size: 250% 100%;
+  animation: busy-sweep 1.8s linear infinite;
+}
+
+.busy-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  z-index: 1;
+  max-width: calc(100% - 32px);
+  padding: 8px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--surface, #fff);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+  transform: translateX(-50%);
+}
+
+@keyframes busy-sweep {
+  from {
+    background-position: 125% 0;
+  }
+  to {
+    background-position: -125% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-busy::after {
+    animation: none;
+  }
 }
 
 .made-with {
@@ -1866,6 +1910,48 @@ a {
 .presenter__bar button:disabled {
   opacity: 0.35;
   cursor: default;
+}
+
+.presenter__bar button[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Speaker notes: a quiet panel under the slide, only when the presenter turns it on. */
+.presenter__notes {
+  width: min(900px, calc(100% - 32px));
+  max-height: 22vh;
+  overflow-y: auto;
+  margin: 8px auto 0;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 1rem;
+  line-height: 1.55;
+  animation: notes-in 0.22s var(--ease-out);
+}
+
+.presenter__notes p {
+  margin: 0;
+}
+
+.presenter__notes-empty {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+@keyframes notes-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presenter__notes {
+    animation: none;
+  }
 }
 
 .presenter__count {
@@ -7699,4 +7785,81 @@ body:has(.assistant) .feedback {
   fill: var(--card-text);
   font-size: 28px;
   font-weight: 700;
+}
+
+/* What is happening right now: one line at a time, each sliding in, with a live dot. */
+.work-ticker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 1.5em;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.work-ticker::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: ticker-dot 1.2s ease-in-out infinite;
+}
+
+.work-ticker__line {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: ticker-in 0.35s var(--ease-out);
+}
+
+@keyframes ticker-in {
+  from {
+    opacity: 0;
+    transform: translateY(70%);
+  }
+}
+
+@keyframes ticker-dot {
+  50% {
+    opacity: 0.3;
+    transform: scale(0.7);
+  }
+}
+
+.card__ticker {
+  margin-top: 6px;
+}
+
+.planning-stage__progress {
+  margin: 12px 0 8px;
+}
+
+/* A sheen runs along progress bars while work goes on. */
+.planning-stage__progress span,
+.writing .progress span {
+  background: linear-gradient(90deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 55%, #fff) 50%, var(--primary) 100%);
+  background-size: 200% 100%;
+  animation: bar-sheen 1.6s linear infinite;
+}
+
+@keyframes bar-sheen {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-ticker::before,
+  .work-ticker__line,
+  .planning-stage__progress span,
+  .writing .progress span {
+    animation: none;
+  }
 }
