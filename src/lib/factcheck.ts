@@ -263,7 +263,7 @@ export function stripUnverified(card: CardContent, problems: Problem[], fallback
   });
   const out: CardContent = {
     ...card,
-    title: bad.has("title") ? fallbackTitle.replace(/\d[\d.,]*/g, "").replace(/\s+/g, " ").trim() || card.title : card.title,
+    title: bad.has("title") ? withoutFigures(fallbackTitle) || card.title : card.title,
     subtitle: bad.has("subtitle") ? (withoutSentences(card.subtitle, failed("subtitle")) ?? "") : card.subtitle,
     eyebrow: bad.has("eyebrow") ? "" : card.eyebrow,
     items,
@@ -302,6 +302,21 @@ export function stripUnverified(card: CardContent, problems: Problem[], fallback
 }
 
 const words = (text: string) => text.split(/\s+/).filter(Boolean).length;
+
+/**
+ * A title with its figures taken out, along with what only made sense with them: units ("%", "percent", "m"),
+ * and the little word in front ("since 2010", "by 70%", "about 20%"). "70% Cost Drop Since 2010 Drives Solar
+ * Adoption" becomes "Cost Drop Drives Solar Adoption", not "% Cost Drop Since Drives Solar Adoption".
+ */
+export function withoutFigures(title: string): string {
+  return title
+    .replace(/\b(?:since|in|by|from|to|of|over|about|around|nearly|almost|up to|more than|less than|under)\s+(?=[$€£]?\d)/gi, "")
+    .replace(/[$€£]?\d[\d.,]*\s*(?:(?:%|percent\b|per cent\b)(?:\s+of\b)?|x\b|[kmb]n?\b|million\b|billion\b|thousand\b)?/gi, "")
+    .replace(/\(\s*\)|\s+([,.:;!?])/g, "$1")
+    .replace(/^[\s,:;–—-]+|[\s,:;–—-]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 /** Whether this text contains something that failed. */
 function holds(text: string, issues: Problem[]): boolean {

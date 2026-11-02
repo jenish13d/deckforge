@@ -88,3 +88,14 @@ describe("speaker notes", () => {
     expect(fixed.notes).toBe("Bacteria in plaque feed on sugar and release acid. Cutting sugar lowers the risk.");
   });
 });
+
+describe("titles without unconfirmed figures", () => {
+  it("drops the figure with its unit and the word in front of it", async () => {
+    const { withoutFigures } = await import("../factcheck");
+    expect(withoutFigures("70% Cost Drop Since 2010 Drives Solar Adoption")).toBe("Cost Drop Drives Solar Adoption");
+    expect(withoutFigures("Commercial panels convert about 20% of sunlight")).toBe("Commercial panels convert sunlight");
+    expect(withoutFigures("Prices fell by $2.50 a watt")).toBe("Prices fell a watt");
+    expect(withoutFigures("The 1839 discovery")).toBe("The discovery");
+    expect(withoutFigures("Why solar matters")).toBe("Why solar matters");
+  });
+});
