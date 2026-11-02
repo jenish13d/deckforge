@@ -13,9 +13,12 @@ export function useStageMotion<T extends HTMLElement>({
   tilt = 0,
   scroll = "through",
   steps,
+  play,
 }: {
   tilt?: number;
   scroll?: "through" | "pinned";
+  /** Plays `--p` from 0 to 1 by itself while the element is on screen (then holds and loops) instead of following the scroll. */
+  play?: { seconds: number; hold: number };
   /** Progress points where each step after the first begins; sets `data-step` on the element. */
   steps?: number[];
 }) {
@@ -29,7 +32,16 @@ export function useStageMotion<T extends HTMLElement>({
     let target = { x: 0, y: 0 };
     let now = { x: 0, y: 0 };
 
+    // Autoplay: time since the element came into view, looping; paused while it's off screen.
+    let shownAt = 0;
+    let visible = false;
+    const played = () => {
+      if (!play || !visible) return 0;
+      const t = ((performance.now() - shownAt) / 1000) % (play.seconds + play.hold);
+      return clamp(t / play.seconds);
+    };
     const progress = () => {
+      if (play) return played();
       const box = el.getBoundingClientRect();
       const view = window.innerHeight;
       // "pinned": 0 when the section reaches the top, 1 when its end leaves the screen.
@@ -45,7 +57,8 @@ export function useStageMotion<T extends HTMLElement>({
       const p = progress();
       el.style.setProperty("--p", p.toFixed(4));
       if (steps) el.dataset.step = String(steps.filter((start) => p >= start).length);
-      if (Math.abs(target.x - now.x) > 0.001 || Math.abs(target.y - now.y) > 0.001) frame = requestAnimationFrame(paint);
+      if (visible && play) frame = requestAnimationFrame(paint);
+      else if (Math.abs(target.x - now.x) > 0.001 || Math.abs(target.y - now.y) > 0.001) frame = requestAnimationFrame(paint);
     };
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(paint);
@@ -56,18 +69,30 @@ export function useStageMotion<T extends HTMLElement>({
       schedule();
     };
 
+    const observer = play
+      ? new IntersectionObserver(([entry]) => {
+          if (entry.isIntersecting && !visible) {
+            visible = true;
+            shownAt = performance.now();
+            schedule();
+          } else if (!entry.isIntersecting) visible = false;
+        }, { threshold: 0.35 })
+      : null;
+    observer?.observe(el);
+
     paint();
-    el.dataset.live = "";
+    el.dataset.live = play ? "play" : "";
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
     if (tilt) window.addEventListener("pointermove", onPointer, { passive: true });
     return () => {
+      observer?.disconnect();
       cancelAnimationFrame(frame);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
       window.removeEventListener("pointermove", onPointer);
     };
-  }, [tilt, scroll, steps]);
+  }, [tilt, scroll, steps, play]);
 
   return ref;
 }

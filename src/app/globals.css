@@ -4549,7 +4549,7 @@ main:focus {
   scroll-margin-top: 61px;
 }
 
-.story[data-live] {
+.story[data-live=""] {
   height: 340vh;
 }
 
@@ -4563,10 +4563,16 @@ main:focus {
   padding: 0 16px;
 }
 
-.story[data-live] .story__pin {
+.story[data-live=""] .story__pin {
   position: sticky;
   top: 61px;
   height: calc(100svh - 61px);
+  overflow: clip;
+}
+
+/* Playing on its own: an ordinary section, tall enough for the scene. */
+.story[data-live="play"] .story__pin {
+  min-height: min(680px, calc(100svh - 61px));
   overflow: clip;
 }
 

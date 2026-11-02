@@ -58,10 +58,12 @@ const STEPS = [
 
 // Where each step after the first takes over, as scroll progress through the section.
 const STEP_STARTS = [0.24, 0.5, 0.66];
+// Plays by itself once on screen: about 10 seconds of building, then the finished deck for 4, then again.
+const PLAY = { seconds: 10, hold: 4 };
 
-/** "How it works" told as a scroll story: the prompt types, sources arrive, slides assemble in 3D. */
+/** "How it works", played on its own once in view: the prompt types, sources arrive, slides assemble in 3D. */
 export function BuildStory() {
-  const ref = useStageMotion<HTMLElement>({ tilt: 4, scroll: "pinned", steps: STEP_STARTS });
+  const ref = useStageMotion<HTMLElement>({ tilt: 4, steps: STEP_STARTS, play: PLAY });
 
   return (
     <section ref={ref} id="how" className="story" data-step={STEPS.length - 1}>
