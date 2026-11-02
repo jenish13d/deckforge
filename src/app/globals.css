@@ -5275,6 +5275,12 @@ main:focus {
   animation: none;
 }
 
+/* Thumbnails are too small for photo credits and the badge: their minimum sizes would cover the slide. */
+.slide-rail__thumb .card__credit,
+.slide-rail__thumb .card__badge {
+  display: none;
+}
+
 .slide-rail__empty {
   display: grid;
   place-items: center;
