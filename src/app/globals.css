@@ -871,6 +871,10 @@ a {
   font-size: calc(1.5cqi * var(--fit, 1));
 }
 
+.mini-card .card__stats--hero .card__stat-label {
+  font-size: calc(2.6cqi * var(--fit, 1));
+}
+
 .steps {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
